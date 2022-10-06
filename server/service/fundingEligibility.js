@@ -129,7 +129,8 @@ function buildFundingEligibilityQuery(basicFundingEligibility : FundingEligibili
         [ FUNDING.BOLETO ]:         getBasicFundingEligibilityQuery(),
         [ FUNDING.BOLETOBANCARIO ]: getBasicFundingEligibilityQuery(),
         [ FUNDING.MERCADOPAGO ]:    getBasicFundingEligibilityQuery(),
-        [ FUNDING.MULTIBANCO ]:     getBasicFundingEligibilityQuery()
+        [ FUNDING.MULTIBANCO ]:     getBasicFundingEligibilityQuery(),
+        [ FUNDING.PAIDY ]:          getBasicFundingEligibilityQuery()
 
     };
 
