@@ -195,6 +195,9 @@ export default {
       },
       multibanco: {
         eligible: false,
+      }, 
+      paidy: {
+        eligible: false,
       },
     },
     wallet: {
