@@ -1,5 +1,4 @@
 /* @flow */
-import { FUNDING } from '@paypal/sdk-constants/src';
 
 export const SMART_PAYMENT_BUTTONS = 'smart-payment-buttons';
 
@@ -76,6 +75,7 @@ export const USER_EXPERIENCE_FLOW = {
 };
 
 export const PRODUCT_FLOW = {
+    ACCELERATED:           'ACCELERATED_CHECKOUT',
     SMART_PAYMENT_BUTTONS: 'SMART_PAYMENT_BUTTONS'
 };
 
@@ -111,6 +111,7 @@ export const FPTI_TRANSITION = {
     CONFIRM_ORDER:             ('process_confirm_order' : 'process_confirm_order'),
     RECEIVE_ORDER:            ('process_receive_order' : 'process_receive_order'),
     CREATE_PAYMENT:           ('process_create_payment' : 'process_create_payment'),
+    CAPTURE_AUTHORIZATION:    ('process_capture_authorization' : 'process_capture_authorization'),
 
     CHECKOUT_SHIPPING_CHANGE:         ('process_checkout_shipping_change' : 'process_checkout_shipping_change'),
     CHECKOUT_SHIPPING_ADDRESS_CHANGE: ('process_checkout_shipping_address_change' : 'process_checkout_shipping_address_change'),
@@ -135,6 +136,7 @@ export const FPTI_TRANSITION = {
     APPLEPAY_CREATE_ORDER_ERROR:                        ('applepay_create_order_error' : 'applepay_create_order_error'),
     APPLEPAY_GET_DETAILS_ERROR:                         ('applepay_get_details_error' : 'applepay_get_details_error'),
     APPLEPAY_PAYMENT_ERROR:                             ('applepay_payment_error' : 'applepay_payment_error'),
+    APPLEPAY_CONFIG_ERROR:                             ('applepay_config_error' : 'applepay_config_error'),
 
     NATIVE_DETECT_POSSIBLE_APP_SWITCH:      ('native_detect_possible_app_switch' : 'native_detect_possible_app_switch'),
     NATIVE_DETECT_APP_SWITCH:               ('native_detect_app_switch' : 'native_detect_app_switch'),
@@ -257,15 +259,7 @@ export const QRCODE_STATE = {
     DEFAULT:    'qr_default'
 };
 
-export const LSAT_UPGRADE_EXCLUDED_MERCHANTS = [
-    'AQipcJ1uXz50maKgYx49lKUB8MlSOXP573M6cpsFpHqDZOqnopsJpfYY7bQC_9CtQJsEhGlk8HLs2oZz',
-    'Aco-yrRKihknb5vDBbDOdtYywjYMEPaM7mQg6kev8VDAz01lLA88J4oAUnF4UV9F_InqkqX7K62_jOjx',
-    'AeAiB9K2rRsTXsFKZt4FMAQ8a6VEu4hijducis3a8NcIjV2J_c5I2H2PYhT3qCOwxT8P4l17skqgBlmg',
-    'AXKrWRqEvxiDoUIZQaD1tFi2QhtmhWve3yTDBi58bxWjieYJ9j73My-yJmM7hP00JvOXu4YD6L2eaI5O',
-    'AfRTnXv_QcuVyalbUxThtgk1xTygygsdevlBUTz36dDgD6XZNHp3Ym99a-mjMaokXyTTiI8VJ9mRgaFB',
-    'AejlsIlg_KjKjmLKqxJqFIAwn3ZP02emx41Z2It4IfirQ-nNgZgzWk1CU-Q1QDbYUXjWoYJZ4dq1S2pK',
-    'AQXD7-m_2yMo-5AxJ1fQaPeEWYDE7NZ9XrLzEXeiPLTHDu9vfe_T0foF8BoX8K5cMfXuRDysUEmhw-8Z'
-];
+
 
 export const ITEM_CATEGORY = {
     DIGITAL:  'DIGITAL',
@@ -280,6 +274,7 @@ export const BUTTON_LABEL = {
 export const STATUS_CODES = {
     TOO_MANY_REQUESTS: 429
 };
+<<<<<<< HEAD
 
 export const APM_LIST = [
     FUNDING.IDEAL,
@@ -302,3 +297,5 @@ export const APM_LIST = [
     FUNDING.MULTIBANCO,
     FUNDING.PAIDY
 ];
+=======
+>>>>>>> upstream/main

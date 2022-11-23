@@ -8,7 +8,6 @@ import type { ProxyWindow } from '@krakenjs/post-robot/src';
 
 import { type NativeEligibility, getNativeEligibility } from '../../api';
 import { enableAmplitude, getStorageState, isIOSSafari, isAndroidChrome, toProxyWindow } from '../../lib';
-import { LSAT_UPGRADE_EXCLUDED_MERCHANTS } from '../../constants';
 import type { ButtonProps, ServiceData } from '../../button/props';
 import type { IsEligibleOptions, IsPaymentEligibleOptions } from '../types';
 
@@ -135,7 +134,7 @@ export function canUseNativeQRCode({ fundingSource, win } : {| fundingSource : ?
 }
 
 export function isNativeEligible({ props, config, serviceData } : IsEligibleOptions) : boolean {
-    const { clientID, fundingSource, onShippingChange, createBillingAgreement, createSubscription, env, platform } = props;
+    const { fundingSource, onShippingChange, createBillingAgreement, createSubscription, env, platform } = props;
     const { firebase: firebaseConfig } = config;
     const { cookies, merchantID, fundingEligibility } = serviceData;
     const isVenmoEligible = fundingEligibility?.venmo?.eligible;
@@ -185,7 +184,7 @@ export function isNativeEligible({ props, config, serviceData } : IsEligibleOpti
         return false;
     }
 
-    if (LSAT_UPGRADE_EXCLUDED_MERCHANTS.indexOf(clientID) !== -1) {
+    if (!serviceData.featureFlags.isLsatUpgradable) {
         return false;
     }
 

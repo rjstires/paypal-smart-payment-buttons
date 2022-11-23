@@ -9,16 +9,18 @@ import { setupExports, formatFieldValue, autoFocusOnFirstInput, filterExtraField
 import { CARD_FIELD_TYPE_TO_FRAME_NAME, CARD_FIELD_TYPE } from '../constants';
 import { submitCardFields } from '../interface';
 import { getCardProps, type CardProps } from '../props';
-import type { SetupCardOptions } from '../types';
+import type { SetupCardOptions} from '../types';
+import type {FeatureFlags } from '../../types'
 
 import { CardField, CardNumberField, CardCVVField, CardExpiryField, CardNameField } from './fields';
 
 type PageProps = {|
     cspNonce : string,
-    props : CardProps
+    props : CardProps,
+    featureFlags: FeatureFlags
 |};
 
-function Page({ cspNonce, props } : PageProps) : mixed {
+function Page({ cspNonce, props, featureFlags } : PageProps) : mixed {
     const { facilitatorAccessToken, style, disableAutocomplete, placeholder, type, onChange, export: xport } = props;
 
     const [ fieldValue, setFieldValue ] = useState();
@@ -96,7 +98,7 @@ function Page({ cspNonce, props } : PageProps) : mixed {
         xport({
             submit: (extraData) => {
                 const extraFields = filterExtraFields(extraData);
-                return submitCardFields({ facilitatorAccessToken, extraFields });
+                return submitCardFields({ facilitatorAccessToken, extraFields, featureFlags });
             }
         });
     }, [ fieldValid, fieldValue ]);
@@ -208,10 +210,11 @@ function Page({ cspNonce, props } : PageProps) : mixed {
     );
 }
 
-export function setupCard({ cspNonce, facilitatorAccessToken } : SetupCardOptions) {
+export function setupCard({ cspNonce, facilitatorAccessToken, featureFlags } : SetupCardOptions) {
     const props = getCardProps({
-        facilitatorAccessToken
+        facilitatorAccessToken,
+        featureFlags
     });
 
-    render(<Page cspNonce={ cspNonce } props={ props } />, getBody());
+    render(<Page cspNonce={ cspNonce } props={ props } featureFlags={featureFlags} />, getBody());
 }

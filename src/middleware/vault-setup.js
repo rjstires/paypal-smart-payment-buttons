@@ -23,7 +23,8 @@ type VaultAutoSetupEligibleProps = {|
     intent : $Values<typeof INTENT>,
     commit : boolean,
     disableFunding : ?$ReadOnlyArray<$Values<typeof FUNDING>>,
-    disableCard : ?$ReadOnlyArray<$Values<typeof CARD>>
+    disableCard : ?$ReadOnlyArray<$Values<typeof CARD>>,
+    userIDToken: ?string,
 |};
 
 type IsFundingSourceVaultableOptions = {|
@@ -87,11 +88,18 @@ function isFundingSourceVaultable({ accessToken, fundingSource, clientID, mercha
 }
 
 function isVaultAutoSetupEligible({ vault, clientAccessToken, createBillingAgreement, createSubscription, fundingSource,
-    clientID, merchantID, buyerCountry, currency, commit, intent, disableFunding, disableCard } : VaultAutoSetupEligibleProps) : ZalgoPromise<boolean> {
+    clientID, merchantID, buyerCountry, currency, commit, intent, disableFunding, disableCard, userIDToken } : VaultAutoSetupEligibleProps) : ZalgoPromise<boolean> {
 
     return ZalgoPromise.try(() => {
         if (!clientAccessToken) {
             return false;
+        }
+
+        if (userIDToken) {
+          // If a merchant passes in both client-token and id-token
+          // ID token flow takes precedence
+          getLogger().info('vault_auto_setup_disabled_id_token', { clientID });
+          return false;
         }
 
         if (createBillingAgreement || createSubscription) {
@@ -120,7 +128,7 @@ export function enableVaultSetup({ orderID, vault, clientAccessToken, createBill
             .flush();
 
         return isVaultAutoSetupEligible({ vault, clientAccessToken, createBillingAgreement, createSubscription, fundingSource,
-            clientID, merchantID, buyerCountry, currency, commit, intent, disableFunding, disableCard });
+            clientID, merchantID, buyerCountry, currency, commit, intent, disableFunding, disableCard, userIDToken });
 
     }).then(eligible => {
         if (eligible && clientAccessToken) {

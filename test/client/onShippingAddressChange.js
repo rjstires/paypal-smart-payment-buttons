@@ -8,7 +8,7 @@ import { FUNDING, COUNTRY } from '@paypal/sdk-constants/src';
 import {
     mockAsyncProp,
     createButtonHTML,
-    getRestfulPatchOrderApiMock,
+    getGraphQLApiMock,
     DEFAULT_FUNDING_ELIGIBILITY,
     mockFunction,
     clickButton,
@@ -86,7 +86,7 @@ describe('onShippingAddressChange', () => {
         }
     ];
 
-    it('should render a button, click the button, and render checkout, then pass onShippingAddressChange callback to the parent and have SDK patch for client-side integrations', async () => {
+    it('should render a button, click the button, and render checkout, then pass onShippingAddressChange callback to the parent with shipping methods in the checkout session and have SDK patch for client-side integrations', async () => {
         return await wrapPromise(async ({ expect, avoid }) => {
 
             const orderID = uniqueID();
@@ -94,27 +94,87 @@ describe('onShippingAddressChange', () => {
             const payerID = 'YYYYYYYYYY';
             const facilitatorAccessToken = uniqueID();
 
+            const getCheckoutDetails = getGraphQLApiMock({
+                extraHandler: expect('GetCheckoutDetailsCall', ({ data }) => {
+
+                    if (data.query.includes('query GetCheckoutDetails')) {
+                        return {
+                            data: {
+                                checkoutSession: {
+                                    cart: {
+                                        intent:  'capture',
+                                        amounts: {
+                                            total: {
+                                                currencyCode: 'USD'
+                                            }
+                                        },
+                                        shippingMethods: [
+                                            {
+                                                id: 'SHIP_1234',
+                                                label: 'Free Shipping',
+                                                type: 'SHIPPING',
+                                                selected: true,
+                                                amount: {
+                                                    value: '0.00',
+                                                    currency_code: 'USD'
+                                                }
+                                            },
+                                            {
+                                                id: 'SHIP_123',
+                                                label: 'Shipping',
+                                                type: 'SHIPPING',
+                                                selected: false,
+                                                amount: {
+                                                    value: '20.00',
+                                                    currency_code: 'USD'
+                                                }
+                                            },
+                                            {
+                                                id: 'SHIP_124',
+                                                label: 'Overnight',
+                                                type: 'SHIPPING',
+                                                selected: false,
+                                                amount: {
+                                                    value: '40.00',
+                                                    currency_code: 'USD'
+                                                }
+                                            }
+                                        ]
+                                    },
+                                    payees: [
+                                        {
+                                            merchantId: 'XYZ12345',
+                                            email:       {
+                                                stringValue: 'xyz-us-b1@paypal.com'
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        };
+                    }
+                })
+            }).expectCalls();
+
             window.xprops.createOrder = mockAsyncProp(expect('createOrder', async () => {
                 return ZalgoPromise.try(() => {
                     return orderID;
                 });
             }));
 
-            window.xprops.onShippingAddressChange = mockAsyncProp(expect('onShippingAddressChange', async (data, actions) => {
-                const patchOrderMock = getRestfulPatchOrderApiMock({
-                    handler: expect('patchOrder', ({ headers }) => {
-                        if (headers.authorization !== `Bearer ${ facilitatorAccessToken }`) {
-                            throw new Error(`Expected call to come with correct facilitator access token`);
+            window.xprops.onShippingAddressChange = mockAsyncProp(expect('onShippingAddressChange', async (callbackData, actions) => {
+                const patchShippingMock = getGraphQLApiMock({
+                    extraHandler: expect('UpdateShippingCall', ({ data }) => {
+                        if (data.query.includes('UpdateShipping')) {
+                            return {
+                                id: orderID
+                            };
                         }
-
-                        return {
-                            id: orderID
-                        };
                     })
                 });
-                patchOrderMock.expectCalls();
+                patchShippingMock.expectCalls();
                 await actions.patch();
-                patchOrderMock.done();
+                patchShippingMock.done();
             }));
 
             mockFunction(window.paypal, 'Checkout', expect('Checkout', ({ original: CheckoutOriginal, args: [ props ] }) => {
@@ -152,7 +212,77 @@ describe('onShippingAddressChange', () => {
                 fundingEligibility:            DEFAULT_FUNDING_ELIGIBILITY,
                 personalization:               {},
                 buyerCountry:                  COUNTRY.US,
-                isCardFieldsExperimentEnabled: false
+            });
+
+            await clickButton(FUNDING.PAYPAL);
+            getCheckoutDetails.done();
+        });
+    });
+
+    it('should render a button, click the button, and render checkout, then pass onShippingAddressChange callback to the parent withour shippping methods in checkout session and have SDK patch for client-side integrations', async () => {
+        return await wrapPromise(async ({ expect, avoid }) => {
+
+            const orderID = uniqueID();
+            const accessToken = uniqueID();
+            const payerID = 'YYYYYYYYYY';
+            const facilitatorAccessToken = uniqueID();
+
+            window.xprops.createOrder = mockAsyncProp(expect('createOrder', async () => {
+                return ZalgoPromise.try(() => {
+                    return orderID;
+                });
+            }));
+
+            window.xprops.onShippingAddressChange = mockAsyncProp(expect('onShippingAddressChange', async (callbackData, actions) => {
+                const patchShippingMock = getGraphQLApiMock({
+                    extraHandler: expect('UpdateShippingCall', ({ data }) => {
+                        if (data.query.includes('UpdateShipping')) {
+                            return {
+                                id: orderID
+                            };
+                        }
+                    })
+                });
+                patchShippingMock.expectCalls();
+                await actions.patch();
+                patchShippingMock.done();
+            }));
+
+            mockFunction(window.paypal, 'Checkout', expect('Checkout', ({ original: CheckoutOriginal, args: [ props ] }) => {
+                props.onAuth({ accessToken });
+                mockFunction(props, 'onApprove', expect('onApprove', ({ original: onApproveOriginal, args: [ data, actions ] }) => {
+                    return onApproveOriginal({ ...data, payerID }, actions);
+                }));
+
+                const checkoutInstance = CheckoutOriginal(props);
+
+                mockFunction(checkoutInstance, 'renderTo', expect('renderTo', async ({ original: renderToOriginal, args }) => {
+                    return props.createOrder().then(id => {
+                        if (id !== orderID) {
+                            throw new Error(`Expected orderID to be ${ orderID }, got ${ id }`);
+                        }
+
+                        return renderToOriginal(...args).then(() => {
+                            return props.onShippingAddressChange({
+                                orderID,
+                                amount,
+                                shipping_address,
+                            }, { reject: avoid('reject') });
+                        });
+                    });
+                }));
+
+                return checkoutInstance;
+            }));
+
+            createButtonHTML();
+
+            await mockSetupButton({
+                facilitatorAccessToken,
+                merchantID:                    [ 'XYZ12345' ],
+                fundingEligibility:            DEFAULT_FUNDING_ELIGIBILITY,
+                personalization:               {},
+                buyerCountry:                  COUNTRY.US,
             });
 
             await clickButton(FUNDING.PAYPAL);
@@ -166,6 +296,68 @@ describe('onShippingAddressChange', () => {
             const accessToken = uniqueID();
             const payerID = 'YYYYYYYYYY';
             const facilitatorAccessToken = uniqueID();
+
+            const getCheckoutDetails = getGraphQLApiMock({
+                extraHandler: expect('upgradeLSATGQLCall', ({ data }) => {
+
+                    if (data.query.includes('query GetCheckoutDetails')) {
+                        return {
+                            data: {
+                                checkoutSession: {
+                                    cart: {
+                                        intent:  'capture',
+                                        amounts: {
+                                            total: {
+                                                currencyCode: 'USD'
+                                            }
+                                        },
+                                        shippingMethods: [
+                                            {
+                                                id: 'SHIP_1234',
+                                                label: 'Free Shipping',
+                                                type: 'SHIPPING',
+                                                selected: true,
+                                                amount: {
+                                                    value: '0.00',
+                                                    currency_code: 'USD'
+                                                }
+                                            },
+                                            {
+                                                id: 'SHIP_123',
+                                                label: 'Shipping',
+                                                type: 'SHIPPING',
+                                                selected: false,
+                                                amount: {
+                                                    value: '20.00',
+                                                    currency_code: 'USD'
+                                                }
+                                            },
+                                            {
+                                                id: 'SHIP_124',
+                                                label: 'Overnight',
+                                                type: 'SHIPPING',
+                                                selected: false,
+                                                amount: {
+                                                    value: '40.00',
+                                                    currency_code: 'USD'
+                                                }
+                                            }
+                                        ]
+                                    },
+                                    payees: [
+                                        {
+                                            merchantId: 'XYZ12345',
+                                            email:       {
+                                                stringValue: 'xyz-us-b1@paypal.com'
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        };
+                    }
+                })
+            }).expectCalls();
 
             window.xprops.createOrder = mockAsyncProp(expect('createOrder', async () => {
                 return ZalgoPromise.try(() => {
@@ -181,7 +373,7 @@ describe('onShippingAddressChange', () => {
                     .query();
                 const expectedQuery = `[{"op":"replace","path":"/purchase_units/@reference_id=='default'/amount","value":{"value":"181.00","currency_code":"USD","breakdown":{"item_total":{"currency_code":"USD","value":"180.00"},"shipping":{"currency_code":"USD","value":"0.00"},"handling":{"currency_code":"USD","value":"1.00"},"tax_total":{"currency_code":"USD","value":"20.00"},"discount":{"currency_code":"USD","value":"10.00"},"shipping_discount":{"currency_code":"USD","value":"10.00"}}}},{"op":"replace","path":"/purchase_units/@reference_id=='default'/shipping/options","value":[{"id":"SHIP_1234","label":"Free Shipping","type":"SHIPPING","selected":true,"amount":{"value":"0.00","currency_code":"USD"}},{"id":"SHIP_123","label":"Shipping","type":"SHIPPING","selected":false,"amount":{"value":"20.00","currency_code":"USD"}},{"id":"SHIP_124","label":"Overnight","type":"SHIPPING","selected":false,"amount":{"value":"40.00","currency_code":"USD"}}]}]`;
 
-                if (query !== expectedQuery) {
+                if (JSON.stringify(query) !== expectedQuery) {
                     throw new Error(`Expected query, ${ query }, to be, ${ expectedQuery }`);
                 }
             }));
@@ -221,10 +413,10 @@ describe('onShippingAddressChange', () => {
                 fundingEligibility:            DEFAULT_FUNDING_ELIGIBILITY,
                 personalization:               {},
                 buyerCountry:                  COUNTRY.US,
-                isCardFieldsExperimentEnabled: false
             });
 
             await clickButton(FUNDING.PAYPAL);
+            getCheckoutDetails.done();
         });
     });
 
@@ -250,7 +442,7 @@ describe('onShippingAddressChange', () => {
                     .query();
                 const expectedQuery = `[{"op":"replace","path":"/purchase_units/@reference_id=='default'/amount","value":{"value":"181.00","currency_code":"USD","breakdown":{"item_total":{"currency_code":"USD","value":"180.00"},"shipping":{"currency_code":"USD","value":"0.00"},"handling":{"currency_code":"USD","value":"1.00"},"tax_total":{"currency_code":"USD","value":"20.00"},"discount":{"currency_code":"USD","value":"10.00"},"shipping_discount":{"currency_code":"USD","value":"10.00"}}}},{"op":"replace","path":"/purchase_units/@reference_id=='default'/shipping/options","value":[{"id":"SHIP_1234","label":"Free Shipping","type":"SHIPPING","selected":true,"amount":{"value":"0.00","currency_code":"USD"}},{"id":"SHIP_123","label":"Shipping","type":"SHIPPING","selected":false,"amount":{"value":"20.00","currency_code":"USD"}},{"id":"SHIP_124","label":"Overnight","type":"SHIPPING","selected":false,"amount":{"value":"40.00","currency_code":"USD"}}]}]`;
 
-                if (query !== expectedQuery) {
+                if (JSON.stringify(query) !== expectedQuery) {
                     throw new Error(`Expected query, ${ query }, to be, ${ expectedQuery }`);
                 }
             }));
@@ -290,7 +482,6 @@ describe('onShippingAddressChange', () => {
                 fundingEligibility:            DEFAULT_FUNDING_ELIGIBILITY,
                 personalization:               {},
                 buyerCountry:                  COUNTRY.US,
-                isCardFieldsExperimentEnabled: false
             });
 
             await clickButton(FUNDING.PAYPAL);
@@ -311,18 +502,20 @@ describe('onShippingAddressChange', () => {
                 });
             }));
 
-            window.xprops.onShippingAddressChange = mockAsyncProp(expect('onShippingAddressChange', async (data, actions) => {
-                const patchOrderMock = getRestfulPatchOrderApiMock({
-                    handler: avoid('patchOrder', () => {
-                        throw new Error(`Expected error...`);
+            window.xprops.onShippingAddressChange = mockAsyncProp(expect('onShippingAddressChange', async (callbackData, actions) => {
+                const patchShippingMock = getGraphQLApiMock({
+                    extraHandler: avoid('UpdateShippingCall', ({ data }) => {
+                        if (data.query.includes('UpdateShipping')) {
+                            throw new Error(`Expected error...`);
+                        }
                     })
                 });
 
                 const query = await actions.query();
-                if (query !== '[]') {
-                    throw new Error(`Expected query to be an empty array but was, ${ query }`);
+                if (query && query.length > 0) {
+                    throw new Error(`Expected query to be an empty array but was, ${ JSON.stringify(query) }`);
                 }
-                patchOrderMock.done();
+                patchShippingMock.done();
             }));
 
             mockFunction(window.paypal, 'Checkout', expect('Checkout', ({ original: CheckoutOriginal, args: [ props ] }) => {
@@ -360,7 +553,6 @@ describe('onShippingAddressChange', () => {
                 fundingEligibility:            DEFAULT_FUNDING_ELIGIBILITY,
                 personalization:               {},
                 buyerCountry:                  COUNTRY.US,
-                isCardFieldsExperimentEnabled: false
             });
 
             await clickButton(FUNDING.PAYPAL);
@@ -426,7 +618,71 @@ describe('onShippingAddressChange', () => {
                 fundingEligibility:            DEFAULT_FUNDING_ELIGIBILITY,
                 personalization:               {},
                 buyerCountry:                  COUNTRY.US,
-                isCardFieldsExperimentEnabled: false
+            });
+
+            await clickButton(FUNDING.PAYPAL);
+        });
+    });
+
+    it('should return generic error message if merchant sends unapproved one', async () => {
+        return await wrapPromise(async ({ expect }) => {
+
+            const orderID = uniqueID();
+            const accessToken = uniqueID();
+            const payerID = 'YYYYYYYYYY';
+            const facilitatorAccessToken = uniqueID();
+
+            window.xprops.createOrder = mockAsyncProp(expect('createOrder', async () => {
+                return ZalgoPromise.try(() => {
+                    return orderID;
+                });
+            }));
+
+            window.xprops.onShippingAddressChange = mockAsyncProp(expect('onShippingAddressChange', async (data, actions) => {
+                actions.reject('This is crazy!');
+            }));
+
+            mockFunction(window.paypal, 'Checkout', expect('Checkout', ({ original: CheckoutOriginal, args: [ props ] }) => {
+                props.onAuth({ accessToken });
+                mockFunction(props, 'onApprove', expect('onApprove', ({ original: onApproveOriginal, args: [ data, actions ] }) => {
+                    return onApproveOriginal({ ...data, payerID }, actions);
+                }));
+
+                const checkoutInstance = CheckoutOriginal(props);
+
+                mockFunction(checkoutInstance, 'renderTo', expect('renderTo', async ({ original: renderToOriginal, args }) => {
+                    return props.createOrder().then(id => {
+                        if (id !== orderID) {
+                            throw new Error(`Expected orderID to be ${ orderID }, got ${ id }`);
+                        }
+
+                        return renderToOriginal(...args).then(() => {
+                            return props.onShippingAddressChange({
+                                orderID,
+                                amount,
+                                shipping_address
+                            }, { reject: expect('reject', (error) => {
+                                const expectedError = 'Unable to update address. Please try again.';
+
+                                if (error !== expectedError) {
+                                    throw new Error(`Expected error message to be, ${ expectedError }, but was ${ error }`);
+                                }
+                            }) });
+                        });
+                    });
+                }));
+
+                return checkoutInstance;
+            }));
+
+            createButtonHTML();
+
+            await mockSetupButton({
+                facilitatorAccessToken,
+                merchantID:                    [ 'XYZ12345' ],
+                fundingEligibility:            DEFAULT_FUNDING_ELIGIBILITY,
+                personalization:               {},
+                buyerCountry:                  COUNTRY.US,
             });
 
             await clickButton(FUNDING.PAYPAL);

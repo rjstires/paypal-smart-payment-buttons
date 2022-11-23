@@ -1,11 +1,12 @@
 /* @flow */
 
 import { ZalgoPromise } from '@krakenjs/zalgo-promise/src';
-import { COUNTRY, CURRENCY, FPTI_KEY } from '@paypal/sdk-constants/src';
+import { COUNTRY, FPTI_KEY } from '@paypal/sdk-constants/src';
 
 import { patchOrder, type OrderResponse } from '../api';
-import { FPTI_TRANSITION, FPTI_CONTEXT_TYPE, LSAT_UPGRADE_EXCLUDED_MERCHANTS, FPTI_CUSTOM_KEY } from '../constants';
+import { FPTI_TRANSITION, FPTI_CONTEXT_TYPE, FPTI_CUSTOM_KEY } from '../constants';
 import { getLogger } from '../lib';
+import type { OrderAmount, FeatureFlags } from '../types';
 
 import type { CreateOrder } from './createOrder';
 
@@ -29,6 +30,8 @@ export const SHIPPING_OPTIONS_ERROR_MESSAGES = {
     STORE_UNAVAILABLE:  `Part of your order isn't available at this store.`
 };
 
+export const GENERIC_REJECT_ADDRESS_MESSAGE = 'Unable to update address. Please try again.';
+
 export type ShippingOption = {|
     id? : string,
     label : string,
@@ -46,42 +49,6 @@ export type Query = {|
     value : mixed
 |};
 
-export type Breakdown = {|
-    item_total? : {|
-        currency_code : $Values<typeof CURRENCY>,
-        value : string
-    |},
-    shipping? : {|
-        currency_code : $Values<typeof CURRENCY>,
-        value : string
-    |},
-    handling? : {|
-        currency_code : $Values<typeof CURRENCY>,
-        value : string
-    |},
-    tax_total? : {|
-        currency_code : $Values<typeof CURRENCY>,
-        value : string
-    |},
-    insurance? : {|
-        currency_code : $Values<typeof CURRENCY>,
-        value : string
-    |},
-    shipping_discount? : {|
-        currency_code : $Values<typeof CURRENCY>,
-        value : string
-    |},
-    discount? : {|
-        currency_code : $Values<typeof CURRENCY>,
-        value : string
-    |}
-|};
-export type ShippingAmount = {|
-    breakdown? : Breakdown,
-    currency_code : $Values<typeof CURRENCY>,
-    value : string
-|};
-
 export type XOnShippingChangeDataType = {|
     orderID? : string,
     paymentID? : string,
@@ -95,7 +62,7 @@ export type XOnShippingChangeDataType = {|
     selected_shipping_option? : ShippingOption,
     buyerAccessToken? : ?string,
     forceRestAPI? : boolean,
-    amount? : ShippingAmount
+    amount? : OrderAmount
 |};
 
 export type XOnShippingChangeActionsType = {|
@@ -113,7 +80,7 @@ export function buildXOnShippingChangeData(data : XOnShippingChangeDataType) : X
 }
 
 export type OnShippingChangeData = {|
-    amount? : ShippingAmount,
+    amount? : OrderAmount,
     orderID? : string,
     paymentID? : string,
     paymentToken? : string,
@@ -158,19 +125,22 @@ export type OnShippingChange = (OnShippingChangeData, OnShippingChangeActionsTyp
 type OnShippingChangeXProps = {|
     onShippingChange : ?XOnShippingChange,
     partnerAttributionID : ?string,
-    clientID : string
+    featureFlags : FeatureFlags
 |};
 
-export function getOnShippingChange({ onShippingChange, partnerAttributionID, clientID } : OnShippingChangeXProps, { facilitatorAccessToken, createOrder } : {| facilitatorAccessToken : string, createOrder : CreateOrder |}) : ?OnShippingChange {
-    const upgradeLSAT = LSAT_UPGRADE_EXCLUDED_MERCHANTS.indexOf(clientID) === -1;
-
+export function getOnShippingChange({ onShippingChange, partnerAttributionID, featureFlags } : OnShippingChangeXProps, { facilitatorAccessToken, createOrder } : {| facilitatorAccessToken : string, createOrder : CreateOrder |}) : ?OnShippingChange {
     if (onShippingChange) {
-        return ({ buyerAccessToken, forceRestAPI = upgradeLSAT, ...data }, actions) => {
+        return ({
+            buyerAccessToken,
+            forceRestAPI = featureFlags.isLsatUpgradable,
+            ...data
+        }, actions) => {
             return createOrder().then(orderID => {
                 getLogger()
                     .info('button_shipping_change')
                     .track({
                         [FPTI_KEY.TRANSITION]:                       FPTI_TRANSITION.CHECKOUT_SHIPPING_CHANGE,
+                        [FPTI_KEY.EVENT_NAME]:                       FPTI_TRANSITION.CHECKOUT_SHIPPING_CHANGE,
                         [FPTI_KEY.CONTEXT_TYPE]:                     FPTI_CONTEXT_TYPE.ORDER_ID,
                         [FPTI_KEY.TOKEN]:                            orderID,
                         [FPTI_KEY.CONTEXT_ID]:                       orderID,

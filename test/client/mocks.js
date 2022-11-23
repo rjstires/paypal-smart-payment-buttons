@@ -13,6 +13,7 @@ import { ProxyWindow } from '@krakenjs/post-robot/src/serialize/window';
 import type { ZoidComponentInstance, MenuFlowProps } from '../../src/types';
 import { setupButton, setupCard, submitCardFields } from '../../src';
 import { loadFirebaseSDK, clearLsatState } from '../../src/api';
+import { type SetupButtonOptions } from '../../src/button/button';
 
 import { triggerKeyPress } from './util';
 
@@ -33,7 +34,7 @@ export function promiseNoop() : ZalgoPromise<void> {
 
 export function mockAsyncProp(handler? : Function = noop, time? : number = 1) : Function {
     const currentPromise = new ZalgoPromise();
-    
+
     const asyncHandler = (...args) => {
         return ZalgoPromise.delay(time).then(() => handler(...args)).then((res) => {
             ZalgoPromise.delay(time).then(() => currentPromise.resolve(res)).catch(noop);
@@ -43,7 +44,7 @@ export function mockAsyncProp(handler? : Function = noop, time? : number = 1) : 
             throw err;
         });
     };
-    
+
     asyncHandler.await = () => currentPromise;
 
     return asyncHandler;
@@ -272,7 +273,26 @@ export function setupMocks() {
                     };
                 },
                 submit: () => {
-                    return submitCardFields({ facilitatorAccessToken: 'ABCDEF12345' });
+                    return submitCardFields({ facilitatorAccessToken: 'ABCDEF12345', featureFlags: {} });
+                }
+            };
+        },
+        PaymentFields: (props) => {
+            return {
+                render: () => {
+                    return ZalgoPromise.delay(50).then(() => {
+                        return props.onContinue();
+                    });
+                },
+                close: () => {
+                    return ZalgoPromise.delay(50).then(() => {
+                        if (props.onClose) {
+                            return props.onClose();
+                        }
+                    });
+                },
+                onError: (err) => {
+                    throw err;
                 }
             };
         },
@@ -319,6 +339,7 @@ export function setupMocks() {
         onApprove:  mockAsyncProp(noop),
         onCancel:   mockAsyncProp(noop),
         onChange:   mockAsyncProp(noop),
+        onContinue: mockAsyncProp(noop),
         export:     mockAsyncProp(noop),
         onError:    mockAsyncProp((err) => {
             throw err;
@@ -362,6 +383,11 @@ export function setupMocks() {
     singleCardFieldContainer.id = 'card-fields-container';
     destroyElement(singleCardFieldContainer);
     body.appendChild(singleCardFieldContainer);
+
+    const paymentFieldsContainer = document.querySelector('#payment-fields-container') || document.createElement('div');
+    paymentFieldsContainer.id = 'payment-fields-container';
+    destroyElement(paymentFieldsContainer);
+    body.appendChild(paymentFieldsContainer);
 }
 
 setupMocks();
@@ -424,7 +450,8 @@ export function mockMenu() : ZoidComponentInstance<MenuFlowProps> {
 
 export const DEFAULT_FUNDING_ELIGIBILITY : FundingEligibilityType = {
     [ FUNDING.PAYPAL ]: {
-        eligible: true
+        eligible: true,
+        branded: true
     }
 };
 
@@ -489,7 +516,7 @@ export function createCardFieldsContainerHTML(type : string = 'single') : mixed 
     if (!body) {
         throw new Error('No document.body found');
     }
-    
+
     body.innerHTML += fields.join('\n');
 
     return document.querySelector(`#card-fields-${ type }-container`);
@@ -638,6 +665,20 @@ export function getRestfulPatchOrderApiMock(options : Object = {}) : MockEndpoin
     return $mockEndpoint.register({
         method: 'PATCH',
         uri:    new RegExp('/v2/checkout/orders/[^/]+'),
+        data:   {
+            ack:  'success',
+            data: {
+
+            }
+        },
+        ...options
+    });
+}
+
+export function getRestfulAuthorizationsCaptureApiMock(options : Object = {}) : MockEndpoint {
+    return $mockEndpoint.register({
+        method: 'POST',
+        uri:    new RegExp('/v2/payments/authorizations/[^/]+/capture'),
         data:   {
             ack:  'success',
             data: {
@@ -896,7 +937,7 @@ getRestfulGetOrderApiMock().listen();
 getRestfulCaptureOrderApiMock().listen();
 getRestfulAuthorizeOrderApiMock().listen();
 getRestfulPatchOrderApiMock().listen();
-
+getRestfulAuthorizationsCaptureApiMock().listen();
 
 navigator.sendBeacon = () => true;
 
@@ -1488,7 +1529,7 @@ export function getNativeFirebaseMock({ sessionUID, extraHandler } : {| sessionU
             message_type:       'request',
             message_name:       'onCancel',
             message_data:       {
-                
+
             }
         }));
     };
@@ -1573,33 +1614,41 @@ export function getNativeFirebaseMock({ sessionUID, extraHandler } : {| sessionU
 
 export const MOCK_SDK_META = 'abc123';
 
-export async function mockSetupButton(overrides? : Object = {}) : Promise<void> {
+export async function mockSetupButton(options : $Shape<SetupButtonOptions> = {}) : Promise<void> {
     await setupButton({
         facilitatorAccessToken:        'QQQ123000',
         merchantID:                    [ 'XYZ12345' ],
         fundingEligibility:            DEFAULT_FUNDING_ELIGIBILITY,
         personalization:               {},
         buyerCountry:                  COUNTRY.US,
-        isCardFieldsExperimentEnabled: false,
         firebaseConfig:                MOCK_FIREBASE_CONFIG,
         eligibility:                   {
             cardFields: false,
-            native:     false
+            native:     false,
+            inlinePaymentFields: {
+                inlineEligibleAPMs : [],
+                isInlineEnabled : false
+            }
         },
         sdkMeta: MOCK_SDK_META,
-        ...overrides
+        featureFlags: {
+            isLsatUpgradable: true,
+            shouldThrowIntegrationError: true
+        },
+        ...options
     });
 }
 
 export async function mockSetupCardFields() : Promise<void> {
     await setupCard({
         cspNonce:               '111222333',
-        facilitatorAccessToken: 'ABCDEF12345'
+        facilitatorAccessToken: 'ABCDEF12345',
+        featureFlags: {}
     });
 }
 
 export function setCardFieldsValues({ number, expiry, cvv, name } : {| number? : string, expiry? : string, cvv? : string, name? : string |}) : mixed {
-    
+
     const numberInput = number ? document.getElementsByName('number')[0] : null;
     const expiryInput = expiry ? document.getElementsByName('expiry')[0] : null;
     const cvvInput = cvv ? document.getElementsByName('cvv')[0] : null;
@@ -1801,7 +1850,7 @@ export function getMockWindowOpen({ expectedUrl, times = 1, appSwitch = false, e
 
     let win : ?CrossDomainWindowType;
     let winOpts : ?{| [string] : string |};
-    
+
 
     const _onLoad = (url) => {
         if (!win) {
@@ -1949,7 +1998,7 @@ export function getMockWindowOpen({ expectedUrl, times = 1, appSwitch = false, e
         }
 
         win.location = url;
-        
+
         return ZalgoPromise.delay(10);
     };
 

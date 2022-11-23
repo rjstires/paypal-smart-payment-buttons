@@ -5,7 +5,7 @@ import { stringifyError } from '@krakenjs/belter/src';
 
 import { upgradeFacilitatorAccessToken } from '../api';
 import { getLogger } from '../lib';
-import { LSAT_UPGRADE_EXCLUDED_MERCHANTS } from '../constants';
+import type { FeatureFlags } from '../types';
 
 import type { CreateOrder } from './createOrder';
 import type { CreateSubscription } from './createSubscription';
@@ -20,18 +20,16 @@ type GetOnAuthOptions = {|
     facilitatorAccessToken : string,
     createOrder : CreateOrder,
     createSubscription : ?CreateSubscription,
-    clientID : string
+    featureFlags: FeatureFlags
 |};
 
-export function getOnAuth({ facilitatorAccessToken, createOrder, createSubscription, clientID } : GetOnAuthOptions) : OnAuth {
-    const upgradeLSAT = LSAT_UPGRADE_EXCLUDED_MERCHANTS.indexOf(clientID) === -1;
-
+export function getOnAuth({ facilitatorAccessToken, createOrder, createSubscription, featureFlags } : GetOnAuthOptions) : OnAuth {
     return ({ accessToken } : XOnAuthDataType) => {
         getLogger().info(`spb_onauth_access_token_${ accessToken ? 'present' : 'not_present' }`);
 
         return ZalgoPromise.try(() => {
             if (accessToken) {
-                if (upgradeLSAT) {
+                if (featureFlags.isLsatUpgradable) {
                     return createOrder()
                         .then(orderID => {
                             if (createSubscription) {
@@ -49,6 +47,7 @@ export function getOnAuth({ facilitatorAccessToken, createOrder, createSubscript
                             return accessToken;
                         });
                 }
+
                 return accessToken;
             }
         });

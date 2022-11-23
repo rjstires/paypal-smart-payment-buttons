@@ -8,6 +8,7 @@ import { uniqueID } from '@krakenjs/belter/src';
 import { FRAME_NAME } from '../constants';
 import { tokenizeCard, approveCardPayment } from '../api';
 import { getLogger } from '../lib';
+import type {FeatureFlags} from '../types'
 
 import { getCardProps } from './props';
 import type { Card, ExtraFields } from './types';
@@ -144,6 +145,7 @@ export function resetGQLErrors() : void {
 
 type SubmitCardFieldsOptions = {|
     facilitatorAccessToken : string,
+    featureFlags: FeatureFlags,
     extraFields? : {|
         billingAddress? : string
     |}
@@ -158,8 +160,8 @@ type CardValues = {|
     ...ExtraFields
 |};
 
-export function submitCardFields({ facilitatorAccessToken, extraFields } : SubmitCardFieldsOptions) : ZalgoPromise<void> {
-    const { intent, branded, vault, createOrder, onApprove, clientID } = getCardProps({ facilitatorAccessToken });
+export function submitCardFields({ facilitatorAccessToken, extraFields, featureFlags } : SubmitCardFieldsOptions) : ZalgoPromise<void> {
+    const { intent, branded, vault, createOrder, onApprove, clientID } = getCardProps({ facilitatorAccessToken, featureFlags });
 
     resetGQLErrors();
 

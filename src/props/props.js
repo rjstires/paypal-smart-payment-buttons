@@ -5,7 +5,7 @@ import { ENV, INTENT, COUNTRY, FUNDING, CARD, PLATFORM, CURRENCY } from '@paypal
 import { EXPERIENCE } from '@paypal/checkout-components/src/constants/button';
 import { ZalgoPromise } from '@krakenjs/zalgo-promise/src';
 
-import type { LocaleType, ProxyWindow, Wallet, ConnectOptions } from '../types';
+import type { LocaleType, ProxyWindow, Wallet, ConnectOptions, FeatureFlags } from '../types';
 import type { XApplePaySessionConfigRequest } from '../payment-flows/types';
 import { getStorageID, isStorageStateFresh } from '../lib';
 
@@ -27,7 +27,7 @@ import type { CreateOrder, XCreateOrder, CreateBillingAgreement, XCreateBillingA
     XOnInit, OnApprove, XOnApprove, OnComplete, XOnComplete, OnCancel, XOnCancel, OnClick, XOnClick,
     OnShippingChange, XOnShippingChange, OnShippingAddressChange, XOnShippingAddressChange,
     OnShippingOptionsChange, XOnShippingOptionsChange, XOnError,
-    OnError, XGetPopupBridge, GetPopupBridge, XCreateSubscription, RememberFunding, GetPageURL, OnAuth, GetQueriedEligibleFunding
+    OnError, XGetPopupBridge, GetPopupBridge, XCreateSubscription, RememberFunding, GetPageURL, OnAuth, GetQueriedEligibleFunding, PaymentRequest
 } from '.';
 
 // export something to force webpack to see this as an ES module
@@ -106,7 +106,8 @@ export type XProps = {|
     userExperienceFlow : string,
     allowBillingPayments : boolean,
 
-    applePay : XApplePaySessionConfigRequest
+    applePay : XApplePaySessionConfigRequest,
+    paymentRequest: ?PaymentRequest
 |};
 
 export type Props = {|
@@ -180,10 +181,23 @@ export type Props = {|
 
     branded : boolean | null,
     userExperienceFlow : string,
-    allowBillingPayments : boolean
+    allowBillingPayments : boolean,
+
+    paymentRequest: ?PaymentRequest,
+    merchantID : $ReadOnlyArray<string>
 |};
 
-export function getProps({ facilitatorAccessToken, branded, paymentSource } : {| facilitatorAccessToken : string, branded : boolean | null, paymentSource : $Values<typeof FUNDING> | null |}) : Props {
+export function getProps({
+    facilitatorAccessToken,
+    branded,
+    paymentSource,
+    featureFlags
+} : {|
+    facilitatorAccessToken : string,
+    branded : boolean | null,
+    paymentSource : $Values<typeof FUNDING> | null,
+    featureFlags: FeatureFlags
+|}) : Props {
     const xprops : XProps = window.xprops;
 
     let {
@@ -230,7 +244,8 @@ export function getProps({ facilitatorAccessToken, branded, paymentSource } : {|
         storageID,
         applePay,
         userExperienceFlow,
-        allowBillingPayments
+        allowBillingPayments,
+        paymentRequest
     } = xprops;
 
     const onInit = getOnInit({ onInit: xprops.onInit });
@@ -251,13 +266,13 @@ export function getProps({ facilitatorAccessToken, branded, paymentSource } : {|
     const createOrder = getCreateOrder({ createOrder: xprops.createOrder, currency, intent, merchantID, partnerAttributionID, paymentSource }, { facilitatorAccessToken, createBillingAgreement, createSubscription });
 
     const onError = getOnError({ onError: xprops.onError });
-    const onApprove = getOnApprove({ onApprove: xprops.onApprove, createBillingAgreement, createSubscription, intent, onError, partnerAttributionID, clientAccessToken, vault, clientID, facilitatorAccessToken, branded, createOrder, paymentSource });
-    const onComplete = getOnComplete({ intent, onComplete: xprops.onComplete, partnerAttributionID, onError, clientID, facilitatorAccessToken, createOrder });
+    const onApprove = getOnApprove({ onApprove: xprops.onApprove, createBillingAgreement, createSubscription, intent, onError, partnerAttributionID, clientAccessToken, vault, clientID, facilitatorAccessToken, branded, createOrder, paymentSource, featureFlags });
+    const onComplete = getOnComplete({ intent, onComplete: xprops.onComplete, partnerAttributionID, onError, clientID, facilitatorAccessToken, createOrder, featureFlags });
     const onCancel = getOnCancel({ onCancel: xprops.onCancel, onError }, { createOrder });
-    const onShippingChange = getOnShippingChange({ onShippingChange: xprops.onShippingChange, partnerAttributionID, clientID }, { facilitatorAccessToken, createOrder });
-    const onShippingAddressChange = getOnShippingAddressChange({ onShippingAddressChange: xprops.onShippingAddressChange, partnerAttributionID, clientID }, { facilitatorAccessToken, createOrder });
-    const onShippingOptionsChange = getOnShippingOptionsChange({ onShippingOptionsChange: xprops.onShippingOptionsChange, partnerAttributionID, clientID }, { facilitatorAccessToken, createOrder });
-    const onAuth = getOnAuth({ facilitatorAccessToken, createOrder, createSubscription, clientID });
+    const onShippingChange = getOnShippingChange({ onShippingChange: xprops.onShippingChange, partnerAttributionID, featureFlags  }, { facilitatorAccessToken, createOrder });
+    const onShippingAddressChange = getOnShippingAddressChange({ onShippingAddressChange: xprops.onShippingAddressChange, clientID }, { createOrder });
+    const onShippingOptionsChange = getOnShippingOptionsChange({ onShippingOptionsChange: xprops.onShippingOptionsChange, clientID }, { createOrder });
+    const onAuth = getOnAuth({ facilitatorAccessToken, createOrder, createSubscription, featureFlags });
 
     return {
         uid,
@@ -325,6 +340,9 @@ export function getProps({ facilitatorAccessToken, branded, paymentSource } : {|
         stickinessID,
         applePay,
         userExperienceFlow,
-        allowBillingPayments
+        allowBillingPayments,
+
+        paymentRequest,
+        merchantID
     };
 }

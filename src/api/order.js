@@ -121,7 +121,8 @@ export function getOrder(orderID : string, { facilitatorAccessToken, buyerAccess
 
 export function isProcessorDeclineError(err : mixed) : boolean {
     // $FlowFixMe
-    return Boolean(err?.response?.body?.data?.details?.some(detail => {
+    const details = err?.response?.body?.data?.details ? err?.response?.body?.data?.details : err?.response?.body?.details;
+    return Boolean(details?.some(detail => {
         return detail.issue === ORDER_API_ERROR.INSTRUMENT_DECLINED || detail.issue === ORDER_API_ERROR.PAYER_ACTION_REQUIRED;
     }));
 }
@@ -301,6 +302,31 @@ export function patchOrder(orderID : string, data : PatchData, { facilitatorAcce
         return patchData;
     });
 }
+
+export function patchShipping({ clientID, orderID, data } : {|clientID : string, orderID : string, data : PatchData |}) : ZalgoPromise<OrderResponse> {
+    return callGraphQL({
+        name:  'UpdateShipping',
+        query: `
+            mutation UpdateShipping(
+                $clientID: String!
+                $patch: [JSON]!
+                $token: String!
+            ) {
+                updateShipping(
+                    clientID: $clientID,
+                    patch: $patch,
+                    token: $token,
+                )
+            }
+        `,
+        variables: {
+            clientID,
+            patch: data,
+            token: orderID
+        }
+    });
+}
+
 type ConfirmPaymentSource = {|
     [$Values<typeof FUNDING>] : {|
         country_code? : string | null,
@@ -673,6 +699,71 @@ export const getSupplementalOrderInfo : GetSupplementalOrderInfo = memoize(order
     return callGraphQL({
         name:  'GetCheckoutDetails',
         query: `
+        query GetCheckoutDetails($orderID: String!) {
+            checkoutSession(token: $orderID) {
+                cart {
+                    billingType
+                    intent
+                    paymentId
+                    billingToken
+                    amounts {
+                        total {
+                            currencyValue
+                            currencyCode
+                            currencyFormatSymbolISOCurrency
+                        }
+                    }
+                    supplementary {
+                        initiationIntent
+                    }
+                    category
+                }
+                flags {
+                    isChangeShippingAddressAllowed
+                }
+                payees {
+                    merchantId
+                    email {
+                        stringValue
+                    }
+                }
+            }
+        }
+        `,
+        variables: { orderID },
+        headers:   {
+            [HEADERS.CLIENT_CONTEXT]: orderID
+        }
+    });
+});
+type ShippingOrderInfo = {|
+    checkoutSession : {|
+        cart : {|
+            amounts : {|
+                total : {|
+                    currencyFormatSymbolISOCurrency : string,
+                    currencyValue : string,
+                    currencyCode : string
+                |}
+            |},
+            shippingAddress? : ShippingAddress,
+            shippingMethods? : $ReadOnlyArray<ShippingMethod>
+        |},
+        buyer? : {|
+            userId? : string
+        |},
+        flags : {|
+            isChangeShippingAddressAllowed? : boolean
+        |}
+    |}
+|};
+
+export type GetShippingOrderInfo = (string) => ZalgoPromise<ShippingOrderInfo>;
+
+export const getShippingOrderInfo : GetShippingOrderInfo = orderID => {
+    return callGraphQL({
+        name:  'GetCheckoutDetails',
+        query: `
             query GetCheckoutDetails($orderID: String!) {
                 checkoutSession(token: $orderID) {
                     cart {
@@ -691,6 +782,26 @@ export const getSupplementalOrderInfo : GetSupplementalOrderInfo = memoize(order
                             initiationIntent
                         }
                         category
+                        shippingAddress {
+                            firstName
+                            lastName
+                            line1
+                            line2
+                            city
+                            state
+                            postalCode
+                            country
+                        }
+                        shippingMethods {
+                            id
+                            amount {
+                                currencyCode
+                                currencyValue
+                            }
+                            label
+                            selected
+                            type
+                        }
                     }
                     flags {
                         isChangeShippingAddressAllowed
@@ -709,7 +820,7 @@ export const getSupplementalOrderInfo : GetSupplementalOrderInfo = memoize(order
             [HEADERS.CLIENT_CONTEXT]: orderID
         }
     });
-});
+};
 
 export type DetailedOrderInfo = {|
     checkoutSession : {|
@@ -830,17 +941,18 @@ type UpdateButtonClientConfigOptions = {|
     fundingSource : $Values<typeof FUNDING>,
     inline : boolean | void,
     userExperienceFlow? : string,
-    buttonSessionID? : ?string
+    buttonSessionID? : ?string,
+    productFlow? : string
 |};
 
-export function updateButtonClientConfig({ orderID, fundingSource, inline = false, userExperienceFlow, buttonSessionID } : UpdateButtonClientConfigOptions) : ZalgoPromise<void> {
+export function updateButtonClientConfig({ orderID, productFlow, fundingSource, inline = false, userExperienceFlow, buttonSessionID } : UpdateButtonClientConfigOptions) : ZalgoPromise<void> {
     const experienceFlow = inline ? USER_EXPERIENCE_FLOW.INLINE : USER_EXPERIENCE_FLOW.INCONTEXT;
     return updateClientConfig({
         orderID,
         fundingSource,
         integrationArtifact: INTEGRATION_ARTIFACT.PAYPAL_JS_SDK,
         userExperienceFlow:  userExperienceFlow ? userExperienceFlow : experienceFlow,
-        productFlow:         PRODUCT_FLOW.SMART_PAYMENT_BUTTONS,
+        productFlow:         productFlow || PRODUCT_FLOW.SMART_PAYMENT_BUTTONS,
         buttonSessionID
     });
 }

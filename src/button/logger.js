@@ -1,6 +1,7 @@
 /* @flow */
 
 import { isIEIntranet, getPageRenderTime, querySelectorAll } from '@krakenjs/belter/src';
+import { EXPERIENCE } from '@paypal/checkout-components/src/constants/button';
 import { FPTI_KEY, ENV, FUNDING, FPTI_USER_ACTION, COUNTRY } from '@paypal/sdk-constants/src';
 import { ZalgoPromise } from '@krakenjs/zalgo-promise/src';
 
@@ -55,11 +56,12 @@ type ButtonLoggerOptions = {|
     getQueriedEligibleFunding : GetQueriedEligibleFunding,
     stickinessID : string,
     buyerCountry : $Values<typeof COUNTRY>,
-    onShippingChange : ?OnShippingChange
+    onShippingChange : ?OnShippingChange,
+    experience? : string
 |};
 
 export function setupButtonLogger({ env, sessionID, buttonSessionID, clientID, partnerAttributionID, commit, sdkCorrelationID, buttonCorrelationID, locale,
-    merchantID, merchantDomain, sdkVersion, style, fundingSource, getQueriedEligibleFunding, stickinessID, buyerCountry, onShippingChange } : ButtonLoggerOptions) : ZalgoPromise<void> {
+    merchantID, merchantDomain, sdkVersion, style, fundingSource, getQueriedEligibleFunding, stickinessID, buyerCountry, onShippingChange, experience } : ButtonLoggerOptions) : ZalgoPromise<void> {
 
     const logger = getLogger();
 
@@ -86,9 +88,8 @@ export function setupButtonLogger({ env, sessionID, buttonSessionID, clientID, p
             [FPTI_KEY.USER_ACTION]:                  commit ? FPTI_USER_ACTION.COMMIT : FPTI_USER_ACTION.CONTINUE,
             [FPTI_KEY.SELLER_ID]:                    merchantID[0],
             [FPTI_KEY.MERCHANT_DOMAIN]:              merchantDomain,
-            [FPTI_KEY.TIMESTAMP]:                    Date.now().toString(),
-            [AMPLITUDE_KEY.TIME]:                    Date.now().toString(),
-            [AMPLITUDE_KEY.USER_ID]:                 buttonSessionID
+            [FPTI_CUSTOM_KEY.EXPERIENCE]:            experience === EXPERIENCE.INLINE ? 'accelerated' : 'default',
+            [FPTI_KEY.TIMESTAMP]:                    Date.now().toString()
         };
     });
 
@@ -160,6 +161,7 @@ export function setupButtonLogger({ env, sessionID, buttonSessionID, clientID, p
         logger.track({
             [FPTI_KEY.STATE]:                           FPTI_STATE.BUTTON,
             [FPTI_KEY.TRANSITION]:                      FPTI_TRANSITION.BUTTON_LOAD,
+            [FPTI_KEY.EVENT_NAME]:                      FPTI_TRANSITION.BUTTON_LOAD,
             [FPTI_KEY.FUNDING_LIST]:                    fundingSources.join(':'),
             [FPTI_KEY.FI_LIST]:                         walletInstruments.join(':'),
             [FPTI_KEY.SELECTED_FI]:                     fundingSource,

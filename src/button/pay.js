@@ -1,11 +1,10 @@
 /* @flow */
 
 import { noop, stringifyError, isCrossSiteTrackingEnabled } from '@krakenjs/belter/src';
-import { EXPERIENCE } from '@paypal/checkout-components/src/constants/button';
 import { ZalgoPromise } from '@krakenjs/zalgo-promise/src';
 import { FPTI_KEY } from '@paypal/sdk-constants/src';
 
-import { applepay, checkout, cardField, cardForm, native, vaultCapture, walletCapture, popupBridge, type Payment, type PaymentFlow } from '../payment-flows';
+import { applepay, checkout, cardField, cardForm, paymentFields, native, vaultCapture, walletCapture, popupBridge, type Payment, type PaymentFlow } from '../payment-flows';
 import { getLogger, sendBeacon } from '../lib';
 import { AMPLITUDE_KEY, FPTI_TRANSITION, BUYER_INTENT, FPTI_CONTEXT_TYPE, FPTI_CUSTOM_KEY } from '../constants';
 import { updateButtonClientConfig } from '../api';
@@ -22,6 +21,7 @@ const PAYMENT_FLOWS : $ReadOnlyArray<PaymentFlow> = [
     walletCapture,
     cardField,
     cardForm,
+    paymentFields,
     popupBridge,
     applepay,
     native,
@@ -74,7 +74,7 @@ export function initiatePaymentFlow({ payment, serviceData, config, components, 
     return ZalgoPromise.try(() => {
         const { merchantID, personalization, fundingEligibility, buyerCountry } = serviceData;
         const { clientID, onClick, createOrder, env, vault, partnerAttributionID, userExperienceFlow, buttonSessionID, intent, currency,
-            clientAccessToken, createBillingAgreement, createSubscription, commit, disableFunding, disableCard, userIDToken, enableNativeCheckout, experience } = props;
+            clientAccessToken, createBillingAgreement, createSubscription, commit, disableFunding, disableCard, userIDToken, enableNativeCheckout, inlinexo } = props;
         
         sendPersonalizationBeacons(personalization);
 
@@ -99,16 +99,17 @@ export function initiatePaymentFlow({ payment, serviceData, config, components, 
                     [FPTI_KEY.CONTEXT_ID]:         buttonSessionID,
                     [FPTI_KEY.BUTTON_SESSION_UID]: buttonSessionID,
                     [AMPLITUDE_KEY.USER_ID]:       buttonSessionID,
+                    [AMPLITUDE_KEY.TIME]:          Date.now().toString(),
                     [FPTI_KEY.TOKEN]:              null
                 };
             })
             .track({
                 [FPTI_KEY.TRANSITION]:        FPTI_TRANSITION.BUTTON_CLICK,
+                [FPTI_KEY.EVENT_NAME]:        FPTI_TRANSITION.BUTTON_CLICK,
                 [FPTI_KEY.CHOSEN_FI_TYPE]:    instrumentType,
                 [FPTI_KEY.PAYMENT_FLOW]:      name,
                 [FPTI_KEY.IS_VAULT]:          instrumentType ? '1' : '0',
-                [FPTI_CUSTOM_KEY.INFO_MSG]:   enableNativeCheckout ? 'tester' : '',
-                [FPTI_CUSTOM_KEY.EXPERIENCE]: experience === EXPERIENCE.INLINE ? 'inline' : 'default'
+                [FPTI_CUSTOM_KEY.INFO_MSG]:   enableNativeCheckout ? 'tester' : ''
             });
 
             getLogger()
@@ -146,13 +147,12 @@ export function initiatePaymentFlow({ payment, serviceData, config, components, 
             }
 
             const updateClientConfigPromise = createOrder().then(orderID => {
-                const experienceFlow = experience === EXPERIENCE.INLINE ? 'ACCELERATED' : userExperienceFlow;
                 if (updateFlowClientConfig) {
-                    return updateFlowClientConfig({ orderID, payment, userExperienceFlow: experienceFlow, buttonSessionID });
+                    return updateFlowClientConfig({ orderID, payment, userExperienceFlow, buttonSessionID, inlinexo });
                 }
 
                 // Do not block by default
-                updateButtonClientConfig({ orderID, fundingSource, inline, userExperienceFlow: experienceFlow }).catch(err => {
+                updateButtonClientConfig({ orderID, fundingSource, inline, userExperienceFlow }).catch(err => {
                     getLogger().error('update_client_config_error', { err: stringifyError(err) });
                 });
             }).catch(noop);
@@ -171,7 +171,15 @@ export function initiatePaymentFlow({ payment, serviceData, config, components, 
             });
 
             const validateOrderPromise = createOrder().then(orderID => {
-                return validateOrder(orderID, { env, clientID, merchantID, intent, currency, vault, buttonLabel });
+                return validateOrder(orderID, {
+                    env,
+                    merchantID,
+                    intent,
+                    currency,
+                    vault,
+                    buttonLabel,
+                    featureFlags: serviceData.featureFlags
+                });
             });
              
             const confirmOrderPromise = createOrder().then((orderID) => {

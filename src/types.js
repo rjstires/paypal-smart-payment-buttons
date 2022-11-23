@@ -2,16 +2,25 @@
 
 import type { CrossDomainWindowType } from '@krakenjs/cross-domain-utils/src';
 import type { ZalgoPromise } from '@krakenjs/zalgo-promise/src';
-import { COUNTRY, LANG, CARD, WALLET_INSTRUMENT, FUNDING } from '@paypal/sdk-constants/src';
+import { COUNTRY, LANG, CARD, CURRENCY, WALLET_INSTRUMENT, FUNDING } from '@paypal/sdk-constants/src';
 import type { ProxyWindow as _ProxyWindow } from '@krakenjs/post-robot/src';
 
 import { CONTEXT, QRCODE_STATE } from './constants';
 import type { OnShippingChangeData } from './props/onShippingChange';
 import type { OnShippingAddressChangeData } from './props/onShippingAddressChange';
 import type { OnShippingOptionsChangeData } from './props/onShippingOptionsChange';
+import type { ConfirmData } from './api/order';
 
 // export something to force webpack to see this as an ES module
 export const TYPES = true;
+
+// This type is shared with smartcomponentnodeweb
+// When we move to typescript we should figure out
+// how to share this type between the two code bases
+export type FeatureFlags = $Shape<{|
+    isLsatUpgradable: boolean;
+    shouldThrowIntegrationError: boolean
+|}>
 
 export type ProxyWindow = _ProxyWindow;
 
@@ -46,7 +55,7 @@ export type CheckoutProps = {|
     createAuthCode? : () => ZalgoPromise<?string>,
     getConnectURL? : ?({| payerID : string |}) => ZalgoPromise<string>,
     createOrder : () => ZalgoPromise<string>,
-    onApprove : ({| payerID : string, paymentID : ?string, billingToken : ?string, subscriptionID : ?string, authCode : ?string |}) => ZalgoPromise<void> | void,
+    onApprove : ({| accelerated? : boolean, payerID : string, paymentID : ?string, billingToken : ?string, subscriptionID : ?string, authCode : ?string |}) => ZalgoPromise<void> | void,
     onComplete : () => ZalgoPromise<void> | void,
     onAuth : ({| accessToken : string |}) => ZalgoPromise<void> | void,
     onCancel : () => ZalgoPromise<void> | void,
@@ -72,7 +81,8 @@ export type CheckoutProps = {|
         width : number,
         height : number
     |},
-    inlinexo : boolean | void
+    inlinexo : boolean | void,
+    smokeHash : string
 |};
 
 export type CheckoutFlowType = ZoidComponent<CheckoutProps>;
@@ -162,12 +172,38 @@ export type PostRobot = {|
 
 |};
 
+export type InlinePaymentFieldsEligibility = {|
+    inlineEligibleAPMs : $ReadOnlyArray<string>,
+    isInlineEnabled : boolean
+|}
+
+export type PaymentFieldsProps = {|
+    window? : ?(ProxyWindow | CrossDomainWindowType),
+    sessionID : string,
+    buttonSessionID : string,
+    fundingSource : FundingType,
+    onClose : () => void,
+    onError : () => ZalgoPromise<void>,
+    onContinue : (data : ConfirmData, orderID : string) => ZalgoPromise<void>,
+    createOrder : () => ZalgoPromise<string>,
+    onFieldsClose : () => ZalgoPromise<void>,
+    showActionButtons : boolean,
+    sdkMeta : string,
+    buyerCountry : $Values<typeof COUNTRY>,
+    locale : LocaleType,
+    commit : boolean,
+    cspNonce : ?string
+|};
+
+export type PaymentFieldsFlowType = ZoidComponent<PaymentFieldsProps>;
+
 export type PayPal = {|
     version : string,
     Checkout : CheckoutFlowType,
     CardForm : CardFormFlowType,
     ThreeDomainSecure : ThreeDomainSecureFlowType,
     Menu : MenuFlowType,
+    PaymentFields : PaymentFieldsFlowType,
     postRobot : PostRobot
 |};
 
@@ -187,12 +223,12 @@ export type WalletPaymentType = {|
     instruments : $ReadOnlyArray<WalletInstrument>
 |};
 
-export type Wallet = {|
+export type Wallet = $Shape<{|
     paypal : WalletPaymentType,
     card : WalletPaymentType,
     credit : WalletPaymentType,
     venmo : WalletPaymentType
-|};
+|}>;
 
 export type ConnectOptions = {|
     scopes : $ReadOnlyArray<string>
@@ -226,4 +262,41 @@ export type PersonalizationType = {|
             click : string
         |}
     |}
+|};
+
+export type Breakdown = {|
+    item_total? : {|
+        currency_code : $Values<typeof CURRENCY>,
+        value : string
+    |},
+    shipping? : {|
+        currency_code : $Values<typeof CURRENCY>,
+        value : string
+    |},
+    handling? : {|
+        currency_code : $Values<typeof CURRENCY>,
+        value : string
+    |},
+    tax_total? : {|
+        currency_code : $Values<typeof CURRENCY>,
+        value : string
+    |},
+    insurance? : {|
+        currency_code : $Values<typeof CURRENCY>,
+        value : string
+    |},
+    shipping_discount? : {|
+        currency_code : $Values<typeof CURRENCY>,
+        value : string
+    |},
+    discount? : {|
+        currency_code : $Values<typeof CURRENCY>,
+        value : string
+    |}
+|};
+
+export type OrderAmount = {|
+    breakdown? : Breakdown,
+    currency_code : $Values<typeof CURRENCY>,
+    value : string
 |};

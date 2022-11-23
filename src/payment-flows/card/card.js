@@ -52,7 +52,7 @@ function initCardField({ serviceData } : InitOptions) : PaymentFlowInstance {
     };
     
     const start = () => {
-        return submitCardFields({ facilitatorAccessToken });
+        return submitCardFields({ facilitatorAccessToken, featureFlags: serviceData.featureFlags });
     };
 
     const close = promiseNoop;

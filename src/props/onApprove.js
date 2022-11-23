@@ -8,9 +8,10 @@ import { INTENT, SDK_QUERY_KEYS, FPTI_KEY, FUNDING } from '@paypal/sdk-constants
 import { type OrderResponse, type PaymentResponse, getOrder, captureOrder, authorizeOrder, patchOrder,
     getSubscription, activateSubscription, type SubscriptionResponse, getPayment, executePayment, patchPayment,
     getSupplementalOrderInfo, isProcessorDeclineError, isUnprocessableEntityError } from '../api';
-import { FPTI_TRANSITION, FPTI_CONTEXT_TYPE, LSAT_UPGRADE_EXCLUDED_MERCHANTS } from '../constants';
+import { FPTI_TRANSITION, FPTI_CONTEXT_TYPE } from '../constants';
 import { unresolvedPromise, getLogger } from '../lib';
 import { ENABLE_PAYMENT_API } from '../config';
+import type {FeatureFlags} from '../types'
 
 import type { CreateOrder } from './createOrder';
 import type { CreateBillingAgreement } from './createBillingAgreement';
@@ -24,7 +25,8 @@ export type XOnApproveOrderDataType = {|
     billingToken : ?string,
     authCode : ?string,
     facilitatorAccessToken : string,
-    paymentSource : $Values<typeof FUNDING> | null
+    paymentSource : $Values<typeof FUNDING> | null,
+    accelerated? : boolean
 |};
 
 export type XOnApproveBillingDataType = {|
@@ -313,7 +315,8 @@ export type OnApproveData = {|
     buyerAccessToken? : ?string,
     authCode? : ?string,
     forceRestAPI? : boolean,
-    paymentMethodToken? : string
+    paymentMethodToken? : string,
+    accelerated? : boolean
 |};
 
 export type OnApproveActions = {|
@@ -329,11 +332,11 @@ type GetOnApproveOrderOptions = {|
     onError : OnError,
     clientAccessToken : ?string,
     vault : boolean,
-    clientID : string,
     facilitatorAccessToken : string,
     branded : boolean | null,
     createOrder : CreateOrder,
-    paymentSource : $Values<typeof FUNDING> | null
+    paymentSource : $Values<typeof FUNDING> | null,
+    featureFlags: FeatureFlags
 |};
 
 function getDefaultOnApproveOrder(intent : $Values<typeof INTENT>) : XOnApproveOrder {
@@ -348,14 +351,20 @@ function getDefaultOnApproveOrder(intent : $Values<typeof INTENT>) : XOnApproveO
     };
 }
 
-export function getOnApproveOrder({ intent, onApprove = getDefaultOnApproveOrder(intent), partnerAttributionID, onError, clientAccessToken, vault, clientID, facilitatorAccessToken, branded, createOrder, paymentSource } : GetOnApproveOrderOptions) : OnApprove {
+export function getOnApproveOrder({ intent, onApprove = getDefaultOnApproveOrder(intent), partnerAttributionID, onError, clientAccessToken, vault, facilitatorAccessToken, branded, createOrder, paymentSource, featureFlags } : GetOnApproveOrderOptions) : OnApprove {
     if (!onApprove) {
         throw new Error(`Expected onApprove`);
     }
 
-    const upgradeLSAT = LSAT_UPGRADE_EXCLUDED_MERCHANTS.indexOf(clientID) === -1;
-
-    return memoize(({ payerID, paymentID, billingToken, buyerAccessToken, authCode, forceRestAPI = upgradeLSAT } : OnApproveData, { restart } : OnApproveActions) => {
+    return memoize(({
+        accelerated = false,
+        payerID,
+        paymentID,
+        billingToken,
+        buyerAccessToken,
+        authCode,
+        forceRestAPI = featureFlags.isLsatUpgradable
+    } : OnApproveData, { restart } : OnApproveActions) => {
         return createOrder().then(orderID => {
             getLogger()
                 .info('button_approve')
@@ -376,7 +385,7 @@ export function getOnApproveOrder({ intent, onApprove = getDefaultOnApproveOrder
                 billingToken = billingToken || (supplementalData && supplementalData.checkoutSession && supplementalData.checkoutSession.cart && supplementalData.checkoutSession.cart.billingToken);
                 paymentID = paymentID || (supplementalData && supplementalData.checkoutSession && supplementalData.checkoutSession.cart && supplementalData.checkoutSession.cart.paymentId);
 
-                const data = { orderID, payerID, paymentID, billingToken, facilitatorAccessToken, authCode, paymentSource };
+                const data = { accelerated, orderID, payerID, paymentID, billingToken, facilitatorAccessToken, authCode, paymentSource };
                 const actions = buildXApproveOrderActions({ orderID, paymentID, payerID, intent, restart, facilitatorAccessToken, buyerAccessToken, partnerAttributionID, forceRestAPI, onError });
 
                 return onApprove(data, actions).catch(err => {
@@ -513,6 +522,7 @@ export function getOnApproveSubscription({ onApprove = getDefaultOnApproveSubscr
                 .info('button_approve')
                 .track({
                     [FPTI_KEY.TRANSITION]:   FPTI_TRANSITION.CHECKOUT_APPROVE,
+                    [FPTI_KEY.EVENT_NAME]:   FPTI_TRANSITION.CHECKOUT_APPROVE,
                     [FPTI_KEY.CONTEXT_TYPE]: FPTI_CONTEXT_TYPE.ORDER_ID,
                     [FPTI_KEY.TOKEN]:        orderID,
                     [FPTI_KEY.CONTEXT_ID]:   orderID
@@ -545,10 +555,11 @@ type GetOnApproveOptions = {|
     createOrder : CreateOrder,
     createBillingAgreement : ?CreateBillingAgreement,
     createSubscription : ?CreateSubscription,
-    paymentSource : $Values<typeof FUNDING> | null
+    paymentSource : $Values<typeof FUNDING> | null,
+    featureFlags: FeatureFlags
 |};
 
-export function getOnApprove({ intent, createBillingAgreement, createSubscription, onApprove, partnerAttributionID, onError, clientAccessToken, vault, clientID, facilitatorAccessToken, branded, createOrder, paymentSource } : GetOnApproveOptions) : OnApprove {
+export function getOnApprove({ intent, createBillingAgreement, createSubscription, onApprove, partnerAttributionID, onError, clientAccessToken, vault, clientID, facilitatorAccessToken, branded, createOrder, paymentSource, featureFlags } : GetOnApproveOptions) : OnApprove {
     if (createBillingAgreement) {
         return getOnApproveBilling({ onApprove, onError, facilitatorAccessToken, createOrder, paymentSource });
     }
@@ -558,7 +569,7 @@ export function getOnApprove({ intent, createBillingAgreement, createSubscriptio
     }
 
     if (intent === INTENT.CAPTURE || intent === INTENT.AUTHORIZE || intent === INTENT.ORDER) {
-        return getOnApproveOrder({ intent, onApprove, partnerAttributionID, onError, clientAccessToken, vault, clientID, facilitatorAccessToken, branded, createOrder, paymentSource });
+        return getOnApproveOrder({ intent, onApprove, partnerAttributionID, onError, clientAccessToken, vault, facilitatorAccessToken, branded, createOrder, paymentSource, featureFlags });
     }
 
     if (intent === INTENT.TOKENIZE) {

@@ -3,12 +3,12 @@
 import type { CrossDomainWindowType } from '@krakenjs/cross-domain-utils/src';
 import { ZalgoPromise } from '@krakenjs/zalgo-promise/src';
 import { FUNDING, FPTI_KEY } from '@paypal/sdk-constants/src';
-import { destroyElement, noop } from '@krakenjs/belter/src';
+import { destroyElement, noop, stringifyError } from '@krakenjs/belter/src';
 import { initiateInstallments } from '@paypal/installments/src/interface';
 
 import type { ThreeDomainSecureFlowType, MenuChoices } from '../types';
 import type { CreateOrder } from '../props';
-import { validatePaymentMethod, type ValidatePaymentMethodResponse, getSupplementalOrderInfo, deleteVault, updateButtonClientConfig, loadFraudnet, confirmOrderAPI, buildPaymentSource } from '../api';
+import { validatePaymentMethod, type ValidatePaymentMethodResponse, getSupplementalOrderInfo, deleteVault, updateButtonClientConfig, loadFraudnet, confirmOrderAPI, buildPaymentSource, createAccessToken } from '../api';
 import { TARGET_ELEMENT, BUYER_INTENT, FPTI_TRANSITION, FPTI_CONTEXT_TYPE, FPTI_MENU_OPTION } from '../constants';
 import { getLogger } from '../lib';
 import type { ButtonProps } from '../button/props';
@@ -119,14 +119,18 @@ function getClientMetadataID({ props } : {| props : ButtonProps |}) : string {
 
 function initVaultCapture({ props, components, payment, serviceData, config } : InitOptions) : PaymentFlowInstance {
     const { createOrder, onApprove, clientAccessToken,
-        enableThreeDomainSecure, partnerAttributionID, getParent, userIDToken, clientID, env } = props;
+        enableThreeDomainSecure, partnerAttributionID, getParent, userIDToken, clientID, env, merchantID } = props;
     const { ThreeDomainSecure, Installments } = components;
     const { fundingSource, paymentMethodID, button } = payment;
     const { facilitatorAccessToken, buyerCountry } = serviceData;
     const { cspNonce } = config;
 
     const clientMetadataID = getClientMetadataID({ props });
-    const accessToken = userIDToken ? facilitatorAccessToken : clientAccessToken;
+    let accessToken = facilitatorAccessToken;
+
+    if (clientAccessToken) {
+        accessToken = clientAccessToken;
+    }
 
     if (!paymentMethodID) {
         throw new Error(`Payment method id required for vault capture`);
@@ -159,6 +163,24 @@ function initVaultCapture({ props, components, payment, serviceData, config } : 
         });
     };
 
+    const createAccessTokenWithTargetSubject = (): ZalgoPromise<string> => {
+        return ZalgoPromise.try(() => {
+            return createAccessToken(
+                clientID,
+                { targetSubject: merchantID[0] }
+            ).catch(err => {
+                getLogger().warn('vault_access_token_with_target_subject_failure', { error: stringifyError(err) });
+                throw err;
+            });
+        })
+    }
+
+    if (userIDToken && merchantID && merchantID[0]) {
+        createAccessTokenWithTargetSubject().then(accessTokenWithTargetSubject => {
+            accessToken = accessTokenWithTargetSubject;
+        });
+    }
+
     const startPaymentFlow = (orderID, installmentPlan) => {
         return ZalgoPromise.hash({
             validate:        validatePaymentMethod({ accessToken, orderID, paymentMethodID, enableThreeDomainSecure, clientMetadataID, partnerAttributionID, installmentPlan }),
@@ -174,7 +196,7 @@ function initVaultCapture({ props, components, payment, serviceData, config } : 
 
             const { status, body } = validate;
             return handleValidateResponse({ ThreeDomainSecure, status, body, createOrder, getParent }).then(() => {
-                return confirmOrderAPI(orderID, { payment_source: buildPaymentSource(paymentMethodID) }, { facilitatorAccessToken, partnerAttributionID })
+                return confirmOrderAPI(orderID, { payment_source: buildPaymentSource(paymentMethodID) }, { facilitatorAccessToken: accessToken, partnerAttributionID })
                 .then(() => {
                   return onApprove({}, { restart });
                 });

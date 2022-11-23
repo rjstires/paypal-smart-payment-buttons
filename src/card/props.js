@@ -4,7 +4,7 @@ import type { ZalgoPromise } from '@krakenjs/zalgo-promise/src';
 import { FUNDING, CARD, type FundingEligibilityType } from '@paypal/sdk-constants/src';
 import { EXPERIENCE } from '@paypal/checkout-components/src/constants/button';
 
-import type { ProxyWindow } from '../types';
+import type { ProxyWindow, FeatureFlags } from '../types';
 import { getProps, type XProps, type Props } from '../props/props';
 
 import type { CardStyle, CardPlaceholder } from './types';
@@ -61,10 +61,11 @@ export type CardProps = {|
 |};
 
 type GetCardPropsOptions = {|
-    facilitatorAccessToken : string
+    facilitatorAccessToken : string,
+    featureFlags: FeatureFlags
 |};
 
-export function getCardProps({ facilitatorAccessToken } : GetCardPropsOptions) : CardProps {
+export function getCardProps({ facilitatorAccessToken, featureFlags } : GetCardPropsOptions) : CardProps {
     const xprops : CardXProps = window.xprops;
 
     const {
@@ -80,7 +81,7 @@ export function getCardProps({ facilitatorAccessToken } : GetCardPropsOptions) :
         export: xport
     } = xprops;
 
-    const props = getProps({ facilitatorAccessToken, branded, paymentSource: null });
+    const props = getProps({ facilitatorAccessToken, branded, paymentSource: null, featureFlags });
 
     return {
         ...props,

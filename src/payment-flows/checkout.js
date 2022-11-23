@@ -1,14 +1,14 @@
 /* @flow */
 
 import { ZalgoPromise } from '@krakenjs/zalgo-promise/src';
-import { memoize, noop, supportsPopups, stringifyError, extendUrl, PopupOpenError } from '@krakenjs/belter/src';
-import { FUNDING, FPTI_KEY } from '@paypal/sdk-constants/src';
+import { memoize, noop, supportsPopups, stringifyError, extendUrl, PopupOpenError, parseQuery } from '@krakenjs/belter/src';
+import { FUNDING, FPTI_KEY, APM_LIST } from '@paypal/sdk-constants/src';
 import { getParent, getTop, type CrossDomainWindowType } from '@krakenjs/cross-domain-utils/src';
 
 import type { ProxyWindow, ConnectOptions } from '../types';
 import { type CreateBillingAgreement, type CreateSubscription } from '../props';
 import { exchangeAccessTokenForAuthCode, getConnectURL, updateButtonClientConfig, getSmartWallet, loadFraudnet  } from '../api';
-import { CONTEXT, TARGET_ELEMENT, BUYER_INTENT, FPTI_TRANSITION, FPTI_CONTEXT_TYPE, APM_LIST } from '../constants';
+import { CONTEXT, TARGET_ELEMENT, BUYER_INTENT, FPTI_TRANSITION, FPTI_CONTEXT_TYPE, PRODUCT_FLOW } from '../constants';
 import { unresolvedPromise, getLogger, setBuyerAccessToken } from '../lib';
 import { openPopup } from '../ui';
 import { FUNDING_SKIP_LOGIN } from '../config';
@@ -26,7 +26,18 @@ export const CHECKOUT_APM_POPUP_DIMENSIONS = {
 };
 
 let canRenderTop = false;
-let inline = false;
+let acceleratedXO = false;
+let smokeHash = '';
+
+function getSmokeHash() : ZalgoPromise<string> {
+    return window.xprops.getPageUrl().then(pageUrl => {
+        if (pageUrl.indexOf('smokeHash') !== -1) {
+            return parseQuery(pageUrl.split('?')[1]).smokeHash
+        }
+
+        return '';
+    });
+}
 
 function getRenderWindow() : Object {
     const top = getTop(window);
@@ -51,6 +62,10 @@ function setupCheckout({ components } : SetupOptions) : ZalgoPromise<void> {
             canRenderTop = result;
         });
     }
+
+    getSmokeHash().then(hash => {
+        smokeHash = hash;
+    });
 
     return ZalgoPromise.hash(tasks).then(noop);
 }
@@ -112,7 +127,7 @@ function getContext({ win, isClick, merchantRequestedPopupsDisabled } : {| win :
     return CONTEXT.IFRAME;
 }
 
-function getDimensions(fundingSource : string) : {| width : number, height : number |} {
+export const getDimensions = (fundingSource : string) : {| width : number, height : number |} => {
     if (APM_LIST.indexOf(fundingSource) !== -1) {
         getLogger().info(`popup_dimensions_value_${ fundingSource }`).flush();
         return { width: CHECKOUT_APM_POPUP_DIMENSIONS.WIDTH, height: CHECKOUT_APM_POPUP_DIMENSIONS.HEIGHT };
@@ -135,7 +150,7 @@ function initCheckout({ props, components, serviceData, payment, config, restart
     const { buyerCountry, sdkMeta, merchantID } = serviceData;
     const { cspNonce } = config;
 
-    inline = inlinexo && fundingSource === FUNDING.CARD;
+    acceleratedXO = inlinexo && fundingSource === FUNDING.CARD;
 
     let context = getContext({ win, isClick, merchantRequestedPopupsDisabled });
     const connectEligible = isConnectEligible({ connect, createBillingAgreement, createSubscription, vault, fundingSource });
@@ -152,7 +167,8 @@ function initCheckout({ props, components, serviceData, payment, config, restart
             stickinessID,
             clientAccessToken,
             venmoPayloadID,
-            inlinexo: inline,
+            inlinexo: acceleratedXO,
+            smokeHash,
 
             createAuthCode: () => {
                 return ZalgoPromise.try(() => {
@@ -223,7 +239,7 @@ function initCheckout({ props, components, serviceData, payment, config, restart
                 });
             },
 
-            onApprove: ({ approveOnClose = false, payerID, paymentID, billingToken, subscriptionID, authCode }) => {
+            onApprove: ({ accelerated, approveOnClose = false, payerID, paymentID, billingToken, subscriptionID, authCode } = {}) => {
                 if (approveOnClose) {
                     doApproveOnClose = true;
                     return;
@@ -233,11 +249,20 @@ function initCheckout({ props, components, serviceData, payment, config, restart
 
                 setBuyerAccessToken(buyerAccessToken);
 
+                let valid = true;
                 // eslint-disable-next-line no-use-before-define
-                return onApprove({ payerID, paymentID, billingToken, subscriptionID, buyerAccessToken, authCode }, { restart })
-                    // eslint-disable-next-line no-use-before-define
-                    .finally(() => close().then(noop))
-                    .catch(noop);
+                return onApprove({ accelerated, payerID, paymentID, billingToken, subscriptionID, buyerAccessToken, authCode }, { restart })
+                .finally(() => {
+                    if (accelerated) {
+                        return valid;
+                    } else {
+                        // eslint-disable-next-line no-use-before-define
+                        return close().then(noop);
+                    }
+                })
+                .catch(() => {
+                    valid = false;
+                });
             },
 
             onComplete: () => {
@@ -245,8 +270,7 @@ function initCheckout({ props, components, serviceData, payment, config, restart
 
                 setBuyerAccessToken(buyerAccessToken);
 
-                // eslint-disable-next-line no-use-before-define
-                return onComplete({ buyerAccessToken }, { restart })
+                return onComplete({ buyerAccessToken })
                     // eslint-disable-next-line no-use-before-define
                     .finally(() => close().then(noop))
                     .catch(noop);
@@ -278,7 +302,7 @@ function initCheckout({ props, components, serviceData, payment, config, restart
                         throw new Error('Must pass shipping_address in data to handle changes in shipping address.');
                     }
                     
-                    return onShippingAddressChange({ buyerAccessToken, ...data }, actions);
+                    return onShippingAddressChange({ ...data }, actions);
                 } : null,
 
             onShippingOptionsChange: onShippingOptionsChange
@@ -287,7 +311,7 @@ function initCheckout({ props, components, serviceData, payment, config, restart
                         throw new Error('Must pass selected_shipping_option in data to handle changes in shipping options.');
                     }
                     
-                    return onShippingOptionsChange({ buyerAccessToken, ...data }, actions);
+                    return onShippingOptionsChange({ ...data }, actions);
                 } : null,
 
             onClose: () => {
@@ -305,6 +329,7 @@ function initCheckout({ props, components, serviceData, payment, config, restart
                     .info(`checkout_flow_error `, { err: stringifyError(err) })
                     .track({
                         [FPTI_KEY.TRANSITION]:   FPTI_TRANSITION.CHECKOUT_ERROR,
+                        [FPTI_KEY.EVENT_NAME]:   FPTI_TRANSITION.CHECKOUT_ERROR,
                         [FPTI_KEY.ERROR_DESC]:   stringifyError(err)
                     }).flush();
                 return onError(err);
@@ -354,7 +379,7 @@ function initCheckout({ props, components, serviceData, payment, config, restart
 
     const click = () => {
         return ZalgoPromise.try(() => {
-            if (inline) {
+            if (acceleratedXO) {
                 context = CONTEXT.IFRAME;
             } else if (!merchantRequestedPopupsDisabled && !win && supportsPopups()) {
                 try {
@@ -389,10 +414,15 @@ function initCheckout({ props, components, serviceData, payment, config, restart
     return { click, start, close };
 }
 
-function updateCheckoutClientConfig({ orderID, payment, userExperienceFlow }) : ZalgoPromise<void> {
+function updateCheckoutClientConfig({ orderID, payment, userExperienceFlow, inlinexo }) : ZalgoPromise<void> {
     return ZalgoPromise.try(() => {
         const { buyerIntent, fundingSource } = payment;
-        const updateClientConfigPromise = updateButtonClientConfig({ fundingSource, orderID, inline, userExperienceFlow });
+        
+        let productFlow = PRODUCT_FLOW.SMART_PAYMENT_BUTTONS;
+        if (inlinexo) {
+            productFlow = PRODUCT_FLOW.ACCELERATED;
+        }
+        const updateClientConfigPromise = updateButtonClientConfig({ fundingSource, productFlow, orderID, inline: acceleratedXO, userExperienceFlow });
 
         // Block
         if (buyerIntent === BUYER_INTENT.PAY_WITH_DIFFERENT_FUNDING_SHIPPING) {

@@ -1,8 +1,11 @@
 /* @flow */
 
+import type { FeatureFlags } from "../types"
+
 export type SetupCardOptions = {|
     cspNonce : string,
-    facilitatorAccessToken : string
+    facilitatorAccessToken : string,
+    featureFlags: FeatureFlags
 |};
 
 export type Card = {|

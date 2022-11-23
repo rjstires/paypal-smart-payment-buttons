@@ -83,7 +83,8 @@ export type UpdateClientConfigOptions = {|
     orderID : string,
     payment : Payment,
     userExperienceFlow? : string,
-    buttonSessionID? : ?string
+    buttonSessionID? : ?string,
+    inlinexo? : boolean
 |};
 
 export type PaymentFlow = {|
@@ -267,6 +268,8 @@ type ApplePayPaymentAuthorizationResult = {|
 
 type ApplePaySessionConfig = {|
     begin : () => void,
+    abort : () => void,
+    oncancel : () => void,
     addEventListener : (string, Function) => void,
     // eslint-disable-next-line flowtype/no-weak-types
     completeMerchantValidation : (validatedSession : any) => void,
@@ -277,3 +280,8 @@ type ApplePaySessionConfig = {|
 |};
 
 export type XApplePaySessionConfigRequest = (version : number, request : Object) => ZalgoPromise<ApplePaySessionConfig>;
+
+export type ApplepaySessionMerchantConfig = {|
+    merchantCountry: string,
+    supportedNetworks: $ReadOnlyArray<string>
+|}
