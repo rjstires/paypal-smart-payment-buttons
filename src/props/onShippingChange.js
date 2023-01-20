@@ -3,7 +3,7 @@
 import { ZalgoPromise } from '@krakenjs/zalgo-promise/src';
 import { COUNTRY, FPTI_KEY } from '@paypal/sdk-constants/src';
 
-import { patchOrder, type OrderResponse } from '../api';
+import { patchShipping, patchOrder, type OrderResponse } from '../api';
 import { FPTI_TRANSITION, FPTI_CONTEXT_TYPE, FPTI_CUSTOM_KEY } from '../constants';
 import { getLogger } from '../lib';
 import type { OrderAmount, FeatureFlags } from '../types';
@@ -100,9 +100,14 @@ export type OnShippingChangeActionsType = {|
     reject : (string) => ZalgoPromise<void>
 |};
 
-export function buildXShippingChangeActions({ orderID, actions, facilitatorAccessToken, buyerAccessToken, partnerAttributionID, forceRestAPI } : {| orderID : string, actions : OnShippingChangeActionsType, facilitatorAccessToken : string, buyerAccessToken : ?string, partnerAttributionID : ?string, forceRestAPI : boolean |}) : XOnShippingChangeActionsType {
+export function buildXShippingChangeActions({ orderID, actions, facilitatorAccessToken, buyerAccessToken, partnerAttributionID, forceRestAPI, featureFlags, clientID } : {| orderID : string, actions : OnShippingChangeActionsType, facilitatorAccessToken : string, buyerAccessToken : ?string, partnerAttributionID : ?string, forceRestAPI : boolean, featureFlags: FeatureFlags, clientID: string |}) : XOnShippingChangeActionsType {
 
     const patch = (data = {}) => {
+        if(featureFlags.useShippingChangeCallbackMutation){
+            return patchShipping({ clientID, data, orderID }).catch(() => {
+                throw new Error('Order could not be patched');
+            });
+        }
         return patchOrder(orderID, data, { facilitatorAccessToken, buyerAccessToken, partnerAttributionID, forceRestAPI }).catch(() => {
             throw new Error('Order could not be patched');
         });
@@ -125,10 +130,11 @@ export type OnShippingChange = (OnShippingChangeData, OnShippingChangeActionsTyp
 type OnShippingChangeXProps = {|
     onShippingChange : ?XOnShippingChange,
     partnerAttributionID : ?string,
-    featureFlags : FeatureFlags
+    featureFlags : FeatureFlags,
+    clientID: string,
 |};
 
-export function getOnShippingChange({ onShippingChange, partnerAttributionID, featureFlags } : OnShippingChangeXProps, { facilitatorAccessToken, createOrder } : {| facilitatorAccessToken : string, createOrder : CreateOrder |}) : ?OnShippingChange {
+export function getOnShippingChange({ onShippingChange, partnerAttributionID, featureFlags, clientID } : OnShippingChangeXProps, { facilitatorAccessToken, createOrder } : {| facilitatorAccessToken : string, createOrder : CreateOrder |}) : ?OnShippingChange {
     if (onShippingChange) {
         return ({
             buyerAccessToken,
@@ -147,7 +153,7 @@ export function getOnShippingChange({ onShippingChange, partnerAttributionID, fe
                         [FPTI_CUSTOM_KEY.SHIPPING_CALLBACK_INVOKED]: '1'
                     }).flush();
 
-                return onShippingChange(buildXOnShippingChangeData(data), buildXShippingChangeActions({ orderID, facilitatorAccessToken, buyerAccessToken, actions, partnerAttributionID, forceRestAPI }));
+                return onShippingChange(buildXOnShippingChangeData(data), buildXShippingChangeActions({ orderID, facilitatorAccessToken, buyerAccessToken, actions, partnerAttributionID, forceRestAPI, featureFlags, clientID }));
             });
         };
     }

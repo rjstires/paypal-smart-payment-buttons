@@ -21,7 +21,8 @@ export const TYPES = true;
 // how to share this type between the two code bases
 export type FeatureFlags = $Shape<{|
     isLsatUpgradable: boolean;
-    shouldThrowIntegrationError: boolean
+    shouldThrowIntegrationError: boolean;
+    useShippingChangeCallbackMutation: boolean;
 |}>
 
 export type ProxyWindow = _ProxyWindow;
