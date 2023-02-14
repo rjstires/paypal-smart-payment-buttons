@@ -69,8 +69,7 @@ describe("onShippingChange", () => {
 
       const patchData = [];
       const onShippingChange = vi.fn((data, actions) => {
-        actions.order.patch(patchData);
-        return ZalgoPromise.resolve();
+        return actions.order.patch(patchData);
       });
 
       const experiments = { useShippingChangeCallbackMutation: false };
@@ -103,17 +102,18 @@ describe("onShippingChange", () => {
       expect.assertions(1);
     });
 
-    test("should call patchShipping when experiment is active", async () => {
+    test("should return generic error if patchOrder fails", async () => {
       // $FlowFixMe
-      mockPatchShipping.mockImplementation(() => ZalgoPromise.resolve({}));
+      mockPatchOrder.mockImplementation(() => ZalgoPromise.reject({}));
 
       const patchData = [];
       const onShippingChange = vi.fn((data, actions) => {
-        actions.order.patch(patchData);
-        return ZalgoPromise.resolve();
+        return actions.order.patch(patchData);
       });
 
-      const experiments = { useShippingChangeCallbackMutation: true };
+      const experiments = { useShippingChangeCallbackMutation: false };
+
+      const buyerAccessToken = uniqueID();
 
       const fn = getOnShippingChange(
         {
@@ -126,17 +126,83 @@ describe("onShippingChange", () => {
         { facilitatorAccessToken, createOrder }
       );
 
+      const data = { buyerAccessToken };
+
       if (fn) {
-        await fn({}, invocationActions);
+        await expect(fn(data, invocationActions)).rejects.toThrow(
+          "Order could not be patched"
+        );
       }
 
-      expect(patchShipping).toBeCalledWith({
-        clientID,
-        data: patchData,
-        orderID,
+      expect.assertions(1);
+    });
+
+    describe("when useShippingChangeCallbackMutation is active", () => {
+      test("should call patchShipping", async () => {
+        // $FlowFixMe
+        mockPatchShipping.mockImplementation(() => ZalgoPromise.resolve({}));
+
+        const patchData = [];
+        const onShippingChange = vi.fn((data, actions) => {
+          return actions.order.patch(patchData);
+        });
+
+        const experiments = { useShippingChangeCallbackMutation: true };
+
+        const fn = getOnShippingChange(
+          {
+            onShippingChange,
+            partnerAttributionID,
+            featureFlags,
+            experiments,
+            clientID,
+          },
+          { facilitatorAccessToken, createOrder }
+        );
+
+        if (fn) {
+          await fn({}, invocationActions);
+        }
+
+        expect(patchShipping).toBeCalledWith({
+          clientID,
+          data: patchData,
+          orderID,
+        });
+
+        expect.assertions(1);
       });
 
-      expect.assertions(1);
+      test("should return generic error if patchShipping fails", async () => {
+        // $FlowFixMe
+        mockPatchShipping.mockImplementation(() => ZalgoPromise.reject({}));
+
+        const patchData = [];
+        const onShippingChange = vi.fn((data, actions) => {
+          return actions.order.patch(patchData);
+        });
+
+        const experiments = { useShippingChangeCallbackMutation: true };
+
+        const fn = getOnShippingChange(
+          {
+            onShippingChange,
+            partnerAttributionID,
+            featureFlags,
+            experiments,
+            clientID,
+          },
+          { facilitatorAccessToken, createOrder }
+        );
+
+        if (fn) {
+          await expect(fn({}, invocationActions)).rejects.toThrow(
+            "Order could not be patched"
+          );
+        }
+
+        expect.assertions(1);
+      });
     });
   });
 });
