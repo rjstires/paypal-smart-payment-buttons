@@ -1,10 +1,9 @@
 /* @flow */
 import { ZalgoPromise } from "@krakenjs/zalgo-promise/src";
 
-import { HEADERS, PREFER } from "../constants";
 import { VAULT_SETUP_TOKENS_API_URL } from "../config";
 
-import { callRestAPI } from "./api";
+import { callRestAPI, callGraphQL } from "./api";
 
 export type PaymentSourceCardDetails = {|
   number: string,
@@ -50,25 +49,21 @@ export type PaymentSource = PaymentSourceCard | PaymentSourcePayPal;
 type VaultBasicOptions = {|
   vaultSetupToken: string,
   facilitatorAccessToken: string,
-  partnerAttributionID: ?string,
 |};
 
-type VaultUpdateOptions = {|
-  ...VaultBasicOptions,
-  paymentSource: PaymentSource,
-|};
+type VaultTokenStatus =
+  | "APPROVED"
+  | "CREATED"
+  | "PAYER_ACTION_REQUIRED"
+  | "TOKENIZED"
+  | "VAULTED";
 
 type VaultSetupTokenResponse = {|
   id: string,
   customer: {|
     id: string,
   |},
-  status:
-    | "APPROVED"
-    | "CREATED"
-    | "PAYER_ACTION_REQUIRED"
-    | "TOKENIZED"
-    | "VAULTED",
+  status: VaultTokenStatus,
   payment_source: Object,
   links: $ReadOnlyArray<{|
     href: string,
@@ -80,37 +75,59 @@ type VaultSetupTokenResponse = {|
 export const getVaultSetupToken = ({
   vaultSetupToken,
   facilitatorAccessToken,
-  partnerAttributionID,
 }: VaultBasicOptions): ZalgoPromise<VaultSetupTokenResponse> =>
   callRestAPI<void, VaultSetupTokenResponse>({
     accessToken: facilitatorAccessToken,
     url: `${VAULT_SETUP_TOKENS_API_URL}/${vaultSetupToken}`,
     eventName: "v3_vault_setup_tokens_get",
-    headers: {
-      ...(partnerAttributionID
-        ? { [HEADERS.PARTNER_ATTRIBUTION_ID]: partnerAttributionID }
-        : undefined),
-      [HEADERS.PREFER]: PREFER.REPRESENTATION,
-    },
   });
 
+export type PaymentSourceInput = {|
+  card: {|
+    number: string,
+    expiry: string,
+    name?: string,
+    securityCode?: string,
+    billingAddress?: $Shape<{|
+      postalCode: string,
+    |}>,
+  |},
+|};
+
 export const updateVaultSetupToken = ({
+  clientID,
+  userIDToken,
   vaultSetupToken,
-  facilitatorAccessToken,
-  partnerAttributionID,
   paymentSource,
-}: VaultUpdateOptions): ZalgoPromise<VaultSetupTokenResponse> =>
-  callRestAPI<{| payment_source: PaymentSource |}, VaultSetupTokenResponse>({
-    accessToken: facilitatorAccessToken,
-    method: "post",
-    url: `${VAULT_SETUP_TOKENS_API_URL}/${vaultSetupToken}/update`,
-    headers: {
-      ...(partnerAttributionID
-        ? { [HEADERS.PARTNER_ATTRIBUTION_ID]: partnerAttributionID }
-        : undefined),
-      [HEADERS.PREFER]: PREFER.REPRESENTATION,
-    },
-    data: {
-      payment_source: paymentSource,
+}: {|
+  clientID: string,
+  userIDToken: string,
+  vaultSetupToken: string,
+  paymentSource: PaymentSourceInput,
+|}): ZalgoPromise<{| id: string, status: VaultTokenStatus |}> =>
+  callGraphQL<{| id: string, status: VaultTokenStatus |}>({
+    name: "UpdateVaultSetupToken",
+    query: `
+      mutation UpdateVaultSetupToken(
+        $clientID: String!
+        $userIDToken: String!
+        $vaultSetupToken: String!
+        $paymentSource: PaymentSource
+      ) {
+        updateVaultSetupToken(
+          clientId: $clientID
+          idToken: $userIDToken
+          vaultSetupToken: $vaultSetupToken
+          paymentSource: $paymentSource
+        ) {
+          id,
+          status
+        }
+      }`,
+    variables: {
+      clientID,
+      userIDToken,
+      vaultSetupToken,
+      paymentSource,
     },
   });

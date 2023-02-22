@@ -23,6 +23,8 @@ import type {
   XCreateOrder,
   XCreateBillingAgreement,
   XCreateSubscription,
+  XCreateVaultSetupToken,
+  SaveActionOnApprove,
 } from "../props";
 import { getCreateVaultSetupToken } from "../props/createVaultSetupToken";
 
@@ -74,14 +76,8 @@ export type InputEvents = {
   onInputSubmitRequest?: OnInputSubmitRequest,
 };
 
-type ActionProps = {|
-  // eslint-disable-next-line flowtype/no-weak-types
-  action: any, // TODO: once checkout components is released, we can reference this directly
-|};
-
 export type CardXProps = {|
   ...XProps,
-  ...ActionProps,
   type: $Values<typeof CARD_FIELD_TYPE>,
   style: CardStyle,
   placeholder: CardPlaceholder,
@@ -105,6 +101,10 @@ export type CardXProps = {|
   createOrder: ?XCreateOrder,
   createBillingAgreement: ?XCreateBillingAgreement,
   createSubscription: ?XCreateSubscription,
+  save?: {|
+    createVaultSetupToken?: XCreateVaultSetupToken,
+    onApprove?: SaveActionOnApprove
+  |},
   hcfSessionID: string
 |};
 
@@ -125,15 +125,21 @@ type BaseCardProps = {|
   hcfSessionID?: string
 |};
 
-export type CardProps = {|
+export type LegacyCardProps = {|
   ...BaseCardProps,
   ...LegacyProps,
 |};
 
-export type CardPropsWithAction = {|
+export type SaveCardFieldsProps = {|
   ...BaseCardProps,
-  ...ActionProps,
-|};
+  userIDToken: string,
+  save: {|
+    createVaultSetupToken: XCreateVaultSetupToken,
+    onApprove: SaveActionOnApprove
+  |},
+|}
+
+export type CardProps = LegacyCardProps | SaveCardFieldsProps
 
 type GetCardPropsOptions = {|
   facilitatorAccessToken: string,
@@ -141,70 +147,76 @@ type GetCardPropsOptions = {|
 |};
 
 /**
- * These CardFields props are disallowed when an action is also provided.
+ * These CardFields props are disallowed when save is also provided.
  * This is to prevent confusion between which flow is being used at runtime.
  */
-const disallowedPropsWithAction = [
+const disallowedPropsWithSave = [
   "onApprove",
   "onCancel",
   "onComplete",
   "createOrder",
-  "intent",
 ];
 /**
- * When CardFields is used with an Action, the required properties change. This is for validating the arguments in that use-case.
+ * When CardFields is used with save, the required properties change. This is for validating the arguments in that use-case.
  */
-function validateActionProps(xprops, baseProps): ActionProps {
-  disallowedPropsWithAction.forEach((prop) => {
+function validateSaveMethod(xprops, baseProps): {| save: SaveCardFieldsProps['save'], userIDToken: string |} {
+  disallowedPropsWithSave.forEach((prop) => {
     if (xprops[prop]) {
       throw new Error(`Do not pass ${prop} with an action.`);
     }
   });
 
-  const action = xprops.action || xprops.parent?.action;
+  const save = xprops.save
 
-  switch (action.type) {
-    case "SAVE": {
-      return {
-        action: {
-          ...action,
-          createVaultSetupToken: getCreateVaultSetupToken({
-            createVaultSetupToken: action.createVaultSetupToken,
-          }),
-          onApprove: getSaveActionOnApprove({
-            onApprove: action.onApprove,
-            onError: baseProps.onError,
-          }),
-        },
-      };
-    }
-    default: {
-      throw new Error(`Unsupported type for action: ${action.type}`);
-    }
+  if (!save?.createVaultSetupToken) {
+      throw new Error("createVaultSetupToken is required when saving card fields");
   }
+
+  if (!save?.onApprove) {
+      throw new Error("onApprove is required when saving card fields");
+  }
+
+  if (!xprops.userIDToken) {
+      throw new Error("data attribute \"data-user-id-token\" is required on SDK script tag for saving card fields");
+  }
+
+  return {
+    userIDToken: xprops.userIDToken,
+    save: {
+      createVaultSetupToken: getCreateVaultSetupToken({
+        createVaultSetupToken: save.createVaultSetupToken,
+      }),
+      onApprove: getSaveActionOnApprove({
+        // $FlowIssue
+        onApprove: save.onApprove,
+        onError: baseProps.onError,
+      }),
+    },
+  };
 }
 
 export function getCardProps({
   facilitatorAccessToken,
   featureFlags,
-}: GetCardPropsOptions): CardProps | CardPropsWithAction {
+}: GetCardPropsOptions): LegacyCardProps | SaveCardFieldsProps {
   const xprops: CardXProps = window.xprops;
 
   const {
-      type,
-      cardSessionID,
-      style,
-      placeholder,
-      minLength,
-      maxLength,
-      fundingEligibility,
-      inputEvents,
-      branded = fundingEligibility?.card?.branded ?? true,
-      parent,
-      export: xport,
-      sdkCorrelationID,
-      partnerAttributionID,
-      hcfSessionID
+    type,
+    cardSessionID,
+    style,
+    placeholder,
+    minLength,
+    maxLength,
+    fundingEligibility,
+    inputEvents,
+    branded = fundingEligibility?.card?.branded ?? true,
+    parent,
+    export: xport,
+    save,
+    sdkCorrelationID,
+    partnerAttributionID,
+    hcfSessionID
   } = xprops;
 
   const returnData = {
@@ -222,13 +234,11 @@ export function getCardProps({
   };
 
   const baseProps = getProps({ branded });
-  const action = xprops.action || xprops.parent?.action;
 
-  if (action) {
-    const props = validateActionProps(xprops, baseProps);
+  if (save) {
     return {
       ...baseProps,
-      ...props,
+      ...validateSaveMethod(xprops, baseProps),
       ...returnData,
     };
   } else {

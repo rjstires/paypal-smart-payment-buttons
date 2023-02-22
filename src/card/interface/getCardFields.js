@@ -6,7 +6,7 @@ import type { Card } from '../types';
 import { getExportsByFrameName } from './getExportsByFrameName';
 import { getCardFrames } from './getCardFrames';
 
-export function getCardFields(): ?Card {
+export function getCardFields(): Card {
   const cardFrame = getExportsByFrameName(FRAME_NAME.CARD_FIELD);
 
   if (cardFrame && cardFrame.isFieldValid()) {

@@ -1,16 +1,17 @@
 /* @flow */
 import { describe, beforeEach, vi, test, expect } from "vitest";
 
-import { vault } from "../../../src/card/interface/vault";
+import { savePaymentSource } from "../../../src/card/interface/vault-without-purchase";
 import { updateVaultSetupToken } from "../../../src/api/vault";
 
 vi.mock("../../../src/api/vault", () => ({
   // eslint-disable-next-line compat/compat, promise/no-native, no-restricted-globals
+  getVaultSetupToken: vi.fn(() => Promise.resolve()),
+  // eslint-disable-next-line compat/compat, promise/no-native, no-restricted-globals
   updateVaultSetupToken: vi.fn(() => Promise.resolve()),
 }));
 
-const createSaveAction = (options = {}) => ({
-  type: "save",
+const mockSave = (options = {}) => ({
   createVaultSetupToken: vi.fn().mockResolvedValue("vault-setup-token"),
   onApprove: vi.fn(),
   ...options,
@@ -21,14 +22,15 @@ describe("vault", () => {
     vi.restoreAllMocks();
   });
 
-  describe("create", () => {
+  describe("save", () => {
     // coming back to this test and more once we implement more un-happy paths
     // test.skip("it should handle failure from createVaultSetupToken callback", () => {});
 
     test("should call the provided functions", async () => {
       const options = {
-        action: createSaveAction(),
-        facilitatorAccessToken: "access-token",
+        save: mockSave(),
+        userIDToken: "token",
+        clientID: "client-id",
         paymentSource: {
           card: {
             billing_address: {
@@ -43,15 +45,15 @@ describe("vault", () => {
       };
 
       // $FlowIssue
-      await vault.create(options);
+      await savePaymentSource(options);
 
       expect.assertions(3);
 
-      expect(options.action.createVaultSetupToken).toHaveBeenCalled();
+      expect(options.save.createVaultSetupToken).toHaveBeenCalled();
       expect(updateVaultSetupToken).toHaveBeenCalledWith({
         vaultSetupToken: "vault-setup-token",
-        facilitatorAccessToken: "access-token",
-        partnerAttributionID: "",
+        userIDToken: "token",
+        clientID: "client-id",
         paymentSource: {
           card: {
             billing_address: {
@@ -64,7 +66,7 @@ describe("vault", () => {
           },
         },
       });
-      expect(options.action.onApprove).toHaveBeenCalledWith({
+      expect(options.save.onApprove).toHaveBeenCalledWith({
         vaultSetupToken: "vault-setup-token",
       });
     });

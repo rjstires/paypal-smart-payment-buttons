@@ -8,4 +8,4 @@ export * from './hasCardFields';
 export * from './isEmpty';
 export * from './reformatExpiry';
 export * from './submitCardFields';
-export * from './vault';
+export * from './vault-without-purchase';

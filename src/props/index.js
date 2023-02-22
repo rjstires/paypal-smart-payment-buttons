@@ -5,6 +5,7 @@ export * from './createOrder';
 export * from './confirmOrder';
 export * from './createBillingAgreement';
 export * from './createSubscription';
+export * from './createVaultSetupToken';
 export * from './onApprove';
 export * from './onComplete';
 export * from './onInit';

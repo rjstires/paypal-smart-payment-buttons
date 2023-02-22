@@ -3,13 +3,12 @@ import { describe, test, expect, beforeEach, vi } from "vitest";
 import { INTENT } from "@paypal/sdk-constants";
 
 import {
-  getCardFields,
   hasCardFields,
   submitCardFields,
 } from "../../../src/card/interface";
 import { getCardProps } from "../../../src/card/props";
 import { resetGQLErrors } from "../../../src/card/interface/gql";
-import { vault } from "../../../src/card/interface/vault";
+import { savePaymentSource } from "../../../src/card/interface/vault-without-purchase";
 import { confirmOrderAPI } from "../../../src/api";
 
 vi.mock("../../../src/card/props", () => {
@@ -42,10 +41,8 @@ vi.mock("../../../src/card/interface/gql", () => ({
   resetGQLErrors: vi.fn(),
 }));
 
-vi.mock("../../../src/card/interface/vault", () => ({
-  vault: {
-    create: vi.fn(),
-  },
+vi.mock("../../../src/card/interface/vault-without-purchase", () => ({
+  savePaymentSource: vi.fn(),
 }));
 
 vi.mock("../../../src/lib")
@@ -64,18 +61,9 @@ describe("submitCardFields", () => {
     featureFlags: {},
   };
 
-  test("should get card props and reset graphql errors", async () => {
-    await submitCardFields(defaultOptions);
-
-    expect.assertions(3);
-    expect(getCardProps).toHaveBeenCalledOnce();
-    expect(getCardProps).toHaveBeenCalledWith(defaultOptions);
-    expect(resetGQLErrors).toHaveBeenCalledOnce();
-  });
-
   test("should throw an error if we do not have card fields", () => {
     // $FlowIssue
-    hasCardFields.mockReturnValueOnce(false);
+    hasCardFields.mockReturnValue(false);
 
     expect.assertions(1);
 
@@ -84,25 +72,16 @@ describe("submitCardFields", () => {
     );
   });
 
-  test("should throw an error if we do not have a card", () => {
-    // $FlowIssue
-    getCardFields.mockReturnValueOnce(null);
-
-    expect.assertions(1);
-    expect(submitCardFields(defaultOptions)).rejects.toThrowError(
-      "Card not available to submit"
-    );
-  });
-
   test("should use the provided save action", async () => {
-    const onCreateVaultSetupToken = vi.fn();
+    const createVaultSetupToken = vi.fn().mockResolvedValue('setup-token');
     const onApprove = vi.fn();
 
     const mockGetCardPropsReturn = {
-      action: {
-        type: "save",
+      userIDToken: 'token',
+      clientID: 'client-id',
+      save: {
         onApprove,
-        onCreateVaultSetupToken,
+        createVaultSetupToken,
       },
     };
     // $FlowIssue
@@ -110,64 +89,29 @@ describe("submitCardFields", () => {
 
     await submitCardFields(defaultOptions);
 
-    expect.assertions(1);
-    expect(vault.create).toHaveBeenCalledWith({
-      action: mockGetCardPropsReturn.action,
-      facilitatorAccessToken: "test-access-token",
+    expect.assertions(2);
+    expect(resetGQLErrors).toHaveBeenCalledOnce();
+    expect(savePaymentSource).toHaveBeenCalledWith({
+      save: mockGetCardPropsReturn.save,
+      userIDToken: mockGetCardPropsReturn.userIDToken,
+      clientID: mockGetCardPropsReturn.clientID,
+      facilitatorAccessToken: defaultOptions.facilitatorAccessToken,
       paymentSource: {
         card: {
-          billing_address: {
-            postal_code: "91210",
+          billingAddress: {
+            postalCode: "91210",
           },
-          expiry: "01/24",
+          expiry: "2024-01",
           name: "John Doe",
           number: "4111111111111111",
-          security_code: "123",
+          securityCode: "123",
         },
       },
     });
   });
 
-  test("should throw an error when given an unsupported action", () => {
-    const mockGetCardPropsReturn = {
-      action: {
-        type: "testing",
-      },
-    };
-
-    // $FlowIssue
-    getCardProps.mockReturnValueOnce(mockGetCardPropsReturn);
-
-    expect(submitCardFields(defaultOptions)).rejects.toThrowError(
-      "Action of type testing is not supported by Card Fields"
-    );
-  });
-
-  test("should log and throw any error that occurs when handling a save action", () => {
-    // $FlowIssue
-    vault.create.mockImplementationOnce(() => {
-      throw new Error("testing");
-    });
-
-    const onCreateVaultSetupToken = vi.fn();
-    const onApprove = vi.fn();
-
-    const mockGetCardPropsReturn = {
-      action: {
-        type: "save",
-        onApprove,
-        onCreateVaultSetupToken,
-      },
-    };
-    // $FlowIssue
-    getCardProps.mockReturnValueOnce(mockGetCardPropsReturn);
-
-    expect(submitCardFields(defaultOptions)).rejects.toThrow("testing");
-  });
-
   test("should checkout", async () => {
     const mockGetCardPropsReturn = {
-      intent: INTENT.CAPTURE,
       createOrder: vi.fn().mockResolvedValue("test-order-id"),
       onApprove: vi.fn(),
     };

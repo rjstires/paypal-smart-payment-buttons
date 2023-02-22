@@ -1,6 +1,5 @@
 /* @flow */
 
-import { INTENT } from "@paypal/sdk-constants"
 import { ZalgoPromise } from "@krakenjs/zalgo-promise/src"
 import { uniqueID } from "@krakenjs/belter"
 
@@ -9,11 +8,12 @@ import { confirmOrderAPI } from "../../api"
 import { getLogger } from "../../lib"
 import type { ExtraFields } from "../types"
 import type { FeatureFlags } from "../../types"
+import {convertCardToPaymentSource} from '../lib'
 
 import { resetGQLErrors } from "./gql"
 import { hasCardFields } from "./hasCardFields"
 import { getCardFields } from "./getCardFields"
-import { vault } from "./vault"
+import { savePaymentSource } from "./vault-without-purchase"
 import { reformatExpiry } from "./reformatExpiry"
 
 type CardValues = {|
@@ -22,21 +22,21 @@ type CardValues = {|
   security_code?: ?string,
   postalCode?: ?string,
   name?: ?string,
-  ...ExtraFields
+  ...ExtraFields,
 |};
 
 type SubmitCardFieldsOptions = {|
   facilitatorAccessToken: string,
   featureFlags: FeatureFlags,
   extraFields?: {|
-    billingAddress?: string
-  |}
+    billingAddress?: string,
+  |},
 |};
 
 export function submitCardFields({
   facilitatorAccessToken,
   extraFields,
-  featureFlags
+  featureFlags,
 }: SubmitCardFieldsOptions): ZalgoPromise<void> {
   const cardProps = getCardProps({
     facilitatorAccessToken,
@@ -52,54 +52,26 @@ export function submitCardFields({
 
     const card = getCardFields();
 
-    if (!card) {
-      throw new Error('Card not available to submit')
+    if (cardProps.save) {
+      return savePaymentSource({
+        save: cardProps.save,
+        facilitatorAccessToken,
+        clientID: cardProps.clientID,
+        userIDToken: cardProps.userIDToken,
+        paymentSource: convertCardToPaymentSource(card),
+      });
     }
 
-    const restart = () => {
-      throw new Error(`Restart not implemented for card fields flow`);
-    };
-
-    if (cardProps.action !== undefined) {
-      switch(cardProps.action.type) {
-        case 'save': {
-            return vault.create({
-              action: cardProps.action,
-              facilitatorAccessToken,
-              paymentSource: {
-                card: {
-                  // $FlowIssue
-                  name: card.name,
-                  // $FlowIssue
-                  number: card.number,
-                  // $FlowIssue
-                  expiry: card.expiry,
-                  // $FlowIssue
-                  security_code: card.cvv,
-                  billing_address: {
-                  // $FlowIssue
-                    postal_code: card.postalCode
-                  }
-                }
-              },
-            })
-        }
-        default: {
-          throw new Error(`Action of type ${cardProps.action.type} is not supported by Card Fields`)
-        }
-      }
-    }
-
-    if (cardProps.intent === INTENT.CAPTURE || cardProps.intent === INTENT.AUTHORIZE) {
       // $FlowFixMe
-      return cardProps.createOrder()
-        .then(orderID => {
+      return cardProps
+        .createOrder()
+        .then((orderID) => {
           const cardObject: CardValues = {
             name: card.name,
             number: card.number,
             expiry: reformatExpiry(card.expiry),
             security_code: card.cvv,
-            ...extraFields
+            ...extraFields,
           };
 
           if (card.name) {
@@ -109,13 +81,13 @@ export function submitCardFields({
           // eslint-disable-next-line flowtype/no-weak-types
           const data: any = {
             payment_source: {
-              card: cardObject
-            }
+              card: cardObject,
+            },
           };
           return confirmOrderAPI(orderID, data, {
             facilitatorAccessToken,
-            partnerAttributionID: ""
-          }).catch(error => {
+            partnerAttributionID: "",
+          }).catch((error) => {
             getLogger().info("card_fields_payment_failed");
             if (cardProps.onError) {
               cardProps.onError(error);
@@ -123,13 +95,16 @@ export function submitCardFields({
             throw error;
           });
         })
-        .then(orderData => {
+        .then((orderData) => {
           // $FlowFixMe
           return cardProps.onApprove(
             { payerID: uniqueID(), buyerAccessToken: uniqueID(), ...orderData },
-            { restart }
+            {
+              restart: () => {
+                throw new Error(`Restart not implemented for card fields flow`);
+              },
+            }
           );
         });
-    }
   });
 }
