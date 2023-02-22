@@ -11,6 +11,7 @@ import { submitCardFields, getCardFieldState, getFieldErrors, isEmpty } from '..
 import { getCardProps, type CardProps } from '../props';
 import type { SetupCardOptions} from '../types';
 import type {FeatureFlags } from '../../types'
+import { setupCardLogger } from '../logger';
 
 import { CardField, CardNumberField, CardCVVField, CardExpiryField, CardNameField, CardPostalCodeField } from './fields';
 
@@ -321,11 +322,40 @@ function Page({ cspNonce, props, featureFlags } : PageProps) : mixed {
     );
 }
 
-export function setupCard({ cspNonce, facilitatorAccessToken, featureFlags } : SetupCardOptions) {
+export function setupCard({ cspNonce, facilitatorAccessToken, featureFlags, buyerCountry, metadata } : SetupCardOptions) {
     const props = getCardProps({
         facilitatorAccessToken,
         featureFlags
     });
+    const {
+        env,
+        sessionID,
+        clientID,
+        partnerAttributionID,
+        sdkCorrelationID,
+        locale,
+        merchantID,
+        merchantDomain,
+        cardSessionID,
+        type,
+        hcfSessionID
+    } = props;
+
+    setupCardLogger({
+        env,
+        sessionID,
+        cardSessionID,
+        clientID,
+        partnerAttributionID,
+        sdkCorrelationID,
+        cardCorrelationID: metadata.correlationID,
+        locale,
+        merchantID,
+        merchantDomain,
+        buyerCountry,
+        type,
+        hcfSessionID
+    })
 
     render(<Page cspNonce={ cspNonce } props={ props } featureFlags={featureFlags} />, getBody());
 }

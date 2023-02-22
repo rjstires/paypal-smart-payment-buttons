@@ -105,6 +105,7 @@ export type CardXProps = {|
   createOrder: ?XCreateOrder,
   createBillingAgreement: ?XCreateBillingAgreement,
   createSubscription: ?XCreateSubscription,
+  hcfSessionID: string
 |};
 
 type BaseCardProps = {|
@@ -121,6 +122,7 @@ type BaseCardProps = {|
   inputEvents: InputEvents,
   facilitatorAccessToken: string,
   disableAutocomplete?: boolean,
+  hcfSessionID?: string
 |};
 
 export type CardProps = {|
@@ -189,17 +191,20 @@ export function getCardProps({
   const xprops: CardXProps = window.xprops;
 
   const {
-    type,
-    cardSessionID,
-    style,
-    placeholder,
-    minLength,
-    maxLength,
-    fundingEligibility,
-    inputEvents,
-    branded = fundingEligibility?.card?.branded ?? true,
-    parent,
-    export: xport,
+      type,
+      cardSessionID,
+      style,
+      placeholder,
+      minLength,
+      maxLength,
+      fundingEligibility,
+      inputEvents,
+      branded = fundingEligibility?.card?.branded ?? true,
+      parent,
+      export: xport,
+      sdkCorrelationID,
+      partnerAttributionID,
+      hcfSessionID
   } = xprops;
 
   const returnData = {
@@ -264,7 +269,10 @@ export function getCardProps({
       inputEvents,
       export: parent ? parent.export : xport,
       facilitatorAccessToken,
-    };
+      sdkCorrelationID,
+      partnerAttributionID,
+      hcfSessionID
+    }
   }
 }
 

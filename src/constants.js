@@ -89,6 +89,7 @@ export const FPTI_CONTEXT_TYPE = {
 
 export const FPTI_STATE = {
     BUTTON:            ('smart_button' : 'smart_button'),
+    CARD:               ('card_field': 'card_field'),
     WALLET:            ('smart_wallet' : 'smart_wallet'),
     PXP:               ('PXP_CHECK' : 'PXP_CHECK'),
     ELIGIBILITY_CHECK: ('eligibility_check' : 'eligibility_check')

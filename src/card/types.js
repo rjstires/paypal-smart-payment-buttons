@@ -1,12 +1,19 @@
 /* eslint-disable flowtype/require-exact-type */
 /* @flow */
 
+import { COUNTRY } from '@paypal/sdk-constants/src';
+
 import type { FeatureFlags } from "../types"
 
 export type SetupCardOptions = {|
     cspNonce : string,
     facilitatorAccessToken : string,
-    featureFlags: FeatureFlags
+    featureFlags: FeatureFlags,
+    buyerCountry : $Values<typeof COUNTRY>,
+    metadata: {|
+        correlationID: string,
+        spbVersion: string
+    |}
 |};
 
 export type Card = {

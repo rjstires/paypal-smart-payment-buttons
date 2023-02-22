@@ -69,7 +69,7 @@ export function setupButtonLogger({ env, sessionID, buttonSessionID, clientID, p
 
     const logger = getLogger();
 
-    setupLogger({ env, sessionID, clientID, sdkCorrelationID, locale, sdkVersion, buyerCountry, fundingSource, smartWalletOrderID, product });
+    setupLogger({ env, sessionID, clientID, sdkCorrelationID, locale, sdkVersion, buyerCountry });
 
     logger.addPayloadBuilder(() => {
         return {
@@ -92,6 +92,9 @@ export function setupButtonLogger({ env, sessionID, buttonSessionID, clientID, p
             [FPTI_KEY.USER_ACTION]:                  commit ? FPTI_USER_ACTION.COMMIT : FPTI_USER_ACTION.CONTINUE,
             [FPTI_KEY.SELLER_ID]:                    merchantID[0],
             [FPTI_KEY.MERCHANT_DOMAIN]:              merchantDomain,
+            [FPTI_KEY.CHOSEN_FUNDING]:               fundingSource,
+            [FPTI_KEY.PRODUCT]:                      product,
+            [FPTI_KEY.TOKEN]:                        smartWalletOrderID,
             [FPTI_CUSTOM_KEY.EXPERIENCE]:            experience === EXPERIENCE.INLINE ? 'accelerated' : 'default',
             [FPTI_KEY.TIMESTAMP]:                    Date.now().toString()
         };

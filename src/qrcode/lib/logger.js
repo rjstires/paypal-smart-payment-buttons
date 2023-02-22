@@ -20,7 +20,7 @@ export function setupNativeQRLogger() : LoggerType {
         transport: parent && getHTTPTransport(parent)
     });
 
-    setupLogger({ env, sessionID, clientID, sdkCorrelationID, locale, sdkVersion, buyerCountry, fundingSource });
+    setupLogger({ env, sessionID, clientID, sdkCorrelationID, locale, sdkVersion, buyerCountry });
     enableAmplitude({ env });
 
     logger.addPayloadBuilder(() => {
@@ -37,6 +37,7 @@ export function setupNativeQRLogger() : LoggerType {
             [FPTI_KEY.CONTEXT_ID]:                   orderID,
             [FPTI_KEY.BUTTON_SESSION_UID]:           buttonSessionID,
             [FPTI_KEY.BUTTON_VERSION]:               __SMART_BUTTONS__.__MINOR_VERSION__,
+            [FPTI_KEY.CHOSEN_FUNDING]:               fundingSource,
             [AMPLITUDE_KEY.USER_ID]:                 buttonSessionID
         };
     });

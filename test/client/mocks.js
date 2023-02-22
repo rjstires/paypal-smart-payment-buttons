@@ -1647,7 +1647,12 @@ export async function mockSetupCardFields() : Promise<void> {
     await setupCard({
         cspNonce:               '111222333',
         facilitatorAccessToken: 'ABCDEF12345',
-        featureFlags: {}
+        featureFlags: {},
+        buyerCountry: 'US',
+        metadata: {
+            correlationID: 'ABCXYZ',
+            spbVersion: 'v3'
+        }
     });
 }
 
