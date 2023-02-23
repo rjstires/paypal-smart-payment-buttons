@@ -4771,6 +4771,7 @@
             var httpWin;
             var events = [];
             var tracking = [];
+            var metrics = [];
             var payloadBuilders = [];
             var metaBuilders = [];
             var trackingBuilders = [];
@@ -4787,7 +4788,7 @@
             }
             function immediateFlush() {
                 return promise_ZalgoPromise.try((function() {
-                    if (dom_isBrowser() && "file:" !== window.location.protocol && (events.length || tracking.length)) {
+                    if (dom_isBrowser() && "file:" !== window.location.protocol && (events.length || tracking.length || metrics.length)) {
                         var meta = {};
                         for (var _i2 = 0; _i2 < metaBuilders.length; _i2++) extendIfDefined(meta, (0, metaBuilders[_i2])(meta));
                         var headers = {};
@@ -4801,7 +4802,8 @@
                             json: {
                                 events: events,
                                 meta: meta,
-                                tracking: tracking
+                                tracking: tracking,
+                                metrics: metrics
                             },
                             enableSendBeacon: enableSendBeacon
                         }).catch(src_util_noop));
@@ -4822,6 +4824,7 @@
                         }).catch(src_util_noop);
                         events = [];
                         tracking = [];
+                        metrics = [];
                         return promise_ZalgoPromise.resolve(res).then(src_util_noop);
                     }
                 }));
@@ -4908,6 +4911,12 @@
                     trackingBuilders[_i8])(trackingPayload));
                     print("debug", "track", trackingPayload);
                     tracking.push(trackingPayload);
+                    return logger;
+                },
+                metric: function(metricPayload) {
+                    if (!dom_isBrowser()) return logger;
+                    print("debug", "metric." + metricPayload.name, metricPayload.dimensions);
+                    metrics.push(metricPayload);
                     return logger;
                 },
                 flush: flush,
@@ -4998,7 +5007,7 @@
                 var env = _ref.env, sessionID = _ref.sessionID, buttonSessionID = _ref.buttonSessionID, sdkCorrelationID = _ref.sdkCorrelationID, clientID = _ref.clientID, fundingSource = _ref.fundingSource, sdkVersion = _ref.sdkVersion, locale = _ref.locale, buyerCountry = _ref.buyerCountry;
                 var logger = getLogger();
                 !function(_ref2) {
-                    var env = _ref2.env, sessionID = _ref2.sessionID, clientID = _ref2.clientID, sdkCorrelationID = _ref2.sdkCorrelationID, buyerCountry = _ref2.buyerCountry, locale = _ref2.locale, sdkVersion = _ref2.sdkVersion, fundingSource = _ref2.fundingSource, smartWalletOrderID = _ref2.smartWalletOrderID, product = _ref2.product;
+                    var env = _ref2.env, sessionID = _ref2.sessionID, clientID = _ref2.clientID, sdkCorrelationID = _ref2.sdkCorrelationID, buyerCountry = _ref2.buyerCountry, locale = _ref2.locale, _ref2$sdkVersion = _ref2.sdkVersion, sdkVersion = void 0 === _ref2$sdkVersion ? window.paypal.version : _ref2$sdkVersion;
                     var logger = getLogger();
                     logger.addPayloadBuilder((function() {
                         return {
@@ -5010,21 +5019,16 @@
                         };
                     }));
                     logger.addTrackingBuilder((function() {
-                        var _tracking;
-                        var lang = locale.lang, country = locale.country;
-                        var tracking = ((_tracking = {}).feed_name = "payments_sdk", _tracking.serverside_data_source = "checkout", 
-                        _tracking.client_id = clientID, _tracking.page_session_id = sessionID, _tracking.referer_url = window.location.host, 
-                        _tracking.buyer_cntry = buyerCountry, _tracking.locale = lang + "_" + country, _tracking.integration_identifier = clientID, 
-                        _tracking.sdk_environment = isIos() ? "iOS" : function(ua) {
+                        var _ref3;
+                        return (_ref3 = {}).feed_name = "payments_sdk", _ref3.serverside_data_source = "checkout", 
+                        _ref3.client_id = clientID, _ref3.page_session_id = sessionID, _ref3.referer_url = window.location.host, 
+                        _ref3.buyer_cntry = buyerCountry, _ref3.locale = locale.lang + "_" + locale.country, 
+                        _ref3.integration_identifier = clientID, _ref3.sdk_environment = isIos() ? "iOS" : function(ua) {
                             void 0 === ua && (ua = getUserAgent());
                             return /Android/.test(ua);
-                        }() ? "android" : null, _tracking.sdk_name = "payments_sdk", _tracking.sdk_version = sdkVersion, 
-                        _tracking.user_agent = window.navigator && window.navigator.userAgent, _tracking.context_correlation_id = sdkCorrelationID, 
-                        _tracking.t = Date.now().toString(), _tracking.selected_payment_method = fundingSource, 
-                        _tracking);
-                        product && (tracking.product = product);
-                        smartWalletOrderID && (tracking.token = smartWalletOrderID);
-                        return tracking;
+                        }() ? "android" : null, _ref3.sdk_name = "payments_sdk", _ref3.sdk_version = sdkVersion, 
+                        _ref3.user_agent = window.navigator && window.navigator.userAgent, _ref3.context_correlation_id = sdkCorrelationID, 
+                        _ref3.t = Date.now().toString(), _ref3;
                     }));
                     promise_ZalgoPromise.onPossiblyUnhandledException((function(err) {
                         var _logger$track;
@@ -5042,8 +5046,7 @@
                     sdkCorrelationID: sdkCorrelationID,
                     locale: locale,
                     sdkVersion: sdkVersion,
-                    buyerCountry: buyerCountry,
-                    fundingSource: fundingSource
+                    buyerCountry: buyerCountry
                 });
                 !function(_ref) {
                     var env = _ref.env;
@@ -5062,8 +5065,9 @@
                 logger.addTrackingBuilder((function() {
                     var _ref3;
                     return (_ref3 = {}).state_name = "smart_button", _ref3.context_type = "button_session_id", 
-                    _ref3.context_id = buttonSessionID, _ref3.button_session_id = buttonSessionID, _ref3.button_version = "5.0.129", 
-                    _ref3.user_id = buttonSessionID, _ref3.time = Date.now().toString(), _ref3;
+                    _ref3.context_id = buttonSessionID, _ref3.button_session_id = buttonSessionID, _ref3.button_version = "5.0.130", 
+                    _ref3.selected_payment_method = fundingSource, _ref3.user_id = buttonSessionID, 
+                    _ref3.time = Date.now().toString(), _ref3;
                 }));
                 (function() {
                     if (window.document.documentMode) try {

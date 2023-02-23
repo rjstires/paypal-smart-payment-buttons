@@ -203,6 +203,7 @@ window.spb = function(modules) {
             var url = _ref.url, prefix = _ref.prefix, _ref$logLevel = _ref.logLevel, logLevel = void 0 === _ref$logLevel ? DEFAULT_LOG_LEVEL : _ref$logLevel, _ref$transport = _ref.transport, transport = void 0 === _ref$transport ? getHTTPTransport() : _ref$transport, amplitudeApiKey = _ref.amplitudeApiKey, _ref$flushInterval = _ref.flushInterval, flushInterval = void 0 === _ref$flushInterval ? 6e4 : _ref$flushInterval, _ref$enableSendBeacon = _ref.enableSendBeacon, enableSendBeacon = void 0 !== _ref$enableSendBeacon && _ref$enableSendBeacon;
             var events = [];
             var tracking = [];
+            var metrics = [];
             var payloadBuilders = [];
             var metaBuilders = [];
             var trackingBuilders = [];
@@ -219,7 +220,7 @@ window.spb = function(modules) {
             }
             function immediateFlush() {
                 return src.ZalgoPromise.try((function() {
-                    if (Object(belter_src.isBrowser)() && window.location.protocol !== PROTOCOL.FILE && (events.length || tracking.length)) {
+                    if (Object(belter_src.isBrowser)() && window.location.protocol !== PROTOCOL.FILE && (events.length || tracking.length || metrics.length)) {
                         var meta = {};
                         for (var _i2 = 0; _i2 < metaBuilders.length; _i2++) extendIfDefined(meta, (0, metaBuilders[_i2])(meta));
                         var headers = {};
@@ -233,7 +234,8 @@ window.spb = function(modules) {
                             json: {
                                 events: events,
                                 meta: meta,
-                                tracking: tracking
+                                tracking: tracking,
+                                metrics: metrics
                             },
                             enableSendBeacon: enableSendBeacon
                         }).catch(belter_src.noop));
@@ -254,6 +256,7 @@ window.spb = function(modules) {
                         }).catch(belter_src.noop);
                         events = [];
                         tracking = [];
+                        metrics = [];
                         return src.ZalgoPromise.resolve(res).then(belter_src.noop);
                     }
                 }));
@@ -316,6 +319,12 @@ window.spb = function(modules) {
                     trackingBuilders[_i8])(trackingPayload));
                     print(LOG_LEVEL.DEBUG, "track", trackingPayload);
                     tracking.push(trackingPayload);
+                    return logger;
+                },
+                metric: function(metricPayload) {
+                    if (!Object(belter_src.isBrowser)()) return logger;
+                    print(LOG_LEVEL.DEBUG, "metric." + metricPayload.name, metricPayload.dimensions);
+                    metrics.push(metricPayload);
                     return logger;
                 },
                 flush: flush,
@@ -7642,905 +7651,6 @@ window.spb = function(modules) {
             INLINE: "inline"
         };
     },
-    "./node_modules/@paypal/sdk-constants/dist/paypal-sdk-constants.js": function(module, exports, __webpack_require__) {
-        "undefined" != typeof self && self, module.exports = function(E) {
-            var N = {};
-            function S(R) {
-                if (N[R]) return N[R].exports;
-                var t = N[R] = {
-                    i: R,
-                    l: !1,
-                    exports: {}
-                };
-                return E[R].call(t.exports, t, t.exports, S), t.l = !0, t.exports;
-            }
-            return S.m = E, S.c = N, S.d = function(E, N, R) {
-                S.o(E, N) || Object.defineProperty(E, N, {
-                    enumerable: !0,
-                    get: R
-                });
-            }, S.r = function(E) {
-                "undefined" != typeof Symbol && Symbol.toStringTag && Object.defineProperty(E, Symbol.toStringTag, {
-                    value: "Module"
-                }), Object.defineProperty(E, "__esModule", {
-                    value: !0
-                });
-            }, S.t = function(E, N) {
-                if (1 & N && (E = S(E)), 8 & N) return E;
-                if (4 & N && "object" == typeof E && E && E.__esModule) return E;
-                var R = Object.create(null);
-                if (S.r(R), Object.defineProperty(R, "default", {
-                    enumerable: !0,
-                    value: E
-                }), 2 & N && "string" != typeof E) for (var t in E) S.d(R, t, function(N) {
-                    return E[N];
-                }.bind(null, t));
-                return R;
-            }, S.n = function(E) {
-                var N = E && E.__esModule ? function() {
-                    return E.default;
-                } : function() {
-                    return E;
-                };
-                return S.d(N, "a", N), N;
-            }, S.o = function(E, N) {
-                return {}.hasOwnProperty.call(E, N);
-            }, S.p = "", S(S.s = 0);
-        }([ function(E, N, S) {
-            "use strict";
-            S.r(N), S.d(N, "DEFAULT_COUNTRY", (function() {
-                return a;
-            })), S.d(N, "DEFAULT_CURRENCY", (function() {
-                return Z;
-            })), S.d(N, "DEFAULT_INTENT", (function() {
-                return u;
-            })), S.d(N, "DEFAULT_COMMIT", (function() {
-                return P;
-            })), S.d(N, "DEFAULT_SALE_COMMIT", (function() {
-                return L;
-            })), S.d(N, "DEFAULT_NONSALE_COMMIT", (function() {
-                return d;
-            })), S.d(N, "DEFAULT_VAULT", (function() {
-                return c;
-            })), S.d(N, "DEFAULT_COMPONENTS", (function() {
-                return U;
-            })), S.d(N, "DEFAULT_DEBUG", (function() {
-                return s;
-            })), S.d(N, "ENV", (function() {
-                return B;
-            })), S.d(N, "MOBILE_ENV", (function() {
-                return G;
-            })), S.d(N, "ERROR_CODE", (function() {
-                return K;
-            })), S.d(N, "FPTI_KEY", (function() {
-                return p;
-            })), S.d(N, "FPTI_USER_ACTION", (function() {
-                return l;
-            })), S.d(N, "FPTI_DATA_SOURCE", (function() {
-                return f;
-            })), S.d(N, "FPTI_FEED", (function() {
-                return Y;
-            })), S.d(N, "FPTI_SDK_NAME", (function() {
-                return V;
-            })), S.d(N, "FUNDING", (function() {
-                return m;
-            })), S.d(N, "FUNDING_BRAND_LABEL", (function() {
-                return y;
-            })), S.d(N, "CARD", (function() {
-                return b;
-            })), S.d(N, "WALLET_INSTRUMENT", (function() {
-                return W;
-            })), S.d(N, "FUNDING_PRODUCTS", (function() {
-                return J;
-            })), S.d(N, "COUNTRY", (function() {
-                return R;
-            })), S.d(N, "LANG", (function() {
-                return t;
-            })), S.d(N, "COUNTRY_LANGS", (function() {
-                return T;
-            })), S.d(N, "INTENT", (function() {
-                return e;
-            })), S.d(N, "COMMIT", (function() {
-                return n;
-            })), S.d(N, "VAULT", (function() {
-                return A;
-            })), S.d(N, "CURRENCY", (function() {
-                return r;
-            })), S.d(N, "SDK_PATH", (function() {
-                return _;
-            })), S.d(N, "SDK_SETTINGS", (function() {
-                return F;
-            })), S.d(N, "SDK_QUERY_KEYS", (function() {
-                return I;
-            })), S.d(N, "COMPONENTS", (function() {
-                return D;
-            })), S.d(N, "DEBUG", (function() {
-                return H;
-            })), S.d(N, "QUERY_BOOL", (function() {
-                return O;
-            })), S.d(N, "UNKNOWN", (function() {
-                return o;
-            })), S.d(N, "PROTOCOL", (function() {
-                return i;
-            })), S.d(N, "PAGE_TYPES", (function() {
-                return M;
-            })), S.d(N, "MERCHANT_ID_MAX", (function() {
-                return C;
-            })), S.d(N, "PLATFORM", (function() {
-                return h;
-            })), S.d(N, "TYPES", (function() {
-                return k;
-            })), S.d(N, "APM_LIST", (function() {
-                return g;
-            }));
-            var R = {
-                AD: "AD",
-                AE: "AE",
-                AG: "AG",
-                AI: "AI",
-                AL: "AL",
-                AM: "AM",
-                AN: "AN",
-                AO: "AO",
-                AR: "AR",
-                AT: "AT",
-                AU: "AU",
-                AW: "AW",
-                AZ: "AZ",
-                BA: "BA",
-                BB: "BB",
-                BE: "BE",
-                BF: "BF",
-                BG: "BG",
-                BH: "BH",
-                BI: "BI",
-                BJ: "BJ",
-                BM: "BM",
-                BN: "BN",
-                BO: "BO",
-                BR: "BR",
-                BS: "BS",
-                BT: "BT",
-                BW: "BW",
-                BY: "BY",
-                BZ: "BZ",
-                CA: "CA",
-                CD: "CD",
-                CG: "CG",
-                CH: "CH",
-                CI: "CI",
-                CK: "CK",
-                CL: "CL",
-                CM: "CM",
-                CN: "CN",
-                CO: "CO",
-                CR: "CR",
-                CV: "CV",
-                CY: "CY",
-                CZ: "CZ",
-                DE: "DE",
-                DJ: "DJ",
-                DK: "DK",
-                DM: "DM",
-                DO: "DO",
-                DZ: "DZ",
-                EC: "EC",
-                EE: "EE",
-                EG: "EG",
-                ER: "ER",
-                ES: "ES",
-                ET: "ET",
-                FI: "FI",
-                FJ: "FJ",
-                FK: "FK",
-                FM: "FM",
-                FO: "FO",
-                FR: "FR",
-                GA: "GA",
-                GB: "GB",
-                GD: "GD",
-                GE: "GE",
-                GF: "GF",
-                GI: "GI",
-                GL: "GL",
-                GM: "GM",
-                GN: "GN",
-                GP: "GP",
-                GR: "GR",
-                GT: "GT",
-                GW: "GW",
-                GY: "GY",
-                HK: "HK",
-                HN: "HN",
-                HR: "HR",
-                HU: "HU",
-                ID: "ID",
-                IE: "IE",
-                IL: "IL",
-                IN: "IN",
-                IS: "IS",
-                IT: "IT",
-                JM: "JM",
-                JO: "JO",
-                JP: "JP",
-                KE: "KE",
-                KG: "KG",
-                KH: "KH",
-                KI: "KI",
-                KM: "KM",
-                KN: "KN",
-                KR: "KR",
-                KW: "KW",
-                KY: "KY",
-                KZ: "KZ",
-                LA: "LA",
-                LC: "LC",
-                LI: "LI",
-                LK: "LK",
-                LS: "LS",
-                LT: "LT",
-                LU: "LU",
-                LV: "LV",
-                MA: "MA",
-                MC: "MC",
-                MD: "MD",
-                ME: "ME",
-                MG: "MG",
-                MH: "MH",
-                MK: "MK",
-                ML: "ML",
-                MN: "MN",
-                MQ: "MQ",
-                MR: "MR",
-                MS: "MS",
-                MT: "MT",
-                MU: "MU",
-                MV: "MV",
-                MW: "MW",
-                MX: "MX",
-                MY: "MY",
-                MZ: "MZ",
-                NA: "NA",
-                NC: "NC",
-                NE: "NE",
-                NF: "NF",
-                NG: "NG",
-                NI: "NI",
-                NL: "NL",
-                NO: "NO",
-                NP: "NP",
-                NR: "NR",
-                NU: "NU",
-                NZ: "NZ",
-                OM: "OM",
-                PA: "PA",
-                PE: "PE",
-                PF: "PF",
-                PG: "PG",
-                PH: "PH",
-                PL: "PL",
-                PM: "PM",
-                PN: "PN",
-                PT: "PT",
-                PW: "PW",
-                PY: "PY",
-                QA: "QA",
-                RE: "RE",
-                RO: "RO",
-                RS: "RS",
-                RU: "RU",
-                RW: "RW",
-                SA: "SA",
-                SB: "SB",
-                SC: "SC",
-                SE: "SE",
-                SG: "SG",
-                SH: "SH",
-                SI: "SI",
-                SJ: "SJ",
-                SK: "SK",
-                SL: "SL",
-                SM: "SM",
-                SN: "SN",
-                SO: "SO",
-                SR: "SR",
-                ST: "ST",
-                SV: "SV",
-                SZ: "SZ",
-                TC: "TC",
-                TD: "TD",
-                TG: "TG",
-                TH: "TH",
-                TJ: "TJ",
-                TM: "TM",
-                TN: "TN",
-                TO: "TO",
-                TR: "TR",
-                TT: "TT",
-                TV: "TV",
-                TW: "TW",
-                TZ: "TZ",
-                UA: "UA",
-                UG: "UG",
-                US: "US",
-                UY: "UY",
-                VA: "VA",
-                VC: "VC",
-                VE: "VE",
-                VG: "VG",
-                VN: "VN",
-                VU: "VU",
-                WF: "WF",
-                WS: "WS",
-                YE: "YE",
-                YT: "YT",
-                ZA: "ZA",
-                ZM: "ZM",
-                ZW: "ZW"
-            }, t = {
-                AR: "ar",
-                BG: "bg",
-                CS: "cs",
-                DA: "da",
-                DE: "de",
-                EL: "el",
-                EN: "en",
-                ES: "es",
-                ET: "et",
-                FI: "fi",
-                FR: "fr",
-                HE: "he",
-                HU: "hu",
-                ID: "id",
-                IT: "it",
-                JA: "ja",
-                KO: "ko",
-                LT: "lt",
-                LV: "lv",
-                MS: "ms",
-                NL: "nl",
-                NO: "no",
-                PL: "pl",
-                PT: "pt",
-                RO: "ro",
-                RU: "ru",
-                SI: "si",
-                SK: "sk",
-                SL: "sl",
-                SQ: "sq",
-                SV: "sv",
-                TH: "th",
-                TL: "tl",
-                TR: "tr",
-                VI: "vi",
-                ZH: "zh",
-                ZH_HANT: "zh_Hant"
-            }, T = {
-                AD: [ t.EN, t.FR, t.ES, t.ZH ],
-                AE: [ t.EN, t.FR, t.ES, t.ZH, t.AR ],
-                AG: [ t.EN, t.FR, t.ES, t.ZH ],
-                AI: [ t.EN, t.FR, t.ES, t.ZH ],
-                AL: [ t.SQ, t.EN ],
-                AM: [ t.EN, t.FR, t.ES, t.ZH ],
-                AN: [ t.EN, t.FR, t.ES, t.ZH ],
-                AO: [ t.EN, t.FR, t.ES, t.ZH ],
-                AR: [ t.ES, t.EN ],
-                AT: [ t.DE, t.EN ],
-                AU: [ t.EN ],
-                AW: [ t.EN, t.FR, t.ES, t.ZH ],
-                AZ: [ t.EN, t.FR, t.ES, t.ZH ],
-                BA: [ t.EN ],
-                BB: [ t.EN, t.FR, t.ES, t.ZH ],
-                BE: [ t.EN, t.NL, t.FR ],
-                BF: [ t.FR, t.EN, t.ES, t.ZH ],
-                BG: [ t.BG, t.EN ],
-                BH: [ t.AR, t.EN, t.FR, t.ES, t.ZH ],
-                BI: [ t.FR, t.EN, t.ES, t.ZH ],
-                BJ: [ t.FR, t.EN, t.ES, t.ZH ],
-                BM: [ t.EN, t.FR, t.ES, t.ZH ],
-                BN: [ t.MS, t.EN ],
-                BO: [ t.ES, t.EN, t.FR, t.ZH ],
-                BR: [ t.PT, t.EN ],
-                BS: [ t.EN, t.FR, t.ES, t.ZH ],
-                BT: [ t.EN ],
-                BW: [ t.EN, t.FR, t.ES, t.ZH ],
-                BY: [ t.EN ],
-                BZ: [ t.EN, t.ES, t.FR, t.ZH ],
-                CA: [ t.EN, t.FR ],
-                CD: [ t.FR, t.EN, t.ES, t.ZH ],
-                CG: [ t.EN, t.FR, t.ES, t.ZH ],
-                CH: [ t.DE, t.FR, t.EN ],
-                CI: [ t.FR, t.EN ],
-                CK: [ t.EN, t.FR, t.ES, t.ZH ],
-                CL: [ t.ES, t.EN, t.FR, t.ZH ],
-                CM: [ t.FR, t.EN ],
-                CN: [ t.ZH ],
-                CO: [ t.ES, t.EN, t.FR, t.ZH ],
-                CR: [ t.ES, t.EN, t.FR, t.ZH ],
-                CV: [ t.EN, t.FR, t.ES, t.ZH ],
-                CY: [ t.EN ],
-                CZ: [ t.CS, t.EN ],
-                DE: [ t.DE, t.EN ],
-                DJ: [ t.FR, t.EN, t.ES, t.ZH ],
-                DK: [ t.DA, t.EN ],
-                DM: [ t.EN, t.FR, t.ES, t.ZH ],
-                DO: [ t.ES, t.EN, t.FR, t.ZH ],
-                DZ: [ t.AR, t.EN, t.FR, t.ES, t.ZH ],
-                EC: [ t.ES, t.EN, t.FR, t.ZH ],
-                EE: [ t.ET, t.EN, t.RU ],
-                EG: [ t.AR, t.EN, t.FR, t.ES, t.ZH ],
-                ER: [ t.EN, t.FR, t.ES, t.ZH ],
-                ES: [ t.ES, t.EN ],
-                ET: [ t.EN, t.FR, t.ES, t.ZH ],
-                FI: [ t.FI, t.EN ],
-                FJ: [ t.EN, t.FR, t.ES, t.ZH ],
-                FK: [ t.EN, t.FR, t.ES, t.ZH ],
-                FM: [ t.EN ],
-                FO: [ t.DA, t.EN, t.FR, t.ES, t.ZH ],
-                FR: [ t.FR, t.EN ],
-                GA: [ t.FR, t.EN, t.ES, t.ZH ],
-                GB: [ t.EN ],
-                GD: [ t.EN, t.FR, t.ES, t.ZH ],
-                GE: [ t.EN, t.FR, t.ES, t.ZH ],
-                GF: [ t.EN, t.FR, t.ES, t.ZH ],
-                GI: [ t.EN, t.FR, t.ES, t.ZH ],
-                GL: [ t.DA, t.EN, t.FR, t.ES, t.ZH ],
-                GM: [ t.EN, t.FR, t.ES, t.ZH ],
-                GN: [ t.FR, t.EN, t.ES, t.ZH ],
-                GP: [ t.EN, t.FR, t.ES, t.ZH ],
-                GR: [ t.EL, t.EN ],
-                GT: [ t.ES, t.EN, t.FR, t.ZH ],
-                GW: [ t.EN, t.FR, t.ES, t.ZH ],
-                GY: [ t.EN, t.FR, t.ES, t.ZH ],
-                HK: [ t.EN, t.ZH_HANT, t.ZH ],
-                HN: [ t.ES, t.EN, t.FR, t.ZH ],
-                HR: [ t.EN ],
-                HU: [ t.HU, t.EN ],
-                ID: [ t.ID, t.EN ],
-                IE: [ t.EN, t.FR, t.ES, t.ZH ],
-                IL: [ t.HE, t.EN ],
-                IN: [ t.EN ],
-                IS: [ t.EN ],
-                IT: [ t.IT, t.EN ],
-                JM: [ t.EN, t.ES, t.FR, t.ZH ],
-                JO: [ t.AR, t.EN, t.FR, t.ES, t.ZH ],
-                JP: [ t.JA, t.EN ],
-                KE: [ t.EN, t.FR, t.ES, t.ZH ],
-                KG: [ t.EN, t.FR, t.ES, t.ZH ],
-                KH: [ t.EN ],
-                KI: [ t.EN, t.FR, t.ES, t.ZH ],
-                KM: [ t.FR, t.EN, t.ES, t.ZH ],
-                KN: [ t.EN, t.FR, t.ES, t.ZH ],
-                KR: [ t.KO, t.EN ],
-                KW: [ t.AR, t.EN, t.FR, t.ES, t.ZH ],
-                KY: [ t.EN, t.FR, t.ES, t.ZH ],
-                KZ: [ t.EN, t.FR, t.ES, t.ZH ],
-                LA: [ t.EN ],
-                LC: [ t.EN, t.FR, t.ES, t.ZH ],
-                LI: [ t.EN, t.FR, t.ES, t.ZH ],
-                LK: [ t.SI, t.EN ],
-                LS: [ t.EN, t.FR, t.ES, t.ZH ],
-                LT: [ t.LT, t.EN, t.RU, t.ZH ],
-                LU: [ t.EN, t.DE, t.FR, t.ES, t.ZH ],
-                LV: [ t.LV, t.EN, t.RU ],
-                MA: [ t.AR, t.EN, t.FR, t.ES, t.ZH ],
-                MC: [ t.FR, t.EN ],
-                MD: [ t.EN ],
-                ME: [ t.EN ],
-                MG: [ t.EN, t.FR, t.ES, t.ZH ],
-                MH: [ t.EN, t.FR, t.ES, t.ZH ],
-                MK: [ t.EN ],
-                ML: [ t.FR, t.EN, t.ES, t.ZH ],
-                MN: [ t.EN ],
-                MQ: [ t.EN, t.FR, t.ES, t.ZH ],
-                MR: [ t.EN, t.FR, t.ES, t.ZH ],
-                MS: [ t.EN, t.FR, t.ES, t.ZH ],
-                MT: [ t.EN ],
-                MU: [ t.EN, t.FR, t.ES, t.ZH ],
-                MV: [ t.EN ],
-                MW: [ t.EN, t.FR, t.ES, t.ZH ],
-                MX: [ t.ES, t.EN ],
-                MY: [ t.MS, t.EN ],
-                MZ: [ t.EN, t.FR, t.ES, t.ZH ],
-                NA: [ t.EN, t.FR, t.ES, t.ZH ],
-                NC: [ t.EN, t.FR, t.ES, t.ZH ],
-                NE: [ t.FR, t.EN, t.ES, t.ZH ],
-                NF: [ t.EN, t.FR, t.ES, t.ZH ],
-                NG: [ t.EN ],
-                NI: [ t.ES, t.EN, t.FR, t.ZH ],
-                NL: [ t.NL, t.EN ],
-                NO: [ t.NO, t.EN ],
-                NP: [ t.EN ],
-                NR: [ t.EN, t.FR, t.ES, t.ZH ],
-                NU: [ t.EN, t.FR, t.ES, t.ZH ],
-                NZ: [ t.EN, t.FR, t.ES, t.ZH ],
-                OM: [ t.AR, t.EN, t.FR, t.ES, t.ZH ],
-                PA: [ t.ES, t.EN, t.FR, t.ZH ],
-                PE: [ t.ES, t.EN, t.FR, t.ZH ],
-                PF: [ t.EN, t.FR, t.ES, t.ZH ],
-                PG: [ t.EN, t.FR, t.ES, t.ZH ],
-                PH: [ t.TL, t.EN ],
-                PL: [ t.PL, t.EN ],
-                PM: [ t.EN, t.FR, t.ES, t.ZH ],
-                PN: [ t.EN, t.FR, t.ES, t.ZH ],
-                PT: [ t.PT, t.EN ],
-                PW: [ t.EN, t.FR, t.ES, t.ZH ],
-                PY: [ t.ES, t.EN ],
-                QA: [ t.EN, t.FR, t.ES, t.ZH, t.AR ],
-                RE: [ t.EN, t.FR, t.ES, t.ZH ],
-                RO: [ t.RO, t.EN ],
-                RS: [ t.EN, t.FR, t.ES, t.ZH ],
-                RU: [ t.RU, t.EN ],
-                RW: [ t.FR, t.EN, t.ES, t.ZH ],
-                SA: [ t.AR, t.EN, t.FR, t.ES, t.ZH ],
-                SB: [ t.EN, t.FR, t.ES, t.ZH ],
-                SC: [ t.FR, t.EN, t.ES, t.ZH ],
-                SE: [ t.SV, t.EN ],
-                SG: [ t.EN ],
-                SH: [ t.EN, t.FR, t.ES, t.ZH ],
-                SI: [ t.SL, t.EN ],
-                SJ: [ t.EN, t.FR, t.ES, t.ZH ],
-                SK: [ t.SK, t.EN ],
-                SL: [ t.EN, t.FR, t.ES, t.ZH ],
-                SM: [ t.EN, t.FR, t.ES, t.ZH ],
-                SN: [ t.FR, t.EN, t.ES, t.ZH ],
-                SO: [ t.EN, t.FR, t.ES, t.ZH ],
-                SR: [ t.EN, t.FR, t.ES, t.ZH ],
-                ST: [ t.EN, t.FR, t.ES, t.ZH ],
-                SV: [ t.ES, t.EN, t.FR, t.ZH ],
-                SZ: [ t.EN, t.FR, t.ES, t.ZH ],
-                TC: [ t.EN, t.FR, t.ES, t.ZH ],
-                TD: [ t.FR, t.EN, t.ES, t.ZH ],
-                TG: [ t.FR, t.EN, t.ES, t.ZH ],
-                TH: [ t.TH, t.EN ],
-                TJ: [ t.EN, t.FR, t.ES, t.ZH ],
-                TM: [ t.EN, t.FR, t.ES, t.ZH ],
-                TN: [ t.AR, t.EN, t.FR, t.ES, t.ZH ],
-                TO: [ t.EN ],
-                TR: [ t.TR, t.EN ],
-                TT: [ t.EN, t.FR, t.ES, t.ZH ],
-                TV: [ t.EN, t.FR, t.ES, t.ZH ],
-                TW: [ t.ZH_HANT, t.ZH, t.EN ],
-                TZ: [ t.EN, t.FR, t.ES, t.ZH ],
-                UA: [ t.EN, t.RU, t.FR, t.ES, t.ZH ],
-                UG: [ t.EN, t.FR, t.ES, t.ZH ],
-                US: [ t.EN, t.FR, t.ES, t.ZH ],
-                UY: [ t.ES, t.EN, t.FR, t.ZH ],
-                VA: [ t.EN, t.FR, t.ES, t.ZH ],
-                VC: [ t.EN, t.FR, t.ES, t.ZH ],
-                VE: [ t.ES, t.EN, t.FR, t.ZH ],
-                VG: [ t.EN, t.FR, t.ES, t.ZH ],
-                VN: [ t.VI, t.EN ],
-                VU: [ t.EN, t.FR, t.ES, t.ZH ],
-                WF: [ t.EN, t.FR, t.ES, t.ZH ],
-                WS: [ t.EN ],
-                YE: [ t.AR, t.EN, t.FR, t.ES, t.ZH ],
-                YT: [ t.EN, t.FR, t.ES, t.ZH ],
-                ZA: [ t.EN, t.FR, t.ES, t.ZH ],
-                ZM: [ t.EN, t.FR, t.ES, t.ZH ],
-                ZW: [ t.EN ]
-            }, e = {
-                CAPTURE: "capture",
-                AUTHORIZE: "authorize",
-                ORDER: "order",
-                TOKENIZE: "tokenize",
-                SUBSCRIPTION: "subscription"
-            }, n = {
-                TRUE: !0,
-                FALSE: !1
-            }, A = {
-                TRUE: !0,
-                FALSE: !1
-            }, r = {
-                AED: "AED",
-                ALL: "ALL",
-                ANG: "ANG",
-                AOA: "AOA",
-                AUD: "AUD",
-                AWG: "AWG",
-                BAM: "BAM",
-                BBD: "BBD",
-                BGN: "BGN",
-                BIF: "BIF",
-                BMD: "BMD",
-                BND: "BND",
-                BOB: "BOB",
-                BRL: "BRL",
-                BSD: "BSD",
-                BTN: "BTN",
-                CAD: "CAD",
-                CDF: "CDF",
-                CHF: "CHF",
-                CLP: "CLP",
-                COP: "COP",
-                CRC: "CRC",
-                CVE: "CVE",
-                CZK: "CZK",
-                DJF: "DJF",
-                DKK: "DKK",
-                DOP: "DOP",
-                DZD: "DZD",
-                EGP: "EGP",
-                ETB: "ETB",
-                EUR: "EUR",
-                FJD: "FJD",
-                FKP: "FKP",
-                GBP: "GBP",
-                GIP: "GIP",
-                GMD: "GMD",
-                GNF: "GNF",
-                GTQ: "GTQ",
-                GYD: "GYD",
-                HKD: "HKD",
-                HNL: "HNL",
-                HRK: "HRK",
-                HUF: "HUF",
-                IDR: "IDR",
-                ILS: "ILS",
-                INR: "INR",
-                ISK: "ISK",
-                JMD: "JMD",
-                JPY: "JPY",
-                KES: "KES",
-                KMF: "KMF",
-                KRW: "KRW",
-                KYD: "KYD",
-                LAK: "LAK",
-                LKR: "LKR",
-                MDL: "MDL",
-                MGA: "MGA",
-                MKD: "MKD",
-                MNT: "MNT",
-                MRO: "MRO",
-                MUR: "MUR",
-                MVR: "MVR",
-                MXN: "MXN",
-                MYR: "MYR",
-                NAD: "NAD",
-                NIO: "NIO",
-                NOK: "NOK",
-                NPR: "NPR",
-                NZD: "NZD",
-                PEN: "PEN",
-                PGK: "PGK",
-                PHP: "PHP",
-                PLN: "PLN",
-                PYG: "PYG",
-                QAR: "QAR",
-                RON: "RON",
-                RSD: "RSD",
-                RUB: "RUB",
-                SAR: "SAR",
-                SBD: "SBD",
-                SCR: "SCR",
-                SEK: "SEK",
-                SGD: "SGD",
-                SHP: "SHP",
-                SLL: "SLL",
-                SOS: "SOS",
-                SRD: "SRD",
-                SZL: "SZL",
-                THB: "THB",
-                TJS: "TJS",
-                TOP: "TOP",
-                TTD: "TTD",
-                TWD: "TWD",
-                TZS: "TZS",
-                USD: "USD",
-                UYU: "UYU",
-                VND: "VND",
-                VUV: "VUV",
-                WST: "WST",
-                XAF: "XAF",
-                XCD: "XCD",
-                YER: "YER"
-            }, _ = "/sdk/js", F = {
-                NAMESPACE: "data-namespace",
-                CLIENT_TOKEN: "data-client-token",
-                MERCHANT_ID: "data-merchant-id",
-                PARTNER_ATTRIBUTION_ID: "data-partner-attribution-id",
-                STAGE_HOST: "data-stage-host",
-                API_STAGE_HOST: "data-api-stage-host",
-                CSP_NONCE: "data-csp-nonce",
-                ENABLE_3DS: "data-enable-3ds",
-                SDK_INTEGRATION_SOURCE: "data-sdk-integration-source",
-                USER_ID_TOKEN: "data-user-id-token",
-                AMOUNT: "data-amount",
-                CLIENT_METADATA_ID: "data-client-metadata-id",
-                PAGE_TYPE: "data-page-type",
-                USER_EXPERIENCE_FLOW: "data-user-experience-flow",
-                POPUPS_DISABLED: "data-popups-disabled"
-            }, I = {
-                COMPONENTS: "components",
-                ENV: "env",
-                DEBUG: "debug",
-                CACHEBUST: "cachebust",
-                CLIENT_ID: "client-id",
-                MERCHANT_ID: "merchant-id",
-                LOCALE: "locale",
-                CURRENCY: "currency",
-                INTENT: "intent",
-                COMMIT: "commit",
-                VAULT: "vault",
-                BUYER_COUNTRY: "buyer-country",
-                ENABLE_FUNDING: "enable-funding",
-                DISABLE_FUNDING: "disable-funding",
-                DISABLE_CARD: "disable-card",
-                INTEGRATION_DATE: "integration-date",
-                STAGE_HOST: "stage-host",
-                STAGE_ALIAS: "stage-alias",
-                CDN_REGISTRY: "cdn-registry",
-                VERSION: "version"
-            }, D = {
-                BUTTONS: "buttons",
-                HOSTED_FIELDS: "hosted-fields",
-                CARD_FIELDS: "card-fields"
-            }, H = {
-                TRUE: !0,
-                FALSE: !1
-            }, O = {
-                TRUE: "true",
-                FALSE: "false"
-            }, o = "unknown", i = {
-                HTTP: "http",
-                HTTPS: "https"
-            }, M = {
-                HOME: "home",
-                PRODUCT: "product",
-                CART: "cart",
-                CHECKOUT: "checkout",
-                PRODUCT_LISTING: "product-listing",
-                SEARCH_RESULTS: "search-results",
-                PRODUCT_DETAILS: "product-details",
-                MINI_CART: "mini-cart"
-            }, C = 10, a = R.US, Z = r.USD, u = e.CAPTURE, P = n.TRUE, L = n.TRUE, d = n.TRUE, c = A.FALSE, U = D.BUTTONS, s = H.FALSE, B = {
-                LOCAL: "local",
-                STAGE: "stage",
-                SANDBOX: "sandbox",
-                PRODUCTION: "production",
-                TEST: "test"
-            }, G = {
-                ANDROID: "android",
-                IOS: "iOS"
-            }, K = {
-                VALIDATION_ERROR: "validation_error"
-            }, p = {
-                FEED: "feed_name",
-                STATE: "state_name",
-                EVENT_NAME: "event_name",
-                TRANSITION: "transition_name",
-                PAGE: "page_name",
-                BUTTON_TYPE: "button_type",
-                SESSION_UID: "page_session_id",
-                BUTTON_SESSION_UID: "button_session_id",
-                TOKEN: "token",
-                CONTEXT_ID: "context_id",
-                CONTEXT_TYPE: "context_type",
-                REFERER: "referer_url",
-                MERCHANT_DOMAIN: "merchant_domain",
-                PAY_ID: "pay_id",
-                SELLER_ID: "seller_id",
-                CLIENT_ID: "client_id",
-                DATA_SOURCE: "serverside_data_source",
-                BUTTON_SOURCE: "button_source",
-                ERROR_CODE: "ext_error_code",
-                ERROR_DESC: "ext_error_desc",
-                PAGE_LOAD_TIME: "page_load_time",
-                EXPERIMENT_NAME: "pxp_exp_id",
-                TREATMENT_NAME: "pxp_trtmnt_id",
-                TRANSITION_TIME: "transition_time",
-                FUNDING_LIST: "eligible_payment_methods",
-                FUNDING_COUNT: "eligible_payment_count",
-                CHOSEN_FUNDING: "selected_payment_method",
-                BUTTON_LAYOUT: "button_layout",
-                VERSION: "checkoutjs_version",
-                LOCALE: "locale",
-                BUYER_COUNTRY: "buyer_cntry",
-                INTEGRATION_IDENTIFIER: "integration_identifier",
-                PARTNER_ATTRIBUTION_ID: "bn_code",
-                PAGE_TYPE: "pp_placement",
-                SDK_NAME: "sdk_name",
-                SDK_VERSION: "sdk_version",
-                SDK_ENVIRONMENT: "sdk_environment",
-                MOBILE_APP_VERSION: "mobile_app_version",
-                MOBILE_BUNDLE_IDENTIFIER: "mapv",
-                USER_AGENT: "user_agent",
-                USER_ACTION: "user_action",
-                CONTEXT_CORRID: "context_correlation_id",
-                SDK_CACHE: "sdk_cache",
-                SDK_LOAD_TIME: "sdk_load_time",
-                IS_VAULT: "is_vault",
-                DISABLE_FUNDING: "disable_funding",
-                DISABLE_CARD: "disable_card",
-                RESPONSE_DURATION: "response_duration",
-                SDK_INTEGRATION_SOURCE: "sdk_integration_source",
-                PAYMENT_FLOW: "payment_flow",
-                BUTTON_VERSION: "button_version",
-                FI_LIST: "fi_list",
-                FI_ID: "fi_id",
-                PRODUCT: "product",
-                CHOSEN_FI_TYPE: "chosen_fi_type",
-                SELECTED_FI: "merchant_selected_funding_source",
-                POTENTIAL_PAYMENT_METHODS: "potential_payment_methods",
-                PAY_NOW: "pay_now",
-                STICKINESS_ID: "stickiness_id",
-                TIMESTAMP: "t",
-                OPTION_SELECTED: "optsel",
-                USER_IDENTITY_METHOD: "user_identity_method",
-                FIELDS_COMPONENT_SESSION_ID: "fields_component_session_id",
-                CPL_COMP_METRICS: "cpl_comp_metrics",
-                CPL_CHUNK_METRICS: "cpl_chunk_metrics",
-                CPL_QUERY_METRICS: "cpl_query_metrics"
-            }, l = {
-                COMMIT: "commit",
-                CONTINUE: "continue"
-            }, f = {
-                PAYMENTS_SDK: "checkout"
-            }, Y = {
-                PAYMENTS_SDK: "payments_sdk"
-            }, V = {
-                PAYMENTS_SDK: "payments_sdk"
-            }, m = {
-                PAYPAL: "paypal",
-                VENMO: "venmo",
-                APPLEPAY: "applepay",
-                ITAU: "itau",
-                CREDIT: "credit",
-                PAYLATER: "paylater",
-                CARD: "card",
-                IDEAL: "ideal",
-                SEPA: "sepa",
-                BANCONTACT: "bancontact",
-                GIROPAY: "giropay",
-                SOFORT: "sofort",
-                EPS: "eps",
-                MYBANK: "mybank",
-                P24: "p24",
-                VERKKOPANKKI: "verkkopankki",
-                PAYU: "payu",
-                BLIK: "blik",
-                TRUSTLY: "trustly",
-                ZIMPLER: "zimpler",
-                MAXIMA: "maxima",
-                OXXO: "oxxo",
-                BOLETO: "boleto",
-                BOLETOBANCARIO: "boletobancario",
-                WECHATPAY: "wechatpay",
-                MERCADOPAGO: "mercadopago",
-                MULTIBANCO: "multibanco",
-                SATISPAY: "satispay",
-                PAIDY: "paidy"
-            }, y = {
-                PAYPAL: "PayPal",
-                CREDIT: "PayPal Credit"
-            }, b = {
-                VISA: "visa",
-                MASTERCARD: "mastercard",
-                AMEX: "amex",
-                DISCOVER: "discover",
-                HIPER: "hiper",
-                ELO: "elo",
-                JCB: "jcb",
-                CUP: "cup"
-            }, W = {
-                BALANCE: "balance",
-                CARD: "card",
-                BANK: "bank",
-                CREDIT: "credit"
-            }, J = {
-                PAY_IN_3: "payIn3",
-                PAY_IN_4: "payIn4",
-                PAYLATER: "paylater",
-                CREDIT: "credit"
-            }, h = {
-                DESKTOP: "desktop",
-                MOBILE: "mobile"
-            }, k = !0, g = [ m.IDEAL, m.BANCONTACT, m.GIROPAY, m.SOFORT, m.EPS, m.MYBANK, m.P24, m.PAYU, m.BLIK, m.TRUSTLY, m.ZIMPLER, m.MAXIMA, m.OXXO, m.BOLETO, m.BOLETOBANCARIO, m.WECHATPAY, m.MERCADOPAGO, m.MULTIBANCO, m.SATISPAY, m.PAIDY ];
-        } ]);
-    },
-    "./node_modules/@paypal/sdk-constants/index.js": function(module, exports, __webpack_require__) {
-        module.exports = __webpack_require__("./node_modules/@paypal/sdk-constants/dist/paypal-sdk-constants.js");
-    },
     "./node_modules/@paypal/sdk-constants/src/index.js": function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         __webpack_require__.r(__webpack_exports__);
@@ -10877,7 +9987,7 @@ window.spb = function(modules) {
             Object(lib.getLogger)().info("rest_api_create_order_token");
             var headers = ((_headers15 = {})[constants.HEADERS.AUTHORIZATION] = "Bearer " + accessToken, 
             _headers15[constants.HEADERS.PARTNER_ATTRIBUTION_ID] = partnerAttributionID, _headers15[constants.HEADERS.CLIENT_METADATA_ID] = clientMetadataID, 
-            _headers15[constants.HEADERS.APP_NAME] = constants.SMART_PAYMENT_BUTTONS, _headers15[constants.HEADERS.APP_VERSION] = "5.0.129", 
+            _headers15[constants.HEADERS.APP_NAME] = constants.SMART_PAYMENT_BUTTONS, _headers15[constants.HEADERS.APP_VERSION] = "5.0.130", 
             _headers15);
             var paymentSource = {
                 token: {
@@ -13573,6 +12683,32 @@ window.spb = function(modules) {
             patterns: [],
             type: "cofidis"
         });
+        var cardExpiryToPaymentSourceExpiry = function(dateString) {
+            if (!dateString || "string" != typeof dateString) throw new Error("can not convert invalid expiry date: " + dateString);
+            if (dateString.match("^[0-9]{4}-([1-9]|0[1-9]|1[0-2])$")) return dateString;
+            if (dateString.match("^([1-9]|0[1-9]|1[0-2])/?([0-9]{4}|[0-9]{2})$")) {
+                var _dateString$split = dateString.split("/"), monthString = _dateString$split[0], yearString = _dateString$split[1];
+                var date = new Date(parseInt(2 === yearString.length ? "20" + yearString : yearString, 10), parseInt(monthString, 10));
+                var rawMonth = date.getMonth();
+                var formattedMonth = rawMonth < 10 ? "0" + rawMonth : rawMonth.toString();
+                return date.getFullYear() + "-" + formattedMonth;
+            }
+            throw new Error("can not convert invalid expiry date: " + dateString);
+        };
+        var convertCardToPaymentSource = function(card) {
+            var paymentSource = {
+                card: {
+                    number: card.number,
+                    securityCode: card.cvv,
+                    expiry: cardExpiryToPaymentSourceExpiry(card.expiry)
+                }
+            };
+            card.name && (paymentSource.card.name = card.name);
+            card.postalCode && (paymentSource.card.billingAddress = {
+                postalCode: card.postalCode
+            });
+            return paymentSource;
+        };
         function hasCardFields() {
             var _getCardFrames = getCardFrames();
             return Boolean(_getCardFrames.cardFrame || _getCardFrames.cardNumberFrame && _getCardFrames.cardCVVFrame && _getCardFrames.cardExpiryFrame);
@@ -13583,8 +12719,8 @@ window.spb = function(modules) {
                 return _expiry$split[1] + "-" + _expiry$split[0];
             }
         }
-        var sdk_constants = __webpack_require__("./node_modules/@paypal/sdk-constants/index.js");
-        var disallowedPropsWithAction = [ "onApprove", "onCancel", "onComplete", "createOrder", "intent" ];
+        var props_createVaultSetupToken = __webpack_require__("./src/props/createVaultSetupToken.js");
+        var disallowedPropsWithSave = [ "onApprove", "onCancel", "onComplete", "createOrder" ];
         var api_api = __webpack_require__("./src/api/api.js");
         var cardField = {
             name: "card_field",
@@ -13608,10 +12744,10 @@ window.spb = function(modules) {
                         return function(_ref) {
                             var facilitatorAccessToken = _ref.facilitatorAccessToken, extraFields = _ref.extraFields;
                             var cardProps = function(_ref) {
-                                var _fundingEligibility$c, _fundingEligibility$c2, _xprops$parent2;
+                                var _fundingEligibility$c, _fundingEligibility$c2;
                                 var facilitatorAccessToken = _ref.facilitatorAccessToken, featureFlags = _ref.featureFlags;
                                 var xprops = window.xprops;
-                                var type = xprops.type, cardSessionID = xprops.cardSessionID, style = xprops.style, placeholder = xprops.placeholder, minLength = xprops.minLength, maxLength = xprops.maxLength, fundingEligibility = xprops.fundingEligibility, inputEvents = xprops.inputEvents, _xprops$branded = xprops.branded, branded = void 0 === _xprops$branded ? null == (_fundingEligibility$c = null == fundingEligibility || null == (_fundingEligibility$c2 = fundingEligibility.card) ? void 0 : _fundingEligibility$c2.branded) || _fundingEligibility$c : _xprops$branded, parent = xprops.parent, xport = xprops.export;
+                                var type = xprops.type, cardSessionID = xprops.cardSessionID, style = xprops.style, placeholder = xprops.placeholder, minLength = xprops.minLength, maxLength = xprops.maxLength, fundingEligibility = xprops.fundingEligibility, inputEvents = xprops.inputEvents, _xprops$branded = xprops.branded, branded = void 0 === _xprops$branded ? null == (_fundingEligibility$c = null == fundingEligibility || null == (_fundingEligibility$c2 = fundingEligibility.card) ? void 0 : _fundingEligibility$c2.branded) || _fundingEligibility$c : _xprops$branded, parent = xprops.parent, xport = xprops.export, save = xprops.save, sdkCorrelationID = xprops.sdkCorrelationID, partnerAttributionID = xprops.partnerAttributionID, hcfSessionID = xprops.hcfSessionID;
                                 var returnData = {
                                     type: type,
                                     branded: branded,
@@ -13628,40 +12764,28 @@ window.spb = function(modules) {
                                 var baseProps = Object(props_props.getProps)({
                                     branded: branded
                                 });
-                                if (xprops.action || (null == (_xprops$parent2 = xprops.parent) ? void 0 : _xprops$parent2.action)) {
-                                    var props = function(xprops, baseProps) {
-                                        var _xprops$parent;
-                                        disallowedPropsWithAction.forEach((function(prop) {
-                                            if (xprops[prop]) throw new Error("Do not pass " + prop + " with an action.");
-                                        }));
-                                        var action = xprops.action || (null == (_xprops$parent = xprops.parent) ? void 0 : _xprops$parent.action);
-                                        switch (action.type) {
-                                          case "SAVE":
-                                            return {
-                                                action: Object(esm_extends.default)({}, action, {
-                                                    createVaultSetupToken: (_ref = {
-                                                        createVaultSetupToken: action.createVaultSetupToken
-                                                    }, createVaultSetupToken = _ref.createVaultSetupToken, function() {
-                                                        return createVaultSetupToken({}).then((function(vaultSetupToken) {
-                                                            if (!vaultSetupToken || "string" != typeof vaultSetupToken) throw new Error("Expected a vault setup token to be passed to createVaultSetupToken");
-                                                            return vaultSetupToken;
-                                                        }));
-                                                    }),
-                                                    onApprove: Object(props_onApprove.getSaveActionOnApprove)({
-                                                        onApprove: action.onApprove,
-                                                        onError: baseProps.onError
-                                                    })
-                                                })
-                                            };
-
-                                          default:
-                                            throw new Error("Unsupported type for action: " + action.type);
+                                if (save) return Object(esm_extends.default)({}, baseProps, function(xprops, baseProps) {
+                                    disallowedPropsWithSave.forEach((function(prop) {
+                                        if (xprops[prop]) throw new Error("Do not pass " + prop + " with an action.");
+                                    }));
+                                    var save = xprops.save;
+                                    if (null == save || !save.createVaultSetupToken) throw new Error("createVaultSetupToken is required when saving card fields");
+                                    if (null == save || !save.onApprove) throw new Error("onApprove is required when saving card fields");
+                                    if (!xprops.userIDToken) throw new Error('data attribute "data-user-id-token" is required on SDK script tag for saving card fields');
+                                    return {
+                                        userIDToken: xprops.userIDToken,
+                                        save: {
+                                            createVaultSetupToken: Object(props_createVaultSetupToken.getCreateVaultSetupToken)({
+                                                createVaultSetupToken: save.createVaultSetupToken
+                                            }),
+                                            onApprove: Object(props_onApprove.getSaveActionOnApprove)({
+                                                onApprove: save.onApprove,
+                                                onError: baseProps.onError
+                                            })
                                         }
-                                        var _ref, createVaultSetupToken;
-                                    }(xprops, baseProps);
-                                    return Object(esm_extends.default)({}, baseProps, props, returnData);
-                                }
-                                var _props = getLegacyProps({
+                                    };
+                                }(xprops, baseProps), returnData);
+                                var props = getLegacyProps({
                                     paymentSource: null,
                                     partnerAttributionID: xprops.partnerAttributionID,
                                     merchantID: xprops.merchantID,
@@ -13683,7 +12807,7 @@ window.spb = function(modules) {
                                     createOrder: xprops.createOrder,
                                     createBillingAgreement: xprops.createBillingAgreement
                                 });
-                                return Object(esm_extends.default)({}, baseProps, _props, {
+                                return Object(esm_extends.default)({}, baseProps, props, {
                                     type: type,
                                     branded: branded,
                                     style: style,
@@ -13694,7 +12818,10 @@ window.spb = function(modules) {
                                     fundingEligibility: fundingEligibility,
                                     inputEvents: inputEvents,
                                     export: parent ? parent.export : xport,
-                                    facilitatorAccessToken: facilitatorAccessToken
+                                    facilitatorAccessToken: facilitatorAccessToken,
+                                    sdkCorrelationID: sdkCorrelationID,
+                                    partnerAttributionID: partnerAttributionID,
+                                    hcfSessionID: hcfSessionID
                                 });
                             }({
                                 facilitatorAccessToken: facilitatorAccessToken,
@@ -13710,61 +12837,52 @@ window.spb = function(modules) {
                             return zalgo_promise_src.ZalgoPromise.try((function() {
                                 if (!hasCardFields()) throw new Error("Card fields not available to submit");
                                 var card = getCardFields();
-                                if (!card) throw new Error("Card not available to submit");
-                                var restart = function() {
-                                    throw new Error("Restart not implemented for card fields flow");
-                                };
-                                if (void 0 !== cardProps.action) switch (cardProps.action.type) {
-                                  case "save":
-                                    return function(_ref) {
-                                        var action = _ref.action, facilitatorAccessToken = _ref.facilitatorAccessToken, paymentSource = _ref.paymentSource;
-                                        var onApprove = action.onApprove;
-                                        return (0, action.createVaultSetupToken)().then((function(vaultSetupToken) {
-                                            return function(_ref3) {
-                                                var _ref4, _extends3;
-                                                var vaultSetupToken = _ref3.vaultSetupToken, facilitatorAccessToken = _ref3.facilitatorAccessToken, partnerAttributionID = _ref3.partnerAttributionID, paymentSource = _ref3.paymentSource;
-                                                return Object(api_api.callRestAPI)({
-                                                    accessToken: facilitatorAccessToken,
-                                                    method: "post",
-                                                    url: src_config.VAULT_SETUP_TOKENS_API_URL + "/" + vaultSetupToken + "/update",
-                                                    headers: Object(esm_extends.default)({}, partnerAttributionID ? (_ref4 = {}, _ref4[constants.HEADERS.PARTNER_ATTRIBUTION_ID] = partnerAttributionID, 
-                                                    _ref4) : void 0, (_extends3 = {}, _extends3[constants.HEADERS.PREFER] = constants.PREFER.REPRESENTATION, 
-                                                    _extends3)),
-                                                    data: {
-                                                        payment_source: paymentSource
+                                return cardProps.save ? function(_ref) {
+                                    var save = _ref.save, facilitatorAccessToken = _ref.facilitatorAccessToken, clientID = _ref.clientID, userIDToken = _ref.userIDToken, paymentSource = _ref.paymentSource;
+                                    var onApprove = save.onApprove;
+                                    return (0, save.createVaultSetupToken)().then((function(vaultSetupToken) {
+                                        return function(_ref) {
+                                            var vaultSetupToken = _ref.vaultSetupToken, facilitatorAccessToken = _ref.facilitatorAccessToken;
+                                            return Object(api_api.callRestAPI)({
+                                                accessToken: facilitatorAccessToken,
+                                                url: src_config.VAULT_SETUP_TOKENS_API_URL + "/" + vaultSetupToken,
+                                                eventName: "v3_vault_setup_tokens_get"
+                                            });
+                                        }({
+                                            vaultSetupToken: vaultSetupToken,
+                                            facilitatorAccessToken: facilitatorAccessToken
+                                        }).then((function() {
+                                            return function(_ref2) {
+                                                var clientID = _ref2.clientID, userIDToken = _ref2.userIDToken, vaultSetupToken = _ref2.vaultSetupToken, paymentSource = _ref2.paymentSource;
+                                                return Object(api_api.callGraphQL)({
+                                                    name: "UpdateVaultSetupToken",
+                                                    query: "\n      mutation UpdateVaultSetupToken(\n        $clientID: String!\n        $userIDToken: String!\n        $vaultSetupToken: String!\n        $paymentSource: PaymentSource\n      ) {\n        updateVaultSetupToken(\n          clientId: $clientID\n          idToken: $userIDToken\n          vaultSetupToken: $vaultSetupToken\n          paymentSource: $paymentSource\n        ) {\n          id,\n          status\n        }\n      }",
+                                                    variables: {
+                                                        clientID: clientID,
+                                                        userIDToken: userIDToken,
+                                                        vaultSetupToken: vaultSetupToken,
+                                                        paymentSource: paymentSource
                                                     }
                                                 });
                                             }({
+                                                clientID: clientID,
+                                                userIDToken: userIDToken,
                                                 vaultSetupToken: vaultSetupToken,
-                                                facilitatorAccessToken: facilitatorAccessToken,
-                                                paymentSource: paymentSource,
-                                                partnerAttributionID: ""
+                                                paymentSource: paymentSource
                                             }).then((function() {
                                                 return onApprove({
                                                     vaultSetupToken: vaultSetupToken
                                                 });
                                             }));
                                         }));
-                                    }({
-                                        action: cardProps.action,
-                                        facilitatorAccessToken: facilitatorAccessToken,
-                                        paymentSource: {
-                                            card: {
-                                                name: card.name,
-                                                number: card.number,
-                                                expiry: card.expiry,
-                                                security_code: card.cvv,
-                                                billing_address: {
-                                                    postal_code: card.postalCode
-                                                }
-                                            }
-                                        }
-                                    });
-
-                                  default:
-                                    throw new Error("Action of type " + cardProps.action.type + " is not supported by Card Fields");
-                                }
-                                if (cardProps.intent === sdk_constants.INTENT.CAPTURE || cardProps.intent === sdk_constants.INTENT.AUTHORIZE) return cardProps.createOrder().then((function(orderID) {
+                                    }));
+                                }({
+                                    save: cardProps.save,
+                                    facilitatorAccessToken: facilitatorAccessToken,
+                                    clientID: cardProps.clientID,
+                                    userIDToken: cardProps.userIDToken,
+                                    paymentSource: convertCardToPaymentSource(card)
+                                }) : cardProps.createOrder().then((function(orderID) {
                                     var cardObject = Object(esm_extends.default)({
                                         name: card.name,
                                         number: card.number,
@@ -13790,7 +12908,9 @@ window.spb = function(modules) {
                                         payerID: Object(belter.uniqueID)(),
                                         buyerAccessToken: Object(belter.uniqueID)()
                                     }, orderData), {
-                                        restart: restart
+                                        restart: function() {
+                                            throw new Error("Restart not implemented for card fields flow");
+                                        }
                                     });
                                 }));
                             }));
@@ -15552,7 +14672,7 @@ window.spb = function(modules) {
             isEligible: function(_ref6) {
                 var _fundingEligibility$v;
                 var props = _ref6.props, serviceData = _ref6.serviceData;
-                var fundingSource = props.fundingSource, onShippingChange = props.onShippingChange, createBillingAgreement = props.createBillingAgreement, createSubscription = props.createSubscription, env = props.env, platform = props.platform;
+                var fundingSource = props.fundingSource, onShippingChange = props.onShippingChange, createBillingAgreement = props.createBillingAgreement, createSubscription = props.createSubscription, platform = props.platform;
                 var cookies = serviceData.cookies, merchantID = serviceData.merchantID, fundingEligibility = serviceData.fundingEligibility;
                 var isVenmoEligible = null == fundingEligibility || null == (_fundingEligibility$v = fundingEligibility.venmo) ? void 0 : _fundingEligibility$v.eligible;
                 return !(!_ref6.config.firebase || platform && platform === sdk_constants_src.PLATFORM.DESKTOP && !isVenmoEligible || !canUsePopupAppSwitch({
@@ -15569,7 +14689,7 @@ window.spb = function(modules) {
                     return optOutLifetime > now;
                 }() || !isNativeOptedIn({
                     props: props
-                }) && (!cookies && fundingSource === sdk_constants_src.FUNDING.PAYPAL || !Object(src.supportsPopups)() || onShippingChange || createBillingAgreement || createSubscription || env === sdk_constants_src.ENV.LOCAL || env === sdk_constants_src.ENV.STAGE || merchantID.length > 1 || !serviceData.featureFlags.isLsatUpgradable));
+                }) && (!cookies && fundingSource === sdk_constants_src.FUNDING.PAYPAL || !Object(src.supportsPopups)() || onShippingChange || createBillingAgreement || createSubscription || merchantID.length > 1 || !serviceData.featureFlags.isLsatUpgradable));
             },
             isPaymentEligible: function(_ref7) {
                 var payment = _ref7.payment;
@@ -16682,10 +15802,7 @@ window.spb = function(modules) {
                     sdkCorrelationID: sdkCorrelationID,
                     locale: locale,
                     sdkVersion: sdkVersion,
-                    buyerCountry: buyerCountry,
-                    fundingSource: fundingSource,
-                    smartWalletOrderID: smartWalletOrderID,
-                    product: product
+                    buyerCountry: buyerCountry
                 });
                 logger.addPayloadBuilder((function() {
                     var _ref2;
@@ -16699,12 +15816,13 @@ window.spb = function(modules) {
                     var _ref3;
                     return (_ref3 = {})[sdk_constants_src.FPTI_KEY.CONTEXT_TYPE] = constants.FPTI_CONTEXT_TYPE.BUTTON_SESSION_ID, 
                     _ref3[sdk_constants_src.FPTI_KEY.CONTEXT_ID] = buttonSessionID, _ref3[sdk_constants_src.FPTI_KEY.BUTTON_SESSION_UID] = buttonSessionID, 
-                    _ref3[sdk_constants_src.FPTI_KEY.BUTTON_VERSION] = "5.0.129", _ref3[constants.FPTI_BUTTON_KEY.BUTTON_CORRELATION_ID] = buttonCorrelationID, 
+                    _ref3[sdk_constants_src.FPTI_KEY.BUTTON_VERSION] = "5.0.130", _ref3[constants.FPTI_BUTTON_KEY.BUTTON_CORRELATION_ID] = buttonCorrelationID, 
                     _ref3[sdk_constants_src.FPTI_KEY.STICKINESS_ID] = Object(lib.isAndroidChrome)() ? stickinessID : null, 
                     _ref3[sdk_constants_src.FPTI_KEY.PARTNER_ATTRIBUTION_ID] = partnerAttributionID, 
                     _ref3[sdk_constants_src.FPTI_KEY.USER_ACTION] = commit ? sdk_constants_src.FPTI_USER_ACTION.COMMIT : sdk_constants_src.FPTI_USER_ACTION.CONTINUE, 
                     _ref3[sdk_constants_src.FPTI_KEY.SELLER_ID] = merchantID[0], _ref3[sdk_constants_src.FPTI_KEY.MERCHANT_DOMAIN] = merchantDomain, 
-                    _ref3[constants.FPTI_CUSTOM_KEY.EXPERIENCE] = experience === constants_button.EXPERIENCE.INLINE ? "accelerated" : "default", 
+                    _ref3[sdk_constants_src.FPTI_KEY.CHOSEN_FUNDING] = fundingSource, _ref3[sdk_constants_src.FPTI_KEY.PRODUCT] = product, 
+                    _ref3[sdk_constants_src.FPTI_KEY.TOKEN] = smartWalletOrderID, _ref3[constants.FPTI_CUSTOM_KEY.EXPERIENCE] = experience === constants_button.EXPERIENCE.INLINE ? "accelerated" : "default", 
                     _ref3[sdk_constants_src.FPTI_KEY.TIMESTAMP] = Date.now().toString(), _ref3;
                 }));
                 Object(src.isIEIntranet)() && logger.warn("button_child_intranet_mode");
@@ -17208,6 +16326,7 @@ window.spb = function(modules) {
         };
         var FPTI_STATE = {
             BUTTON: "smart_button",
+            CARD: "card_field",
             WALLET: "smart_wallet",
             PXP: "PXP_CHECK",
             ELIGIBILITY_CHECK: "eligibility_check"
@@ -17684,7 +16803,7 @@ window.spb = function(modules) {
             });
         }
         function setupLogger(_ref2) {
-            var env = _ref2.env, sessionID = _ref2.sessionID, clientID = _ref2.clientID, sdkCorrelationID = _ref2.sdkCorrelationID, buyerCountry = _ref2.buyerCountry, locale = _ref2.locale, sdkVersion = _ref2.sdkVersion, fundingSource = _ref2.fundingSource, smartWalletOrderID = _ref2.smartWalletOrderID, product = _ref2.product;
+            var env = _ref2.env, sessionID = _ref2.sessionID, clientID = _ref2.clientID, sdkCorrelationID = _ref2.sdkCorrelationID, buyerCountry = _ref2.buyerCountry, locale = _ref2.locale, _ref2$sdkVersion = _ref2.sdkVersion, sdkVersion = void 0 === _ref2$sdkVersion ? window.paypal.version : _ref2$sdkVersion;
             var logger = getLogger();
             logger.addPayloadBuilder((function() {
                 return {
@@ -17696,27 +16815,22 @@ window.spb = function(modules) {
                 };
             }));
             logger.addTrackingBuilder((function() {
-                var _tracking;
-                var lang = locale.lang, country = locale.country;
-                var tracking = ((_tracking = {})[_paypal_sdk_constants_src__WEBPACK_IMPORTED_MODULE_3__.FPTI_KEY.FEED] = _paypal_sdk_constants_src__WEBPACK_IMPORTED_MODULE_3__.FPTI_FEED.PAYMENTS_SDK, 
-                _tracking[_paypal_sdk_constants_src__WEBPACK_IMPORTED_MODULE_3__.FPTI_KEY.DATA_SOURCE] = _paypal_sdk_constants_src__WEBPACK_IMPORTED_MODULE_3__.FPTI_DATA_SOURCE.PAYMENTS_SDK, 
-                _tracking[_paypal_sdk_constants_src__WEBPACK_IMPORTED_MODULE_3__.FPTI_KEY.CLIENT_ID] = clientID, 
-                _tracking[_paypal_sdk_constants_src__WEBPACK_IMPORTED_MODULE_3__.FPTI_KEY.SESSION_UID] = sessionID, 
-                _tracking[_paypal_sdk_constants_src__WEBPACK_IMPORTED_MODULE_3__.FPTI_KEY.REFERER] = window.location.host, 
-                _tracking[_paypal_sdk_constants_src__WEBPACK_IMPORTED_MODULE_3__.FPTI_KEY.BUYER_COUNTRY] = buyerCountry, 
-                _tracking[_paypal_sdk_constants_src__WEBPACK_IMPORTED_MODULE_3__.FPTI_KEY.LOCALE] = lang + "_" + country, 
-                _tracking[_paypal_sdk_constants_src__WEBPACK_IMPORTED_MODULE_3__.FPTI_KEY.INTEGRATION_IDENTIFIER] = clientID, 
-                _tracking[_paypal_sdk_constants_src__WEBPACK_IMPORTED_MODULE_3__.FPTI_KEY.SDK_ENVIRONMENT] = Object(_krakenjs_belter_src__WEBPACK_IMPORTED_MODULE_1__.isIos)() ? _paypal_sdk_constants_src__WEBPACK_IMPORTED_MODULE_3__.MOBILE_ENV.IOS : Object(_krakenjs_belter_src__WEBPACK_IMPORTED_MODULE_1__.isAndroid)() ? _paypal_sdk_constants_src__WEBPACK_IMPORTED_MODULE_3__.MOBILE_ENV.ANDROID : null, 
-                _tracking[_paypal_sdk_constants_src__WEBPACK_IMPORTED_MODULE_3__.FPTI_KEY.SDK_NAME] = _paypal_sdk_constants_src__WEBPACK_IMPORTED_MODULE_3__.FPTI_SDK_NAME.PAYMENTS_SDK, 
-                _tracking[_paypal_sdk_constants_src__WEBPACK_IMPORTED_MODULE_3__.FPTI_KEY.SDK_VERSION] = sdkVersion, 
-                _tracking[_paypal_sdk_constants_src__WEBPACK_IMPORTED_MODULE_3__.FPTI_KEY.USER_AGENT] = window.navigator && window.navigator.userAgent, 
-                _tracking[_paypal_sdk_constants_src__WEBPACK_IMPORTED_MODULE_3__.FPTI_KEY.CONTEXT_CORRID] = sdkCorrelationID, 
-                _tracking[_paypal_sdk_constants_src__WEBPACK_IMPORTED_MODULE_3__.FPTI_KEY.TIMESTAMP] = Date.now().toString(), 
-                _tracking[_paypal_sdk_constants_src__WEBPACK_IMPORTED_MODULE_3__.FPTI_KEY.CHOSEN_FUNDING] = fundingSource, 
-                _tracking);
-                product && (tracking["" + _paypal_sdk_constants_src__WEBPACK_IMPORTED_MODULE_3__.FPTI_KEY.PRODUCT] = product);
-                smartWalletOrderID && (tracking["" + _paypal_sdk_constants_src__WEBPACK_IMPORTED_MODULE_3__.FPTI_KEY.TOKEN] = smartWalletOrderID);
-                return tracking;
+                var _ref3;
+                return (_ref3 = {})[_paypal_sdk_constants_src__WEBPACK_IMPORTED_MODULE_3__.FPTI_KEY.FEED] = _paypal_sdk_constants_src__WEBPACK_IMPORTED_MODULE_3__.FPTI_FEED.PAYMENTS_SDK, 
+                _ref3[_paypal_sdk_constants_src__WEBPACK_IMPORTED_MODULE_3__.FPTI_KEY.DATA_SOURCE] = _paypal_sdk_constants_src__WEBPACK_IMPORTED_MODULE_3__.FPTI_DATA_SOURCE.PAYMENTS_SDK, 
+                _ref3[_paypal_sdk_constants_src__WEBPACK_IMPORTED_MODULE_3__.FPTI_KEY.CLIENT_ID] = clientID, 
+                _ref3[_paypal_sdk_constants_src__WEBPACK_IMPORTED_MODULE_3__.FPTI_KEY.SESSION_UID] = sessionID, 
+                _ref3[_paypal_sdk_constants_src__WEBPACK_IMPORTED_MODULE_3__.FPTI_KEY.REFERER] = window.location.host, 
+                _ref3[_paypal_sdk_constants_src__WEBPACK_IMPORTED_MODULE_3__.FPTI_KEY.BUYER_COUNTRY] = buyerCountry, 
+                _ref3[_paypal_sdk_constants_src__WEBPACK_IMPORTED_MODULE_3__.FPTI_KEY.LOCALE] = locale.lang + "_" + locale.country, 
+                _ref3[_paypal_sdk_constants_src__WEBPACK_IMPORTED_MODULE_3__.FPTI_KEY.INTEGRATION_IDENTIFIER] = clientID, 
+                _ref3[_paypal_sdk_constants_src__WEBPACK_IMPORTED_MODULE_3__.FPTI_KEY.SDK_ENVIRONMENT] = Object(_krakenjs_belter_src__WEBPACK_IMPORTED_MODULE_1__.isIos)() ? _paypal_sdk_constants_src__WEBPACK_IMPORTED_MODULE_3__.MOBILE_ENV.IOS : Object(_krakenjs_belter_src__WEBPACK_IMPORTED_MODULE_1__.isAndroid)() ? _paypal_sdk_constants_src__WEBPACK_IMPORTED_MODULE_3__.MOBILE_ENV.ANDROID : null, 
+                _ref3[_paypal_sdk_constants_src__WEBPACK_IMPORTED_MODULE_3__.FPTI_KEY.SDK_NAME] = _paypal_sdk_constants_src__WEBPACK_IMPORTED_MODULE_3__.FPTI_SDK_NAME.PAYMENTS_SDK, 
+                _ref3[_paypal_sdk_constants_src__WEBPACK_IMPORTED_MODULE_3__.FPTI_KEY.SDK_VERSION] = sdkVersion, 
+                _ref3[_paypal_sdk_constants_src__WEBPACK_IMPORTED_MODULE_3__.FPTI_KEY.USER_AGENT] = window.navigator && window.navigator.userAgent, 
+                _ref3[_paypal_sdk_constants_src__WEBPACK_IMPORTED_MODULE_3__.FPTI_KEY.CONTEXT_CORRID] = sdkCorrelationID, 
+                _ref3[_paypal_sdk_constants_src__WEBPACK_IMPORTED_MODULE_3__.FPTI_KEY.TIMESTAMP] = Date.now().toString(), 
+                _ref3;
             }));
             _krakenjs_zalgo_promise_src__WEBPACK_IMPORTED_MODULE_2__.ZalgoPromise.onPossiblyUnhandledException((function(err) {
                 var _logger$track;
@@ -18227,6 +17341,22 @@ window.spb = function(modules) {
             }
         }
     },
+    "./src/props/createVaultSetupToken.js": function(module, __webpack_exports__, __webpack_require__) {
+        "use strict";
+        __webpack_require__.r(__webpack_exports__);
+        __webpack_require__.d(__webpack_exports__, "getCreateVaultSetupToken", (function() {
+            return getCreateVaultSetupToken;
+        }));
+        var getCreateVaultSetupToken = function(_ref) {
+            var createVaultSetupToken = _ref.createVaultSetupToken;
+            return function() {
+                return createVaultSetupToken({}).then((function(vaultSetupToken) {
+                    if (!vaultSetupToken || "string" != typeof vaultSetupToken) throw new Error("Expected a vault setup token to be passed to createVaultSetupToken");
+                    return vaultSetupToken;
+                }));
+            };
+        };
+    },
     "./src/props/getPageUrl.js": function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
         __webpack_require__.r(__webpack_exports__);
@@ -18306,126 +17436,130 @@ window.spb = function(modules) {
         __webpack_require__.d(__webpack_exports__, "getCreateSubscription", (function() {
             return _createSubscription__WEBPACK_IMPORTED_MODULE_4__.getCreateSubscription;
         }));
-        var _onApprove__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__("./src/props/onApprove.js");
+        var _createVaultSetupToken__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__("./src/props/createVaultSetupToken.js");
+        __webpack_require__.d(__webpack_exports__, "getCreateVaultSetupToken", (function() {
+            return _createVaultSetupToken__WEBPACK_IMPORTED_MODULE_5__.getCreateVaultSetupToken;
+        }));
+        var _onApprove__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__("./src/props/onApprove.js");
         __webpack_require__.d(__webpack_exports__, "getOnApproveOrder", (function() {
-            return _onApprove__WEBPACK_IMPORTED_MODULE_5__.getOnApproveOrder;
+            return _onApprove__WEBPACK_IMPORTED_MODULE_6__.getOnApproveOrder;
         }));
         __webpack_require__.d(__webpack_exports__, "getOnApproveBilling", (function() {
-            return _onApprove__WEBPACK_IMPORTED_MODULE_5__.getOnApproveBilling;
+            return _onApprove__WEBPACK_IMPORTED_MODULE_6__.getOnApproveBilling;
         }));
         __webpack_require__.d(__webpack_exports__, "getOnApproveTokenize", (function() {
-            return _onApprove__WEBPACK_IMPORTED_MODULE_5__.getOnApproveTokenize;
+            return _onApprove__WEBPACK_IMPORTED_MODULE_6__.getOnApproveTokenize;
         }));
         __webpack_require__.d(__webpack_exports__, "getOnApproveSubscription", (function() {
-            return _onApprove__WEBPACK_IMPORTED_MODULE_5__.getOnApproveSubscription;
+            return _onApprove__WEBPACK_IMPORTED_MODULE_6__.getOnApproveSubscription;
         }));
         __webpack_require__.d(__webpack_exports__, "getOnApprove", (function() {
-            return _onApprove__WEBPACK_IMPORTED_MODULE_5__.getOnApprove;
+            return _onApprove__WEBPACK_IMPORTED_MODULE_6__.getOnApprove;
         }));
         __webpack_require__.d(__webpack_exports__, "getSaveActionOnApprove", (function() {
-            return _onApprove__WEBPACK_IMPORTED_MODULE_5__.getSaveActionOnApprove;
+            return _onApprove__WEBPACK_IMPORTED_MODULE_6__.getSaveActionOnApprove;
         }));
-        var _onComplete__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__("./src/props/onComplete.js");
+        var _onComplete__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__("./src/props/onComplete.js");
         __webpack_require__.d(__webpack_exports__, "getOnComplete", (function() {
-            return _onComplete__WEBPACK_IMPORTED_MODULE_6__.getOnComplete;
+            return _onComplete__WEBPACK_IMPORTED_MODULE_7__.getOnComplete;
         }));
-        var _onInit__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__("./src/props/onInit.js");
+        var _onInit__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__("./src/props/onInit.js");
         __webpack_require__.d(__webpack_exports__, "buildXOnInitActions", (function() {
-            return _onInit__WEBPACK_IMPORTED_MODULE_7__.buildXOnInitActions;
+            return _onInit__WEBPACK_IMPORTED_MODULE_8__.buildXOnInitActions;
         }));
         __webpack_require__.d(__webpack_exports__, "getOnInit", (function() {
-            return _onInit__WEBPACK_IMPORTED_MODULE_7__.getOnInit;
+            return _onInit__WEBPACK_IMPORTED_MODULE_8__.getOnInit;
         }));
-        var _onCancel__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__("./src/props/onCancel.js");
+        var _onCancel__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__("./src/props/onCancel.js");
         __webpack_require__.d(__webpack_exports__, "buildXOnCancelData", (function() {
-            return _onCancel__WEBPACK_IMPORTED_MODULE_8__.buildXOnCancelData;
+            return _onCancel__WEBPACK_IMPORTED_MODULE_9__.buildXOnCancelData;
         }));
         __webpack_require__.d(__webpack_exports__, "buildXOnCancelActions", (function() {
-            return _onCancel__WEBPACK_IMPORTED_MODULE_8__.buildXOnCancelActions;
+            return _onCancel__WEBPACK_IMPORTED_MODULE_9__.buildXOnCancelActions;
         }));
         __webpack_require__.d(__webpack_exports__, "getOnCancel", (function() {
-            return _onCancel__WEBPACK_IMPORTED_MODULE_8__.getOnCancel;
+            return _onCancel__WEBPACK_IMPORTED_MODULE_9__.getOnCancel;
         }));
-        var _onShippingChange__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__("./src/props/onShippingChange.js");
+        var _onShippingChange__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__("./src/props/onShippingChange.js");
         __webpack_require__.d(__webpack_exports__, "ON_SHIPPING_CHANGE_PATHS", (function() {
-            return _onShippingChange__WEBPACK_IMPORTED_MODULE_9__.ON_SHIPPING_CHANGE_PATHS;
+            return _onShippingChange__WEBPACK_IMPORTED_MODULE_10__.ON_SHIPPING_CHANGE_PATHS;
         }));
         __webpack_require__.d(__webpack_exports__, "SHIPPING_ADDRESS_ERROR_MESSAGES", (function() {
-            return _onShippingChange__WEBPACK_IMPORTED_MODULE_9__.SHIPPING_ADDRESS_ERROR_MESSAGES;
+            return _onShippingChange__WEBPACK_IMPORTED_MODULE_10__.SHIPPING_ADDRESS_ERROR_MESSAGES;
         }));
         __webpack_require__.d(__webpack_exports__, "SHIPPING_OPTIONS_ERROR_MESSAGES", (function() {
-            return _onShippingChange__WEBPACK_IMPORTED_MODULE_9__.SHIPPING_OPTIONS_ERROR_MESSAGES;
+            return _onShippingChange__WEBPACK_IMPORTED_MODULE_10__.SHIPPING_OPTIONS_ERROR_MESSAGES;
         }));
         __webpack_require__.d(__webpack_exports__, "GENERIC_REJECT_ADDRESS_MESSAGE", (function() {
-            return _onShippingChange__WEBPACK_IMPORTED_MODULE_9__.GENERIC_REJECT_ADDRESS_MESSAGE;
+            return _onShippingChange__WEBPACK_IMPORTED_MODULE_10__.GENERIC_REJECT_ADDRESS_MESSAGE;
         }));
         __webpack_require__.d(__webpack_exports__, "buildXOnShippingChangeData", (function() {
-            return _onShippingChange__WEBPACK_IMPORTED_MODULE_9__.buildXOnShippingChangeData;
+            return _onShippingChange__WEBPACK_IMPORTED_MODULE_10__.buildXOnShippingChangeData;
         }));
         __webpack_require__.d(__webpack_exports__, "buildXShippingChangeActions", (function() {
-            return _onShippingChange__WEBPACK_IMPORTED_MODULE_9__.buildXShippingChangeActions;
+            return _onShippingChange__WEBPACK_IMPORTED_MODULE_10__.buildXShippingChangeActions;
         }));
         __webpack_require__.d(__webpack_exports__, "getOnShippingChange", (function() {
-            return _onShippingChange__WEBPACK_IMPORTED_MODULE_9__.getOnShippingChange;
+            return _onShippingChange__WEBPACK_IMPORTED_MODULE_10__.getOnShippingChange;
         }));
-        var _onShippingAddressChange__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__("./src/props/onShippingAddressChange.js");
+        var _onShippingAddressChange__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__("./src/props/onShippingAddressChange.js");
         __webpack_require__.d(__webpack_exports__, "buildXOnShippingAddressChangeData", (function() {
-            return _onShippingAddressChange__WEBPACK_IMPORTED_MODULE_10__.buildXOnShippingAddressChangeData;
+            return _onShippingAddressChange__WEBPACK_IMPORTED_MODULE_11__.buildXOnShippingAddressChangeData;
         }));
         __webpack_require__.d(__webpack_exports__, "buildXOnShippingAddressChangeActions", (function() {
-            return _onShippingAddressChange__WEBPACK_IMPORTED_MODULE_10__.buildXOnShippingAddressChangeActions;
+            return _onShippingAddressChange__WEBPACK_IMPORTED_MODULE_11__.buildXOnShippingAddressChangeActions;
         }));
         __webpack_require__.d(__webpack_exports__, "getOnShippingAddressChange", (function() {
-            return _onShippingAddressChange__WEBPACK_IMPORTED_MODULE_10__.getOnShippingAddressChange;
+            return _onShippingAddressChange__WEBPACK_IMPORTED_MODULE_11__.getOnShippingAddressChange;
         }));
-        var _onShippingOptionsChange__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__("./src/props/onShippingOptionsChange.js");
+        var _onShippingOptionsChange__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__("./src/props/onShippingOptionsChange.js");
         __webpack_require__.d(__webpack_exports__, "buildXOnShippingOptionsChangeData", (function() {
-            return _onShippingOptionsChange__WEBPACK_IMPORTED_MODULE_11__.buildXOnShippingOptionsChangeData;
+            return _onShippingOptionsChange__WEBPACK_IMPORTED_MODULE_12__.buildXOnShippingOptionsChangeData;
         }));
         __webpack_require__.d(__webpack_exports__, "buildXOnShippingOptionsChangeActions", (function() {
-            return _onShippingOptionsChange__WEBPACK_IMPORTED_MODULE_11__.buildXOnShippingOptionsChangeActions;
+            return _onShippingOptionsChange__WEBPACK_IMPORTED_MODULE_12__.buildXOnShippingOptionsChangeActions;
         }));
         __webpack_require__.d(__webpack_exports__, "getOnShippingOptionsChange", (function() {
-            return _onShippingOptionsChange__WEBPACK_IMPORTED_MODULE_11__.getOnShippingOptionsChange;
+            return _onShippingOptionsChange__WEBPACK_IMPORTED_MODULE_12__.getOnShippingOptionsChange;
         }));
-        var _onClick__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__("./src/props/onClick.js");
+        var _onClick__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__("./src/props/onClick.js");
         __webpack_require__.d(__webpack_exports__, "CLICK_VALID", (function() {
-            return _onClick__WEBPACK_IMPORTED_MODULE_12__.CLICK_VALID;
+            return _onClick__WEBPACK_IMPORTED_MODULE_13__.CLICK_VALID;
         }));
         __webpack_require__.d(__webpack_exports__, "buildXOnClickData", (function() {
-            return _onClick__WEBPACK_IMPORTED_MODULE_12__.buildXOnClickData;
+            return _onClick__WEBPACK_IMPORTED_MODULE_13__.buildXOnClickData;
         }));
         __webpack_require__.d(__webpack_exports__, "buildXOnClickActions", (function() {
-            return _onClick__WEBPACK_IMPORTED_MODULE_12__.buildXOnClickActions;
+            return _onClick__WEBPACK_IMPORTED_MODULE_13__.buildXOnClickActions;
         }));
         __webpack_require__.d(__webpack_exports__, "getOnClick", (function() {
-            return _onClick__WEBPACK_IMPORTED_MODULE_12__.getOnClick;
+            return _onClick__WEBPACK_IMPORTED_MODULE_13__.getOnClick;
         }));
-        var _onError__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__("./src/props/onError.js");
+        var _onError__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__("./src/props/onError.js");
         __webpack_require__.d(__webpack_exports__, "getOnError", (function() {
-            return _onError__WEBPACK_IMPORTED_MODULE_13__.getOnError;
+            return _onError__WEBPACK_IMPORTED_MODULE_14__.getOnError;
         }));
-        var _getPopupBridge__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__("./src/props/getPopupBridge.js");
+        var _getPopupBridge__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__("./src/props/getPopupBridge.js");
         __webpack_require__.d(__webpack_exports__, "POPUP_BRIDGE_OPTYPE", (function() {
-            return _getPopupBridge__WEBPACK_IMPORTED_MODULE_14__.POPUP_BRIDGE_OPTYPE;
+            return _getPopupBridge__WEBPACK_IMPORTED_MODULE_15__.POPUP_BRIDGE_OPTYPE;
         }));
-        var _rememberFunding__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__("./src/props/rememberFunding.js");
+        var _rememberFunding__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__("./src/props/rememberFunding.js");
         __webpack_require__.d(__webpack_exports__, "getRememberFunding", (function() {
-            return _rememberFunding__WEBPACK_IMPORTED_MODULE_15__.getRememberFunding;
+            return _rememberFunding__WEBPACK_IMPORTED_MODULE_16__.getRememberFunding;
         }));
-        var _getPageUrl__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__("./src/props/getPageUrl.js");
+        var _getPageUrl__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__("./src/props/getPageUrl.js");
         __webpack_require__.d(__webpack_exports__, "getGetPageUrl", (function() {
-            return _getPageUrl__WEBPACK_IMPORTED_MODULE_16__.getGetPageUrl;
+            return _getPageUrl__WEBPACK_IMPORTED_MODULE_17__.getGetPageUrl;
         }));
-        var _onAuth__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__("./src/props/onAuth.js");
+        var _onAuth__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__("./src/props/onAuth.js");
         __webpack_require__.d(__webpack_exports__, "getOnAuth", (function() {
-            return _onAuth__WEBPACK_IMPORTED_MODULE_17__.getOnAuth;
+            return _onAuth__WEBPACK_IMPORTED_MODULE_18__.getOnAuth;
         }));
         __webpack_require__("./src/props/getQueriedEligibleFunding.js");
-        var _paymentRequest__WEBPACK_IMPORTED_MODULE_19__ = __webpack_require__("./src/props/paymentRequest.js");
-        for (var __WEBPACK_IMPORT_KEY__ in _paymentRequest__WEBPACK_IMPORTED_MODULE_19__) [ "default", "TYPES", "getProps", "buildXCreateOrderData", "buildOrderActions", "buildPaymentActions", "buildXCreateOrderActions", "getCreateOrder", "getConfirmOrder", "buildXCreateBillingAgreementData", "buildXCreateBillingAgreementActions", "getCreateBillingAgreement", "buildXCreateSubscriptionData", "buildXCreateSubscriptionActions", "getCreateSubscription", "getOnApproveOrder", "getOnApproveBilling", "getOnApproveTokenize", "getOnApproveSubscription", "getOnApprove", "getSaveActionOnApprove", "getOnComplete", "buildXOnInitActions", "getOnInit", "buildXOnCancelData", "buildXOnCancelActions", "getOnCancel", "ON_SHIPPING_CHANGE_PATHS", "SHIPPING_ADDRESS_ERROR_MESSAGES", "SHIPPING_OPTIONS_ERROR_MESSAGES", "GENERIC_REJECT_ADDRESS_MESSAGE", "buildXOnShippingChangeData", "buildXShippingChangeActions", "getOnShippingChange", "buildXOnShippingAddressChangeData", "buildXOnShippingAddressChangeActions", "getOnShippingAddressChange", "buildXOnShippingOptionsChangeData", "buildXOnShippingOptionsChangeActions", "getOnShippingOptionsChange", "CLICK_VALID", "buildXOnClickData", "buildXOnClickActions", "getOnClick", "getOnError", "POPUP_BRIDGE_OPTYPE", "getRememberFunding", "getGetPageUrl", "getOnAuth" ].indexOf(__WEBPACK_IMPORT_KEY__) < 0 && function(key) {
+        var _paymentRequest__WEBPACK_IMPORTED_MODULE_20__ = __webpack_require__("./src/props/paymentRequest.js");
+        for (var __WEBPACK_IMPORT_KEY__ in _paymentRequest__WEBPACK_IMPORTED_MODULE_20__) [ "default", "TYPES", "getProps", "buildXCreateOrderData", "buildOrderActions", "buildPaymentActions", "buildXCreateOrderActions", "getCreateOrder", "getConfirmOrder", "buildXCreateBillingAgreementData", "buildXCreateBillingAgreementActions", "getCreateBillingAgreement", "buildXCreateSubscriptionData", "buildXCreateSubscriptionActions", "getCreateSubscription", "getCreateVaultSetupToken", "getOnApproveOrder", "getOnApproveBilling", "getOnApproveTokenize", "getOnApproveSubscription", "getOnApprove", "getSaveActionOnApprove", "getOnComplete", "buildXOnInitActions", "getOnInit", "buildXOnCancelData", "buildXOnCancelActions", "getOnCancel", "ON_SHIPPING_CHANGE_PATHS", "SHIPPING_ADDRESS_ERROR_MESSAGES", "SHIPPING_OPTIONS_ERROR_MESSAGES", "GENERIC_REJECT_ADDRESS_MESSAGE", "buildXOnShippingChangeData", "buildXShippingChangeActions", "getOnShippingChange", "buildXOnShippingAddressChangeData", "buildXOnShippingAddressChangeActions", "getOnShippingAddressChange", "buildXOnShippingOptionsChangeData", "buildXOnShippingOptionsChangeActions", "getOnShippingOptionsChange", "CLICK_VALID", "buildXOnClickData", "buildXOnClickActions", "getOnClick", "getOnError", "POPUP_BRIDGE_OPTYPE", "getRememberFunding", "getGetPageUrl", "getOnAuth" ].indexOf(__WEBPACK_IMPORT_KEY__) < 0 && function(key) {
             __webpack_require__.d(__webpack_exports__, key, (function() {
-                return _paymentRequest__WEBPACK_IMPORTED_MODULE_19__[key];
+                return _paymentRequest__WEBPACK_IMPORTED_MODULE_20__[key];
             }));
         }(__WEBPACK_IMPORT_KEY__);
     },
