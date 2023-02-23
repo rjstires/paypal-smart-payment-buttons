@@ -130,7 +130,7 @@ function Page({ cspNonce, props, featureFlags } : PageProps) : mixed {
             const errors = getFieldErrors(fields)
             onChange({
                 fields,
-                potentialCardTypes,
+                cards: potentialCardTypes,
                 emittedBy: type,
                 isFormValid: errors.length === 0,
                 errors
@@ -145,7 +145,7 @@ function Page({ cspNonce, props, featureFlags } : PageProps) : mixed {
             const errors = getFieldErrors(fields)
             const fieldStateObject = {
                 fields,
-                potentialCardTypes,
+                cards: potentialCardTypes,
                 emittedBy: type,
                 isFormValid: errors.length === 0,
                 errors
@@ -167,7 +167,7 @@ function Page({ cspNonce, props, featureFlags } : PageProps) : mixed {
             const errors = getFieldErrors(fields)
             const fieldStateObject = {
                 fields,
-                potentialCardTypes,
+                cards: potentialCardTypes,
                 emittedBy: type,
                 isFormValid: errors.length === 0,
                 errors
@@ -202,7 +202,13 @@ function Page({ cspNonce, props, featureFlags } : PageProps) : mixed {
                 return submitCardFields({ facilitatorAccessToken, extraFields, featureFlags });
             },
             getState: () => {
-                return getCardFieldState()
+                const cardFieldState = getCardFieldState()
+                const { fields } = cardFieldState
+                const errors = getFieldErrors(fields)
+
+                return {...cardFieldState,
+                    isFormValid: errors.length === 0,
+                    errors}
             }
         });
     }, [ fieldValid, fieldValue, fieldFocus, fieldPotentiallyValid, cardTypes ]);

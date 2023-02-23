@@ -52,7 +52,7 @@ export type CardExport = ({|
 |}) => ZalgoPromise<void>;
 
 export type InputEventState = {|
-  potentialCardTypes: $ReadOnlyArray<ParsedCardType>,
+  cards: $ReadOnlyArray<ParsedCardType>,
   emittedBy: string,
   fields: FieldsState,
   errors: [$Values<typeof CARD_ERRORS>] | [],

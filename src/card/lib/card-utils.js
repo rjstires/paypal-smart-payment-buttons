@@ -154,13 +154,13 @@ export function getCSSText(cardFieldStyle : Object, customStyle : Object) : stri
 }
 
 // mark the ref's HTMLElement as valid or invalid
-export function markValidity(ref : Object, validity : FieldValidity) {
+export function markValidity(ref : Object, validity : FieldValidity, hasFocus?: boolean, touched?: boolean ) {
     const element = ref?.current?.base;
     if (element) {
-        if (validity.isPotentiallyValid || validity.isValid) {
+        if (validity.isValid || (validity.isPotentiallyValid && hasFocus)) {
             element.classList.add('valid');
             element.classList.remove('invalid');
-        } else{
+        } else if(touched){
             element.classList.add('invalid');
             element.classList.remove('valid');
         }

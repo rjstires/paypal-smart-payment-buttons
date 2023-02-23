@@ -39,6 +39,10 @@ export function CardField({ cspNonce, onChange, styleObject = {}, placeholder = 
     const [ numberValidity, setNumberValidity ] : [ FieldValidity, (FieldValidity) => FieldValidity ] = useState(initFieldValidity);
     const [ expiryValidity, setExpiryValidity ] : [ FieldValidity, (FieldValidity) => FieldValidity ] = useState(initFieldValidity);
     const [ cvvValidity, setCvvValidity ] : [ FieldValidity, (FieldValidity) => FieldValidity ] = useState(initFieldValidity);
+    const [ touched, setTouched ] = useState(false)
+    // TODO: change the focus boolean flag to an object to avoid a race condition when either of number/expiry or cvv 
+    // fields have been focused instantaneously. Eg: {cvvHasFocus: true, expiryHasFocus: false, ...}, if any of these 
+    // fields has focus, hasFocus should be true since this block is for Single Card Fields
     const [ hasFocus, setHasFocus ] : [ boolean, (boolean) => boolean ] = useState(false);
     const numberRef = useRef();
     const expiryRef = useRef();
@@ -116,10 +120,10 @@ export function CardField({ cspNonce, onChange, styleObject = {}, placeholder = 
                 element.classList.remove('valid');
             }
         } else {
-            markValidity(numberRef, numberValidity);
+            markValidity(numberRef, numberValidity, hasFocus, touched);
         }
-        markValidity(expiryRef, expiryValidity);
-        markValidity(cvvRef, cvvValidity);
+        markValidity(expiryRef, expiryValidity, hasFocus, touched);
+        markValidity(cvvRef, cvvValidity, hasFocus, touched);
 
         onChange({ value: { number, cvv, expiry }, valid, errors });
 
@@ -154,6 +158,11 @@ export function CardField({ cspNonce, onChange, styleObject = {}, placeholder = 
         setNumber(cardNumber);
     };
 
+    const handleFocus = () => {
+        setTouched(true)
+        setHasFocus(true)
+    }
+
     return (
         <Fragment>
             <style nonce={ cspNonce }>
@@ -171,7 +180,7 @@ export function CardField({ cspNonce, onChange, styleObject = {}, placeholder = 
                     onChange={ onChangeNumber }
                     onEligibilityChange={ (eligibility : boolean) => setIsCardEligible(eligibility) }
                     onValidityChange={ (validity : FieldValidity) => setNumberValidity({ ...validity }) }
-                    onFocus={ () => setHasFocus(true) }
+                    onFocus={ handleFocus }
                     onBlur={ () => setHasFocus(false) }
                 />
                 <CardExpiry
@@ -184,7 +193,7 @@ export function CardField({ cspNonce, onChange, styleObject = {}, placeholder = 
                     maxLength='7'
                     onChange={ ({ maskedDate } : CardExpiryChangeEvent) => setExpiry(convertDateFormat(maskedDate)) }
                     onValidityChange={ (validity : FieldValidity) => setExpiryValidity({ ...validity }) }
-                    onFocus={ () => setHasFocus(true) }
+                    onFocus={ handleFocus }
                     onBlur={ () => setHasFocus(false) }
                 />
                 <CardCVV
@@ -196,7 +205,7 @@ export function CardField({ cspNonce, onChange, styleObject = {}, placeholder = 
                     placeholder={ placeholder.cvv }
                     onChange={ ({ cardCvv } : CardCvvChangeEvent) => setCvv(cardCvv) }
                     onValidityChange={ (validity : FieldValidity) => setCvvValidity({ ...validity }) }
-                    onFocus={ () => setHasFocus(true) }
+                    onFocus={ handleFocus }
                     onBlur={ () => setHasFocus(false) }
                 />
             </fieldset>
@@ -231,8 +240,9 @@ export function CardNumberField({ cspNonce, onChange, onFocus, styleObject = {},
     const [ number, setNumber ] : [ string, (string) => string ] = useState('');
     const [ isCardEligible, setIsCardEligible ] : [ boolean, (boolean) => boolean ] = useState(true);
     const [ numberValidity, setNumberValidity ] : [ FieldValidity, (FieldValidity) => FieldValidity ] = useState(initFieldValidity);
-    const [cards, setCards] : [$ReadOnlyArray<CardType>, (CardType) => $ReadOnlyArray<CardType>] = useState([])
+    const [ cards, setCards ] : [$ReadOnlyArray<CardType>, (CardType) => $ReadOnlyArray<CardType>] = useState([])
     const [ hasFocus, setHasFocus ] : [ boolean, (boolean) => boolean ] = useState(false);
+    const [ touched, setTouched ] = useState(false)
     const [ isSubmitRequest, setIsSubmitRequest ] : [ boolean, (boolean) => boolean ] = useState(false);
     const numberRef = useRef();
 
@@ -261,7 +271,7 @@ export function CardNumberField({ cspNonce, onChange, onFocus, styleObject = {},
                 element.classList.remove('valid');
             }
         } else {
-            markValidity(numberRef, numberValidity);
+            markValidity(numberRef, numberValidity, hasFocus, touched);
         }
         onChange({ value: number, valid: numberValidity.isValid, isFocused: hasFocus, potentiallyValid: numberValidity.isPotentiallyValid, potentialCardTypes: cards });
     }, [ number, isCardEligible, isValid, hasFocus, isPotentiallyValid, cards ]);
@@ -278,6 +288,11 @@ export function CardNumberField({ cspNonce, onChange, onFocus, styleObject = {},
         onKeyDown({isInputSubmitRequest: isSubmitRequest})
     }, [isSubmitRequest]);
 
+    const handleFocus = () => {
+        setTouched(true)
+        setHasFocus(true)
+    }
+
     return (
         <Fragment>
             <style nonce={ cspNonce }>
@@ -292,7 +307,7 @@ export function CardNumberField({ cspNonce, onChange, onFocus, styleObject = {},
                 onChange={ ({ cardNumber, potentialCardTypes } : CardNumberChangeEvent) => handleInputChange(cardNumber, potentialCardTypes) }
                 onEligibilityChange={ (eligibility : boolean) => setIsCardEligible(eligibility) }
                 onValidityChange={ (validity : FieldValidity) => setNumberValidity(validity) }
-                onFocus={ () => setHasFocus(true) }
+                onFocus={ handleFocus }
                 onBlur={ () => setHasFocus(false) }
                 onKeyDown={ (keyDown: boolean) => setIsSubmitRequest(keyDown) }
             />
@@ -318,6 +333,7 @@ export function CardExpiryField({ cspNonce, onChange, onFocus, onKeyDown, styleO
     const [ expiryValidity, setExpiryValidity ] : [ FieldValidity, (FieldValidity) => FieldValidity ] = useState(initFieldValidity);
     const expiryRef = useRef();
     const [ hasFocus, setHasFocus ] : [ boolean, (boolean) => boolean ] = useState(false);
+    const [ touched, setTouched ] = useState(false)
     const [ isSubmitRequest, setIsSubmitRequest ] : [ boolean, (boolean) => boolean ] = useState(false);
 
     const { isValid, isPotentiallyValid } = expiryValidity;
@@ -338,7 +354,7 @@ export function CardExpiryField({ cspNonce, onChange, onFocus, onKeyDown, styleO
     }, [ gqlErrors ]);
     
     useEffect(() => {
-        markValidity(expiryRef, expiryValidity);
+        markValidity(expiryRef, expiryValidity, hasFocus, touched);
         onChange({ value: expiry, valid: expiryValidity.isValid, isFocused: hasFocus, potentiallyValid: expiryValidity.isPotentiallyValid });
     }, [ expiry, isValid, hasFocus, isPotentiallyValid ]);
 
@@ -349,6 +365,11 @@ export function CardExpiryField({ cspNonce, onChange, onFocus, onKeyDown, styleO
     useEffect(() => {
         onKeyDown({isInputSubmitRequest: isSubmitRequest})
     }, [isSubmitRequest])
+
+    const handleFocus = () => {
+        setTouched(true)
+        setHasFocus(true)
+    }
 
     return (
         <Fragment>
@@ -363,7 +384,7 @@ export function CardExpiryField({ cspNonce, onChange, onFocus, onKeyDown, styleO
                 maxLength='7'
                 onChange={ ({ maskedDate } : CardExpiryChangeEvent) => setExpiry(convertDateFormat(maskedDate)) }
                 onValidityChange={ (validity : FieldValidity) => setExpiryValidity(validity) }
-                onFocus={ () => setHasFocus(true) }
+                onFocus={ handleFocus }
                 onBlur={ () => setHasFocus(false) }
                 onKeyDown={ (value: boolean) => setIsSubmitRequest(value) }
             />
@@ -388,6 +409,7 @@ export function CardCVVField({ cspNonce, onChange, onFocus, onKeyDown, styleObje
     const [ cvvValidity, setCvvValidity ] : [ FieldValidity, (FieldValidity) => FieldValidity ] = useState(initFieldValidity);
     const cvvRef = useRef();
     const [ hasFocus, setHasFocus ] : [ boolean, (boolean) => boolean ] = useState(false);
+    const [ touched, setTouched ] = useState(false)
     const [ isSubmitRequest, setIsSubmitRequest ] : [ boolean, (boolean) => boolean ] = useState(false);
     
     const { isValid, isPotentiallyValid } = cvvValidity;
@@ -408,7 +430,7 @@ export function CardCVVField({ cspNonce, onChange, onFocus, onKeyDown, styleObje
     }, [ gqlErrors ]);
 
     useEffect(() => {
-        markValidity(cvvRef, cvvValidity);
+        markValidity(cvvRef, cvvValidity, hasFocus, touched);
         onChange({ value: cvv, valid: cvvValidity.isValid, isFocused: hasFocus, potentiallyValid: cvvValidity.isPotentiallyValid });
     }, [ cvv, isValid, hasFocus, isPotentiallyValid  ]);
 
@@ -419,6 +441,11 @@ export function CardCVVField({ cspNonce, onChange, onFocus, onKeyDown, styleObje
     useEffect(() => {
         onKeyDown({isInputSubmitRequest: isSubmitRequest})
     }, [isSubmitRequest])
+
+    const handleFocus = () => {
+        setTouched(true)
+        setHasFocus(true)
+    }
 
     return (
         <Fragment>
@@ -432,7 +459,7 @@ export function CardCVVField({ cspNonce, onChange, onFocus, onKeyDown, styleObje
                 placeholder={ placeholder }
                 onChange={ ({ cardCvv } : CardCvvChangeEvent) => setCvv(cardCvv) }
                 onValidityChange={ (validity : FieldValidity) => setCvvValidity(validity) }
-                onFocus={ () => setHasFocus(true) }
+                onFocus={ handleFocus }
                 onBlur={ () => setHasFocus(false) }
                 onKeyDown={ (value: boolean) => setIsSubmitRequest(value) }
             />
@@ -456,6 +483,7 @@ export function CardNameField({ cspNonce, onChange, onFocus, onKeyDown, styleObj
     const [ name, setName ] : [ string, (string) => string ] = useState('');
     const [ nameValidity, setNameValidity ] : [ FieldValidity, (FieldValidity) => FieldValidity ] = useState(initFieldValidity);
     const nameRef = useRef();
+    const [touched, setTouched] = useState(false)
     const [ hasFocus, setHasFocus ] : [ boolean, (boolean) => boolean ] = useState(false);
     const [ isSubmitRequest, setIsSubmitRequest ] : [ boolean, (boolean) => boolean ] = useState(false);
     
@@ -477,7 +505,7 @@ export function CardNameField({ cspNonce, onChange, onFocus, onKeyDown, styleObj
     }, [ gqlErrors ]);
 
     useEffect(() => {
-        markValidity(nameRef, nameValidity);
+        markValidity(nameRef, nameValidity, hasFocus, touched);
         onChange({ value: name, valid: nameValidity.isValid, isFocused: hasFocus, potentiallyValid: nameValidity.isPotentiallyValid });
     }, [ name, isValid, hasFocus, isPotentiallyValid  ]);
 
@@ -488,6 +516,11 @@ export function CardNameField({ cspNonce, onChange, onFocus, onKeyDown, styleObj
     useEffect(() => {
         onKeyDown({isInputSubmitRequest: isSubmitRequest})
     }, [isSubmitRequest])
+
+    const handleFocus = () => {
+        setHasFocus(true)
+        setTouched(true)
+    }
 
     return (
         <Fragment>
@@ -501,7 +534,7 @@ export function CardNameField({ cspNonce, onChange, onFocus, onKeyDown, styleObj
                 maxLength='255'
                 onChange={ ({ cardName } : CardNameChangeEvent) => setName(cardName) }
                 onValidityChange={ (validity : FieldValidity) => setNameValidity(validity) }
-                onFocus={ () => setHasFocus(true) }
+                onFocus={ handleFocus }
                 onBlur={ () => setHasFocus(false) }
                 onKeyDown={ (value: boolean) => setIsSubmitRequest(value) }
             />
@@ -529,6 +562,7 @@ export function CardPostalCodeField({ cspNonce, onChange, onFocus, onKeyDown, st
     const [ postalCodeValidity, setPostalCodeValidity ] : [ FieldValidity, (FieldValidity) => FieldValidity ] = useState(initFieldValidity);
     const postalRef = useRef();
     const [ hasFocus, setHasFocus ] : [ boolean, (boolean) => boolean ] = useState(false);
+    const [ touched, setTouched ] = useState(false)
     const [ isSubmitRequest, setIsSubmitRequest ] : [ boolean, (boolean) => boolean ] = useState(false);
 
     const { isValid, isPotentiallyValid } = postalCodeValidity;
@@ -549,7 +583,7 @@ export function CardPostalCodeField({ cspNonce, onChange, onFocus, onKeyDown, st
     }, [ gqlErrors ]);
 
     useEffect(() => {
-        markValidity(postalRef, postalCodeValidity);
+        markValidity(postalRef, postalCodeValidity, hasFocus, touched);
         onChange({ value: postalCode, valid: postalCodeValidity.isValid, isFocused: hasFocus, potentiallyValid: postalCodeValidity.isPotentiallyValid });
     }, [ postalCode, isValid, hasFocus, isPotentiallyValid  ]);
 
@@ -560,6 +594,11 @@ export function CardPostalCodeField({ cspNonce, onChange, onFocus, onKeyDown, st
     useEffect(() => {
         onKeyDown({isInputSubmitRequest: isSubmitRequest})
     }, [isSubmitRequest])
+
+    const handleFocus = () => {
+        setTouched(true)
+        setHasFocus(true)
+    }
 
     return (
         <Fragment>
@@ -575,7 +614,7 @@ export function CardPostalCodeField({ cspNonce, onChange, onFocus, onKeyDown, st
                 maxLength={ maxLength }
                 onChange={ ({ cardPostalCode } : CardPostalCodeChangeEvent) => setPostalCode(cardPostalCode) }
                 onValidityChange={ (validity : FieldValidity) => setPostalCodeValidity(validity) }
-                onFocus={ () => setHasFocus(true) }
+                onFocus={ handleFocus }
                 onBlur={ () => setHasFocus(false) }
                 onKeyDown={ (value: boolean) => setIsSubmitRequest(value) }
             />

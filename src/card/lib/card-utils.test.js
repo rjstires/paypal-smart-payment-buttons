@@ -420,7 +420,7 @@ describe('card utils', () => {
 
     describe('markValidity', () => {
 
-        it('marks the refs HTMLelement as valid when isValid is true', () => {
+        it('marks the refs HTMLelement as valid when isValid is true, it has focus, and it has been touched', () => {
 
             const element = document.createElement('div')
 
@@ -432,15 +432,44 @@ describe('card utils', () => {
 
             const validity = {
                 isValid: true,
-                isPotentiallyValid: true
+                isPotentiallyValid: false
             };
 
-            markValidity(ref, validity)
+            const hasFocus = true;
+
+            const touched = true;
+
+            markValidity(ref, validity, hasFocus, touched)
 
             expect(element.classList.contains('valid')).toBe(true)
         })
 
-        it('marks the refs HTMLelement as invalid when isValid is false', () => {
+        it('marks the refs HTMLelement as invalid when isValid is false, it does not have focus, and it has been touched', () => {
+
+            const element = document.createElement('div')
+
+            const ref = {
+                current: {
+                    base: element
+                }
+            };
+
+            const validity = {
+                isValid: false,
+                isPotentiallyValid: true
+            };
+
+            const hasFocus = false;
+
+            const touched = true;
+
+            markValidity(ref, validity, hasFocus, touched)
+
+            expect(element.classList.contains('invalid')).toBe(true)
+            expect(element.classList.contains('valid')).toBe(false)
+        })
+
+        it('marks the refs HTMLelement as neither valid or invalid. isValid, isPotentiallyValid, hasFocus, and touched are all false', () => {
 
             const element = document.createElement('div')
 
@@ -455,10 +484,114 @@ describe('card utils', () => {
                 isPotentiallyValid: false
             };
 
-            markValidity(ref, validity)
+            const hasFocus = false;
+
+            const touched = false;
+
+            markValidity(ref, validity, hasFocus, touched)
+
+            expect(element.classList.contains('invalid')).toBe(false)
+            expect(element.classList.contains('valid')).toBe(false)
+        })
+
+        it('marks the refs HTMLelement as invalid when not valid, potentiallyValid, or focused but has been touched', () => {
+
+            const element = document.createElement('div')
+
+            const ref = {
+                current: {
+                    base: element
+                }
+            };
+
+            const validity = {
+                isValid: false,
+                isPotentiallyValid: false
+            };
+
+            const hasFocus = false;
+
+            const touched = true;
+
+            markValidity(ref, validity, hasFocus, touched)
 
             expect(element.classList.contains('invalid')).toBe(true)
             expect(element.classList.contains('valid')).toBe(false)
+        })
+
+        it('marks the refs HTMLelement as valid when focused and potentiallyValid, but not valid or touched', () => {
+
+            const element = document.createElement('div')
+
+            const ref = {
+                current: {
+                    base: element
+                }
+            };
+
+            const validity = {
+                isValid: false,
+                isPotentiallyValid: true
+            };
+
+            const hasFocus = true;
+
+            const touched = false;
+
+            markValidity(ref, validity, hasFocus, touched)
+
+            expect(element.classList.contains('invalid')).toBe(false)
+            expect(element.classList.contains('valid')).toBe(true)
+        })
+
+        it('marks the refs HTMLelement as valid when isValid and potentiallyValid, but not focused or touched', () => {
+
+            const element = document.createElement('div')
+
+            const ref = {
+                current: {
+                    base: element
+                }
+            };
+
+            const validity = {
+                isValid: true,
+                isPotentiallyValid: true
+            };
+
+            const hasFocus = false;
+
+            const touched = false;
+
+            markValidity(ref, validity, hasFocus, touched)
+
+            expect(element.classList.contains('invalid')).toBe(false)
+            expect(element.classList.contains('valid')).toBe(true)
+        })
+
+        it('marks the refs HTMLelement as valid when isValid, potentiallyValid, and focused but not touched', () => {
+
+            const element = document.createElement('div')
+
+            const ref = {
+                current: {
+                    base: element
+                }
+            };
+
+            const validity = {
+                isValid: true,
+                isPotentiallyValid: true
+            };
+
+            const hasFocus = true;
+
+            const touched = false;
+
+            markValidity(ref, validity, hasFocus, touched)
+
+            expect(element.classList.contains('invalid')).toBe(false)
+            expect(element.classList.contains('valid')).toBe(true)
         })
     });
 
