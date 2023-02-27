@@ -1,7 +1,7 @@
 /* @flow */
 
 import { onClick as onElementClick, querySelectorAll, noop, stringifyErrorMessage, stringifyError, preventClickFocus } from '@krakenjs/belter/src';
-import { COUNTRY, FPTI_KEY, type FundingEligibilityType } from '@paypal/sdk-constants/src';
+import { FUNDING, COUNTRY, FPTI_KEY, type FundingEligibilityType } from '@paypal/sdk-constants/src';
 import { ZalgoPromise } from '@krakenjs/zalgo-promise/src';
 
 import type { ContentType, Wallet, PersonalizationType, FeatureFlags, InlinePaymentFieldsEligibility } from '../types';
@@ -104,7 +104,9 @@ export function setupButton({
 
     const { merchantID, buyerCountry } = serviceData;
 
-    const props = getButtonProps({ facilitatorAccessToken, brandedDefault, paymentSource: null, featureFlags, enableOrdersApprovalSmartWallet, smartWalletOrderID });
+    const paymentSource = enableOrdersApprovalSmartWallet ? FUNDING.PAYPAL : null;
+
+    const props = getButtonProps({ facilitatorAccessToken, brandedDefault, paymentSource, featureFlags, enableOrdersApprovalSmartWallet, smartWalletOrderID });
     const { env, sessionID, partnerAttributionID, commit, sdkCorrelationID, locale, onShippingChange,
         buttonSessionID, merchantDomain, onInit,
         getPrerenderDetails, rememberFunding, getQueriedEligibleFunding, experience,
