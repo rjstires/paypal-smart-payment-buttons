@@ -55,6 +55,7 @@ export function submitCardFields({
     if (cardProps.save) {
       return savePaymentSource({
         save: cardProps.save,
+        onError: cardProps.onError,
         facilitatorAccessToken,
         clientID: cardProps.clientID,
         userIDToken: cardProps.userIDToken,

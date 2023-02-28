@@ -7,10 +7,25 @@ import {
   updateVaultSetupToken,
   type PaymentSourceInput,
 } from "../../api/vault";
-import type {SaveCardFieldsProps} from '../props'
+import type { SaveCardFieldsProps } from "../props";
+import {
+  vaultWithoutPurchaseSuccess,
+  vaultWithoutPurchaseFailure,
+} from "../logger";
+import type { XOnError } from "../../props";
+
+const onVaultWithoutPurchaseError = ({vaultToken, onError}: {|vaultToken?: string, onError: XOnError|}) => (error: mixed) => {
+  vaultWithoutPurchaseFailure({
+    vaultToken,
+    error
+  })
+
+  onError(error)
+}
 
 type VaultPaymenSourceOptions = {|
-  save: SaveCardFieldsProps['save'],
+  save: SaveCardFieldsProps["save"],
+  onError: XOnError,
   clientID: string,
   userIDToken: string,
   facilitatorAccessToken: string,
@@ -19,6 +34,7 @@ type VaultPaymenSourceOptions = {|
 
 export const savePaymentSource = ({
   save,
+  onError,
   facilitatorAccessToken,
   clientID,
   userIDToken,
@@ -26,21 +42,25 @@ export const savePaymentSource = ({
 }: VaultPaymenSourceOptions): ZalgoPromise<void> => {
   const { createVaultSetupToken, onApprove } = save;
 
-  // happy path for now
-  // need to add error cases with fpti events for each .then
-  return createVaultSetupToken().then((vaultSetupToken) => {
-    return getVaultSetupToken({
-      vaultSetupToken,
-      facilitatorAccessToken,
-    }).then(() => {
-      return updateVaultSetupToken({
-        clientID,
-        userIDToken,
+  return createVaultSetupToken()
+    .then((vaultSetupToken) =>
+      getVaultSetupToken({
         vaultSetupToken,
-        paymentSource,
-      }).then(() => {
-        return onApprove({ vaultSetupToken });
-      });
-    });
-  });
+        facilitatorAccessToken,
+      })
+        .then(() =>
+          updateVaultSetupToken({
+            vaultSetupToken,
+            clientID,
+            userIDToken,
+            paymentSource,
+          })
+        )
+        .then(() => onApprove({ vaultSetupToken }))
+        .then(() =>
+          vaultWithoutPurchaseSuccess({ vaultToken: vaultSetupToken })
+        )
+        .catch(onVaultWithoutPurchaseError({onError, vaultToken: vaultSetupToken}))
+    )
+    .catch(onVaultWithoutPurchaseError({onError}));
 };

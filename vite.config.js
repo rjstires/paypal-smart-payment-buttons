@@ -39,6 +39,7 @@ export default defineConfig({
       "**/button/logger.test.js",
       "**src/props/*.test.js",
       "**src/card/props.test.js",
+      "**src/card/interface/*.test.js",
       "**/tests/**/*.test.js",
     ],
     deps: {

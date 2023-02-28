@@ -1,6 +1,6 @@
 /* @flow */
 
-import { getPageRenderTime } from "@krakenjs/belter/src";
+import { getPageRenderTime, stringifyErrorMessage  } from "@krakenjs/belter/src";
 import {
   FPTI_KEY,
   ENV,
@@ -89,4 +89,35 @@ export function setupCardLogger({
 
     logger.flush();
   });
+}
+
+export const vaultWithoutPurchaseSuccess = ({
+  vaultToken
+}: {|vaultToken: string|}) => {
+  getLogger().track({
+    [FPTI_KEY.TRANSITION]:  "hcf_vault_without_purchase_success",
+    [FPTI_KEY.EVENT_NAME]:  "hcf_vault_without_purchase_success",
+    [FPTI_HCF_KEYS.VAULT_TOKEN]: vaultToken
+  })
+}
+
+export const vaultWithoutPurchaseFailure = ({
+  vaultToken,
+  error
+}: {|
+  vaultToken?: string,
+  // should be Error but other apis are constraining this type
+  error: mixed
+|}) => {
+  const payload = {
+    [FPTI_KEY.ERROR_CODE]: 'hcf_vault_without_purchase_error',
+    [FPTI_KEY.ERROR_DESC]: stringifyErrorMessage(error),
+  }
+
+  if (vaultToken) {
+    // $FlowIssue
+    payload[FPTI_HCF_KEYS.VAULT_TOKEN] = vaultToken
+  }
+
+  getLogger().track(payload)
 }

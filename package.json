@@ -23,7 +23,8 @@
       "/fixtures/",
       "<rootDir>/src/button/logger.test.js",
       "<rootDir>/src/props/",
-      "<rootDir>/src/card/props.test.js"
+      "<rootDir>/src/card/props.test.js",
+      "<rootDir>/src/card/interface/"
     ]
   },
   "files": [
@@ -122,6 +123,7 @@
     "**/button/logger.test.js": "prettier --write",
     "**/src/props/*.test.js": "prettier --write",
     "**/src/card/props.test.js": "prettier --write",
+    "**/src/card/interface/*.test.js": "prettier --write",
     "**/tests/*.{js}": "prettier --write"
   },
   "license": "Apache-2.0"
