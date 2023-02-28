@@ -44,7 +44,8 @@ export const DATA_ATTRIBUTES = {
 
 export const CLASS = {
     LOADING: 'paypal-button-loading',
-    CLICKED: 'paypal-button-clicked'
+    CLICKED: 'paypal-button-clicked',
+    BUTTON: 'paypal-button',
 };
 
 export const PREFER = {
@@ -279,4 +280,12 @@ export const BUTTON_LABEL = {
 
 export const STATUS_CODES = {
     TOO_MANY_REQUESTS: 429
+};
+
+export const SERVICE_WORKER = {
+    SERVICE_WORKER_URL:              'https://www.paypal.com/checkout-sw',
+    SW_SCOPE:                        '/checkoutweb',
+    GET_SW_LOGS_EVENT_NAME:          'GET_SW_LOGS',
+    LOGS_CHANNEL_NAME:               'logs-channel',
+    GET_SW_LOGS_RESPONSE_EVENT_NAME: 'GET_SW_LOGS_RESPONSE'
 };

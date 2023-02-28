@@ -223,7 +223,8 @@ type ServiceDataOptions = {|
     content : ContentType,
     eligibility : {|
         cardFields : boolean,
-        inlinePaymentFields : InlinePaymentFieldsEligibility
+        inlinePaymentFields : InlinePaymentFieldsEligibility,
+        isServiceWorkerEligible : boolean
     |},
     cookies : string,
     personalization : PersonalizationType,

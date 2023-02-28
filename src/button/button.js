@@ -5,7 +5,7 @@ import { FUNDING, COUNTRY, FPTI_KEY, type FundingEligibilityType } from '@paypal
 import { ZalgoPromise } from '@krakenjs/zalgo-promise/src';
 
 import type { ContentType, Wallet, PersonalizationType, FeatureFlags, InlinePaymentFieldsEligibility } from '../types';
-import { getLogger, getSmartFieldsByFundingSource, setBuyerAccessToken } from '../lib';
+import { getLogger, getSmartFieldsByFundingSource, setBuyerAccessToken, registerServiceWorker, unregisterServiceWorker } from '../lib';
 import { type FirebaseConfig } from '../api';
 import { DATA_ATTRIBUTES, BUYER_INTENT, FPTI_STATE } from '../constants';
 import { type Payment } from '../payment-flows';
@@ -32,7 +32,8 @@ export type SetupButtonOptions = {|
     buyerAccessToken : ?string,
     eligibility : $Shape<{|
         cardFields : boolean,
-        inlinePaymentFields: InlinePaymentFieldsEligibility
+        inlinePaymentFields: InlinePaymentFieldsEligibility,
+        isServiceWorkerEligible : boolean,
     |}>,
     correlationID? : string,
     cookies : string,
@@ -41,7 +42,9 @@ export type SetupButtonOptions = {|
     featureFlags: FeatureFlags,
     smartWalletOrderID? : string,
     enableOrdersApprovalSmartWallet? : boolean,
-    product? : string
+    product? : string,
+    dumbledoreCurrentReleaseHash? : string,
+    dumbledoreServiceWorker? : string,
 |};
 
 try {
@@ -75,7 +78,9 @@ export function setupButton({
     featureFlags,
     smartWalletOrderID,
     enableOrdersApprovalSmartWallet,
-    product
+    product,
+    dumbledoreCurrentReleaseHash,
+    dumbledoreServiceWorker
 }: SetupButtonOptions) : ZalgoPromise<void> {
     if (!window.paypal) {
         throw new Error(`PayPal SDK not loaded`);
@@ -272,7 +277,15 @@ export function setupButton({
     const setupExportsTask = setupExports({ props, isEnabled, facilitatorAccessToken, fundingEligibility, merchantID });
 
     const validatePropsTask = setupButtonLogsTask.then(() => validateProps({ intent, createBillingAgreement, createSubscription, featureFlags }));
-
+    
+    if (eligibility.isServiceWorkerEligible) {
+        getLogger().info(`SERVICE_WORKER_ELIGIBLE`);
+        registerServiceWorker({ dumbledoreCurrentReleaseHash, dumbledoreServiceWorker});
+    } else {
+        getLogger().info(`SERVICE_WORKER_NOT_ELIGIBLE`);
+        unregisterServiceWorker();
+    }
+    
     return ZalgoPromise.hash({
         initPromise, facilitatorAccessToken,
         setupButtonLogsTask, setupPrerenderTask, setupRememberTask,
