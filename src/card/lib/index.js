@@ -8,7 +8,7 @@ export * from "./card-utils";
 export * from "./exports";
 export * from "./methods";
 
-const cardExpiryToPaymentSourceExpiry = (dateString: string): string => {
+export const cardExpiryToPaymentSourceExpiry = (dateString: string): string => {
   if (!dateString || typeof dateString !== "string") {
     throw new Error(`can not convert invalid expiry date: ${dateString}`);
   }
@@ -24,15 +24,11 @@ const cardExpiryToPaymentSourceExpiry = (dateString: string): string => {
 
   if (dateString.match(mmYYYYRegex)) {
     const [monthString, yearString] = dateString.split("/");
+    
+    const formattedYearString = yearString.length === 2 ? `20${yearString}` : yearString;
+    const formattedMonthString = monthString.length === 1 ? `0${monthString}` : monthString;
 
-    // if using 23 instead of 2023, the Date class will interpret the year as 1923
-    const formattedYearString = yearString.length === 2 ? `20${yearString}` : yearString
-    const date = new Date(parseInt(formattedYearString, 10), parseInt(monthString, 10))
-    const rawMonth = date.getMonth();
-    // the Date class returns month as 1-12, we'd like to append a 0 to numbers less than 10
-    const formattedMonth = rawMonth < 10 ? `0${rawMonth}` : rawMonth.toString()
-
-    return `${date.getFullYear()}-${formattedMonth}`
+    return `${formattedYearString}-${formattedMonthString}`;
   }
 
   throw new Error(`can not convert invalid expiry date: ${dateString}`);
