@@ -178,7 +178,7 @@ export function isNativeEligible({ props, config, serviceData } : IsEligibleOpti
         return false;
     }
 
-    if (isVenmoButton && isLocalOrStageEnv) {
+    if (!isVenmoButton && isLocalOrStageEnv) {
         return false;
     }
 
