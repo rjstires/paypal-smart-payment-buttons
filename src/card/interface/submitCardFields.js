@@ -6,30 +6,20 @@ import { uniqueID } from "@krakenjs/belter"
 import { getCardProps } from "../props"
 import { confirmOrderAPI } from "../../api"
 import { getLogger } from "../../lib"
-import type { ExtraFields } from "../types"
 import type { FeatureFlags } from "../../types"
-import {convertCardToPaymentSource} from '../lib'
+import type { BillingAddress } from '../types'
+import {convertCardToPaymentSource, reformatPaymentSource} from '../lib'
 
 import { resetGQLErrors } from "./gql"
 import { hasCardFields } from "./hasCardFields"
 import { getCardFields } from "./getCardFields"
 import { savePaymentSource } from "./vault-without-purchase"
-import { reformatExpiry } from "./reformatExpiry"
-
-type CardValues = {|
-  number: ?string,
-  expiry?: ?string,
-  security_code?: ?string,
-  postalCode?: ?string,
-  name?: ?string,
-  ...ExtraFields,
-|};
 
 type SubmitCardFieldsOptions = {|
   facilitatorAccessToken: string,
   featureFlags: FeatureFlags,
   extraFields?: {|
-    billingAddress?: string,
+    billingAddress?: BillingAddress,
   |},
 |};
 
@@ -59,7 +49,7 @@ export function submitCardFields({
         facilitatorAccessToken,
         clientID: cardProps.clientID,
         userIDToken: cardProps.userIDToken,
-        paymentSource: convertCardToPaymentSource(card),
+        paymentSource: convertCardToPaymentSource(card, extraFields),
       });
     }
 
@@ -67,24 +57,16 @@ export function submitCardFields({
       return cardProps
         .createOrder()
         .then((orderID) => {
-          const cardObject: CardValues = {
-            name: card.name,
-            number: card.number,
-            expiry: reformatExpiry(card.expiry),
-            security_code: card.cvv,
-            ...extraFields,
-          };
-
-          if (card.name) {
-            cardObject.name = card.name;
-          }
-
+          
+          const payment_source = convertCardToPaymentSource(card, extraFields)
           // eslint-disable-next-line flowtype/no-weak-types
           const data: any = {
             payment_source: {
-              card: cardObject,
-            },
-          };
+              // $FlowIssue
+              card: reformatPaymentSource(payment_source.card)
+            }
+          }
+
           return confirmOrderAPI(orderID, data, {
             facilitatorAccessToken,
             partnerAttributionID: "",

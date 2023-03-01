@@ -16,12 +16,31 @@ export type SetupCardOptions = {|
     |}
 |};
 
+export type BillingAddress = {|
+    addressLine1?: string,
+    addressLine2?: string,
+    adminArea2?: string,
+    adminArea1?: string,
+    postalCode?: string,
+    countryCode: string,
+|}
+
+export type ReformattedBillingAddress = {|
+    address_line_1?: string,
+    address_line_2?: string,
+    admin_area_2?: string,
+    admin_area_1?: string,
+    postal_code?: string,
+    country_code: string,
+|}
+
 export type Card = {
     number: string,
     cvv: string,
     expiry: string,
     name?: string,
-    postalCode?: string
+    postalCode?: string,
+    billingAddress?: BillingAddress
 };
 
 export type FieldStyle = {|
@@ -171,6 +190,24 @@ export type InputOptions = {|
 |};
 
 export type ExtraFields = {|
-    billingAddress? : string
+    billingAddress? : BillingAddress
+|};
+
+
+export type PaymentSourceCardInput = {|
+    number: string,
+    expiry: string,
+    name?: string,
+    securityCode: string,
+    billingAddress?: BillingAddress
+|};
+
+
+export type ReformattedPaymentSourceCardInput = {|
+    number: string,
+    expiry: string,
+    name?: string,
+    security_code: string,
+    billing_address?: ReformattedBillingAddress
 |};
 /* eslint-enable flowtype/require-exact-type */

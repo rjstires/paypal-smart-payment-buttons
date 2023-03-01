@@ -1,8 +1,9 @@
+/* eslint-disable flowtype/require-exact-type */
 /* @flow */
 
 import { values } from '@krakenjs/belter';
 
-import type { InputState, FieldValidity, ExtraFields, CardType, ParsedCardType } from '../types';
+import type { InputState, FieldValidity, ExtraFields, CardType, ParsedCardType, PaymentSourceCardInput, ReformattedPaymentSourceCardInput } from '../types';
 import {
     CARD_ERRORS,
     CARD_FIELD_TYPE,
@@ -326,3 +327,34 @@ export function kebabToCamelCase(field: string): string {
     })
     return camelCase.join("");
 }
+
+// Taken from https://github.com/braintree/braintree-web/blob/main/src/lib/camel-case-to-snake-case.js
+export function reformatBillingKeys(str : string): string {
+    return str
+    .replace(/([a-z\d])([A-Z])/g, "$1_$2")
+    .replace(/([a-z\d])(\d)/g, "$1_$2")
+    .toLowerCase()
+}
+
+export function reformatPaymentSource(paymentSource: PaymentSourceCardInput) : ReformattedPaymentSourceCardInput | {} {
+
+    return Object.keys(paymentSource).reduce((newObj, key) => {
+        const transformedKey = reformatBillingKeys(key)
+
+        if (key === 'billingAddress') {
+            if (paymentSource.billingAddress && Object.keys(paymentSource.billingAddress).length !== 0) {
+                newObj.billing_address = {};
+                Object.keys(paymentSource.billingAddress).forEach((billingKey) => {
+                    const snakeCaseBillingKey = reformatBillingKeys(billingKey);
+                    // $FlowIssue
+                    newObj.billing_address[snakeCaseBillingKey] = paymentSource.billingAddress[billingKey];
+                });
+            }
+        } else {
+           newObj[transformedKey] = paymentSource[key];
+        }
+
+        return newObj
+    }, {})
+}
+/* eslint-enable flowtype/require-exact-type */

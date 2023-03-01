@@ -17,7 +17,9 @@ import {
     assertType,
     shouldUseZeroPaddedExpiryPattern,
     parsedCardType,
-    kebabToCamelCase
+    kebabToCamelCase,
+    reformatPaymentSource,
+    reformatBillingKeys
 } from './card-utils';
 
 
@@ -33,6 +35,27 @@ describe('card utils', () => {
             }
 
             expect(assertNumber).toThrow(/Expected a number/)
+        });
+    });
+
+    describe.only('reformatBillingKeys', () => {
+        it('converts single word', () => {
+            const input1 = 'word';
+            const input2 = 'Word';
+            expect(reformatBillingKeys(input1)).toEqual(input1);
+            expect(reformatBillingKeys(input2)).toEqual(input1);
+        });
+
+        it('converts multiple words', () => {
+            const input1 = 'wordToConvert';
+            const expectedOutput = 'word_to_convert';
+            expect(reformatBillingKeys(input1)).toEqual(expectedOutput);
+        });
+
+        it('converts word with number', () => {
+            const input1 = 'addressLine1';
+            const expectedOutput = 'address_line_1';
+            expect(reformatBillingKeys(input1)).toEqual(expectedOutput);
         });
     });
 
@@ -667,6 +690,74 @@ describe('card utils', () => {
             expect(kebabToCamelCase('HELLO-WORLD')).toStrictEqual('helloWorld')
             expect(kebabToCamelCase('HELLOWORLD')).toStrictEqual('helloworld')
             expect(kebabToCamelCase('hELlO-W1rLd')).toStrictEqual('helloW1rld')
+        })
+    })
+
+    describe('reformatPaymentSource', () => {
+        it('should convert a payment source object from camelCase to snake_case', () => {
+            const paymentSource = {
+                number: '4111111111111111',
+                expiry: '2024-01',
+                name: 'John Doe',
+                securityCode: '123',
+                billingAddress: {
+                    postalCode: '12345',
+                    addressLine1: '123 s Main St',
+                    countryCode: 'US'
+                }
+            }
+
+            const reformatted_payment_source = {
+                number: '4111111111111111',
+                expiry: '2024-01',
+                name: 'John Doe',
+                security_code: '123',
+                billing_address: {
+                    postal_code: '12345',
+                    address_line_1: '123 s Main St',
+                    country_code: 'US'
+                }
+            }
+
+            expect(reformatPaymentSource(paymentSource)).toStrictEqual(reformatted_payment_source)
+        })
+
+        it('should remove billingAddress from payment source object when undefined', () => {
+            const paymentSource = {
+                number: '4111111111111111',
+                expiry: '2024-01',
+                name: 'John Doe',
+                securityCode: '123',
+                billingAddress: undefined
+            }
+
+            const reformatted_payment_source = {
+                number: '4111111111111111',
+                expiry: '2024-01',
+                name: 'John Doe',
+                security_code: '123'
+            }
+
+            expect(reformatPaymentSource(paymentSource)).toStrictEqual(reformatted_payment_source)
+        })
+
+        it('should remove billingAddress from payment source object when empty', () => {
+            const paymentSource = {
+                number: '4111111111111111',
+                expiry: '2024-01',
+                name: 'John Doe',
+                securityCode: '123',
+                billingAddress: {}
+            }
+
+            const reformatted_payment_source = {
+                number: '4111111111111111',
+                expiry: '2024-01',
+                name: 'John Doe',
+                security_code: '123'
+            }
+            // $FlowIssue
+            expect(reformatPaymentSource(paymentSource)).toStrictEqual(reformatted_payment_source)
         })
     })
 });

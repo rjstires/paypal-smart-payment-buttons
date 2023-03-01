@@ -13,14 +13,14 @@ export type PaymentSourceCardDetails = {|
   security_code?: string,
   type?: "CREDIT" | "DEBIT" | "PREPAID" | "STORE" | "UNKNOWN",
   brand?: string,
-  billing_address?: $Shape<{|
-    address_line_1: string,
-    address_line_2: string,
-    admin_area_1: string,
-    admin_area_2: string,
-    postal_code: string,
+  billing_address?: {|
+    address_line_1?: string,
+    address_line_2?: string,
+    admin_area_1?: string,
+    admin_area_2?: string,
+    postal_code?: string,
     country_code: string,
-  |}>,
+  |},
   verification_method?: "string",
   experience_context?: Object,
 |};
@@ -87,10 +87,15 @@ export type PaymentSourceInput = {|
     number: string,
     expiry: string,
     name?: string,
-    securityCode?: string,
-    billingAddress?: $Shape<{|
-      postalCode: string,
-    |}>,
+    securityCode: string,
+    billingAddress?: {|
+      postalCode?: string,
+      addressLine1?: string,
+      addressLine2?: string,
+      adminArea1?: string,
+      adminArea2?: string,
+      countryCode: string
+    |},
   |},
 |};
 

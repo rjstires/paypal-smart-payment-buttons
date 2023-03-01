@@ -1,5 +1,5 @@
 /* @flow */
-import type { Card } from "../types";
+import type { Card, ExtraFields } from "../types";
 import type { PaymentSourceInput } from "../../api/vault";
 
 export * from "./card-checks";
@@ -34,7 +34,7 @@ export const cardExpiryToPaymentSourceExpiry = (dateString: string): string => {
   throw new Error(`can not convert invalid expiry date: ${dateString}`);
 };
 
-export const convertCardToPaymentSource = (card: Card): PaymentSourceInput => {
+export const convertCardToPaymentSource = (card: Card, extraFields?: ExtraFields): PaymentSourceInput => {
   const paymentSource = {
     card: {
       number: card.number,
@@ -42,6 +42,11 @@ export const convertCardToPaymentSource = (card: Card): PaymentSourceInput => {
       expiry: cardExpiryToPaymentSourceExpiry(card.expiry),
     },
   };
+
+  if (extraFields && Object.keys(extraFields).length !== 0) {
+    // $FlowIssue
+    paymentSource.card.billingAddress = extraFields.billingAddress;
+  }
 
   if (card.name) {
     // $FlowIssue

@@ -127,7 +127,10 @@ describe("submitCardFields", () => {
       {
         payment_source: {
           card: {
-            expiry: "24-01",
+            expiry: "2024-01",
+            billing_address: {
+              postal_code: "91210",
+            },
             name: "John Doe",
             number: "4111111111111111",
             security_code: "123",
