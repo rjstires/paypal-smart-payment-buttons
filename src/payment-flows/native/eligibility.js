@@ -1,7 +1,7 @@
 /* @flow */
 
 import type { ZalgoPromise } from '@krakenjs/zalgo-promise/src';
-import { FUNDING, PLATFORM } from '@paypal/sdk-constants/src';
+import { ENV, FUNDING, PLATFORM } from '@paypal/sdk-constants/src';
 import { supportsPopups, isIos, isAndroid } from '@krakenjs/belter/src';
 import type { CrossDomainWindowType } from '@krakenjs/cross-domain-utils/src';
 import type { ProxyWindow } from '@krakenjs/post-robot/src';
@@ -134,10 +134,12 @@ export function canUseNativeQRCode({ fundingSource, win } : {| fundingSource : ?
 }
 
 export function isNativeEligible({ props, config, serviceData } : IsEligibleOptions) : boolean {
-    const { fundingSource, onShippingChange, createBillingAgreement, createSubscription, platform } = props;
+    const { fundingSource, onShippingChange, createBillingAgreement, createSubscription, env, platform } = props;
     const { firebase: firebaseConfig } = config;
     const { cookies, merchantID, fundingEligibility } = serviceData;
     const isVenmoEligible = fundingEligibility?.venmo?.eligible;
+    const isVenmoButton = fundingSource === FUNDING.VENMO;
+    const isLocalOrStageEnv = env === ENV.LOCAL || env === ENV.STAGE;
 
     if (!firebaseConfig) {
         return false;
@@ -173,6 +175,10 @@ export function isNativeEligible({ props, config, serviceData } : IsEligibleOpti
     }
 
     if (createBillingAgreement || createSubscription) {
+        return false;
+    }
+
+    if (!isVenmoButton && isLocalOrStageEnv) {
         return false;
     }
 
