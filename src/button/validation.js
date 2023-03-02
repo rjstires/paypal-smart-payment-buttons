@@ -173,7 +173,7 @@ export function validateOrder(orderID : string, { env, merchantID, currency, int
             });
         }
 
-        if (buttonLabel === BUTTON_LABEL.DONATE) {
+        if (!window.xprops.createBillingAgreement && buttonLabel === BUTTON_LABEL.DONATE) {
             const category = ITEM_CATEGORY.DONATION;
             const itemCategory = cart.category || '';
 
