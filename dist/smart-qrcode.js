@@ -591,23 +591,23 @@
                 return target;
             }).apply(this, arguments);
         }
-        var n, l, preact_module_u, preact_module_t, preact_module_r, preact_module_o, f, c = {}, s = [], preact_module_a = /acit|ex(?:s|g|n|p|$)|rph|grid|ows|mnc|ntw|ine[ch]|zoo|^ord|itera/i;
-        function h(n, l) {
+        var n, l, preact_module_u, preact_module_t, preact_module_r, preact_module_o, e = {}, c = [], s = /acit|ex(?:s|g|n|p|$)|rph|grid|ows|mnc|ntw|ine[ch]|zoo|^ord|itera/i;
+        function preact_module_a(n, l) {
             for (var u in l) n[u] = l[u];
             return n;
         }
-        function v(n) {
+        function h(n) {
             var l = n.parentNode;
             l && l.removeChild(n);
         }
-        function y(l, u, i) {
+        function v(l, u, i) {
             var t, r, o, f = {};
             for (o in u) "key" == o ? t = u[o] : "ref" == o ? r = u[o] : f[o] = u[o];
             if (arguments.length > 2 && (f.children = arguments.length > 3 ? n.call(arguments, 2) : i), 
             "function" == typeof l && null != l.defaultProps) for (o in l.defaultProps) void 0 === f[o] && (f[o] = l.defaultProps[o]);
-            return p(l, f, t, r, null);
+            return y(l, f, t, r, null);
         }
-        function p(n, i, t, r, o) {
+        function y(n, i, t, r, o) {
             var f = {
                 type: n,
                 props: i,
@@ -625,105 +625,68 @@
             };
             return null == o && null != l.vnode && l.vnode(f), f;
         }
-        function _(n) {
+        function d(n) {
             return n.children;
         }
-        function b(n, l, u) {
-            "-" === l[0] ? n.setProperty(l, null == u ? "" : u) : n[l] = null == u ? "" : "number" != typeof u || preact_module_a.test(l) ? u : u + "px";
-        }
-        function g(n, l, u, i, t) {
-            var r;
-            n: if ("style" === l) if ("string" == typeof u) n.style.cssText = u; else {
-                if ("string" == typeof i && (n.style.cssText = i = ""), i) for (l in i) u && l in u || b(n.style, l, "");
-                if (u) for (l in u) i && u[l] === i[l] || b(n.style, l, u[l]);
-            } else if ("o" === l[0] && "n" === l[1]) r = l !== (l = l.replace(/Capture$/, "")), 
-            l = l.toLowerCase() in n ? l.toLowerCase().slice(2) : l.slice(2), n.l || (n.l = {}), 
-            n.l[l + r] = u, u ? i || n.addEventListener(l, r ? w : m, r) : n.removeEventListener(l, r ? w : m, r); else if ("dangerouslySetInnerHTML" !== l) {
-                if (t) l = l.replace(/xlink(H|:h)/, "h").replace(/sName$/, "s"); else if ("width" !== l && "height" !== l && "href" !== l && "list" !== l && "form" !== l && "tabIndex" !== l && "download" !== l && l in n) try {
-                    n[l] = null == u ? "" : u;
-                    break n;
-                } catch (n) {}
-                "function" == typeof u || (null == u || !1 === u && -1 == l.indexOf("-") ? n.removeAttribute(l) : n.setAttribute(l, u));
-            }
-        }
-        function m(n) {
-            preact_module_t = !0;
-            try {
-                return this.l[n.type + !1](l.event ? l.event(n) : n);
-            } finally {
-                preact_module_t = !1;
-            }
-        }
-        function w(n) {
-            preact_module_t = !0;
-            try {
-                return this.l[n.type + !0](l.event ? l.event(n) : n);
-            } finally {
-                preact_module_t = !1;
-            }
-        }
-        function x(n, l) {
+        function _(n, l) {
             this.props = n, this.context = l;
         }
-        function A(n, l) {
-            if (null == l) return n.__ ? A(n.__, n.__.__k.indexOf(n) + 1) : null;
+        function k(n, l) {
+            if (null == l) return n.__ ? k(n.__, n.__.__k.indexOf(n) + 1) : null;
             for (var u; l < n.__k.length; l++) if (null != (u = n.__k[l]) && null != u.__e) return u.__e;
-            return "function" == typeof n.type ? A(n) : null;
+            return "function" == typeof n.type ? k(n) : null;
         }
-        function P(n) {
+        function b(n) {
             var l, u;
             if (null != (n = n.__) && null != n.__c) {
                 for (n.__e = n.__c.base = null, l = 0; l < n.__k.length; l++) if (null != (u = n.__k[l]) && null != u.__e) {
                     n.__e = n.__c.base = u.__e;
                     break;
                 }
-                return P(n);
+                return b(n);
             }
         }
-        function C(n) {
-            preact_module_t ? setTimeout(n) : f(n);
+        function g(n) {
+            (!n.__d && (n.__d = !0) && preact_module_t.push(n) && !m.__r++ || preact_module_r !== l.debounceRendering) && ((preact_module_r = l.debounceRendering) || preact_module_o)(m);
         }
-        function T(n) {
-            (!n.__d && (n.__d = !0) && preact_module_r.push(n) && !$.__r++ || preact_module_o !== l.debounceRendering) && ((preact_module_o = l.debounceRendering) || C)($);
-        }
-        function $() {
-            var n, l, u, i, t, o, f, e;
-            for (preact_module_r.sort((function(n, l) {
+        function m() {
+            var n, l, u, i, r, o, f, e;
+            for (preact_module_t.sort((function(n, l) {
                 return n.__v.__b - l.__v.__b;
-            })); n = preact_module_r.shift(); ) n.__d && (l = preact_module_r.length, i = void 0, 
-            t = void 0, f = (o = (u = n).__v).__e, (e = u.__P) && (i = [], (t = h({}, o)).__v = o.__v + 1, 
-            M(e, o, t, u.__n, void 0 !== e.ownerSVGElement, null != o.__h ? [ f ] : null, i, null == f ? A(o) : f, o.__h), 
-            N(i, o), o.__e != f && P(o)), preact_module_r.length > l && preact_module_r.sort((function(n, l) {
+            })); n = preact_module_t.shift(); ) n.__d && (l = preact_module_t.length, i = void 0, 
+            r = void 0, f = (o = (u = n).__v).__e, (e = u.__P) && (i = [], (r = preact_module_a({}, o)).__v = o.__v + 1, 
+            z(e, o, r, u.__n, void 0 !== e.ownerSVGElement, null != o.__h ? [ f ] : null, i, null == f ? k(o) : f, o.__h), 
+            L(i, o), o.__e != f && b(o)), preact_module_t.length > l && preact_module_t.sort((function(n, l) {
                 return n.__v.__b - l.__v.__b;
             })));
-            $.__r = 0;
+            m.__r = 0;
         }
-        function H(n, l, u, i, t, r, o, f, e, a) {
-            var h, v, y, d, k, b, g, m = i && i.__k || s, w = m.length;
-            for (u.__k = [], h = 0; h < l.length; h++) if (null != (d = u.__k[h] = null == (d = l[h]) || "boolean" == typeof d ? null : "string" == typeof d || "number" == typeof d || "bigint" == typeof d ? p(null, d, null, null, d) : Array.isArray(d) ? p(_, {
-                children: d
-            }, null, null, null) : d.__b > 0 ? p(d.type, d.props, d.key, d.ref ? d.ref : null, d.__v) : d)) {
-                if (d.__ = u, d.__b = u.__b + 1, null === (y = m[h]) || y && d.key == y.key && d.type === y.type) m[h] = void 0; else for (v = 0; v < w; v++) {
-                    if ((y = m[v]) && d.key == y.key && d.type === y.type) {
-                        m[v] = void 0;
+        function w(n, l, u, i, t, r, o, f, s, a) {
+            var h, v, p, _, b, g, m, w = i && i.__k || c, A = w.length;
+            for (u.__k = [], h = 0; h < l.length; h++) if (null != (_ = u.__k[h] = null == (_ = l[h]) || "boolean" == typeof _ ? null : "string" == typeof _ || "number" == typeof _ || "bigint" == typeof _ ? y(null, _, null, null, _) : Array.isArray(_) ? y(d, {
+                children: _
+            }, null, null, null) : _.__b > 0 ? y(_.type, _.props, _.key, _.ref ? _.ref : null, _.__v) : _)) {
+                if (_.__ = u, _.__b = u.__b + 1, null === (p = w[h]) || p && _.key == p.key && _.type === p.type) w[h] = void 0; else for (v = 0; v < A; v++) {
+                    if ((p = w[v]) && _.key == p.key && _.type === p.type) {
+                        w[v] = void 0;
                         break;
                     }
-                    y = null;
+                    p = null;
                 }
-                M(n, d, y = y || c, t, r, o, f, e, a), k = d.__e, (v = d.ref) && y.ref != v && (g || (g = []), 
-                y.ref && g.push(y.ref, null, d), g.push(v, d.__c || k, d)), null != k ? (null == b && (b = k), 
-                "function" == typeof d.type && d.__k === y.__k ? d.__d = e = I(d, e, n) : e = z(n, d, y, m, k, e), 
-                "function" == typeof u.type && (u.__d = e)) : e && y.__e == e && e.parentNode != n && (e = A(y));
+                z(n, _, p = p || e, t, r, o, f, s, a), b = _.__e, (v = _.ref) && p.ref != v && (m || (m = []), 
+                p.ref && m.push(p.ref, null, _), m.push(v, _.__c || b, _)), null != b ? (null == g && (g = b), 
+                "function" == typeof _.type && _.__k === p.__k ? _.__d = s = x(_, s, n) : s = P(n, _, p, w, b, s), 
+                "function" == typeof u.type && (u.__d = s)) : s && p.__e == s && s.parentNode != n && (s = k(p));
             }
-            for (u.__e = b, h = w; h--; ) null != m[h] && ("function" == typeof u.type && null != m[h].__e && m[h].__e == u.__d && (u.__d = L(i).nextSibling), 
-            q(m[h], m[h]));
-            if (g) for (h = 0; h < g.length; h++) S(g[h], g[++h], g[++h]);
+            for (u.__e = g, h = A; h--; ) null != w[h] && ("function" == typeof u.type && null != w[h].__e && w[h].__e == u.__d && (u.__d = C(i).nextSibling), 
+            O(w[h], w[h]));
+            if (m) for (h = 0; h < m.length; h++) N(m[h], m[++h], m[++h]);
         }
-        function I(n, l, u) {
-            for (var i, t = n.__k, r = 0; t && r < t.length; r++) (i = t[r]) && (i.__ = n, l = "function" == typeof i.type ? I(i, l, u) : z(u, i, i, t, i.__e, l));
+        function x(n, l, u) {
+            for (var i, t = n.__k, r = 0; t && r < t.length; r++) (i = t[r]) && (i.__ = n, l = "function" == typeof i.type ? x(i, l, u) : P(u, i, i, t, i.__e, l));
             return l;
         }
-        function z(n, l, u, i, t, r) {
+        function P(n, l, u, i, t, r) {
             var o, f, e;
             if (void 0 !== l.__d) o = l.__d, l.__d = void 0; else if (null == u || t != r || null == t.parentNode) n: if (null == r || r.parentNode !== n) n.appendChild(t), 
             o = null; else {
@@ -732,59 +695,83 @@
             }
             return void 0 !== o ? o : t.nextSibling;
         }
-        function L(n) {
+        function C(n) {
             var l, u, i;
             if (null == n.type || "string" == typeof n.type) return n.__e;
-            if (n.__k) for (l = n.__k.length - 1; l >= 0; l--) if ((u = n.__k[l]) && (i = L(u))) return i;
+            if (n.__k) for (l = n.__k.length - 1; l >= 0; l--) if ((u = n.__k[l]) && (i = C(u))) return i;
             return null;
         }
-        function M(n, u, i, t, r, o, f, e, c) {
-            var s, a, v, y, p, d, k, b, g, m, w, A, P, C, T, $ = u.type;
+        function H(n, l, u) {
+            "-" === l[0] ? n.setProperty(l, null == u ? "" : u) : n[l] = null == u ? "" : "number" != typeof u || s.test(l) ? u : u + "px";
+        }
+        function I(n, l, u, i, t) {
+            var r;
+            n: if ("style" === l) if ("string" == typeof u) n.style.cssText = u; else {
+                if ("string" == typeof i && (n.style.cssText = i = ""), i) for (l in i) u && l in u || H(n.style, l, "");
+                if (u) for (l in u) i && u[l] === i[l] || H(n.style, l, u[l]);
+            } else if ("o" === l[0] && "n" === l[1]) r = l !== (l = l.replace(/Capture$/, "")), 
+            l = l.toLowerCase() in n ? l.toLowerCase().slice(2) : l.slice(2), n.l || (n.l = {}), 
+            n.l[l + r] = u, u ? i || n.addEventListener(l, r ? j : T, r) : n.removeEventListener(l, r ? j : T, r); else if ("dangerouslySetInnerHTML" !== l) {
+                if (t) l = l.replace(/xlink(H|:h)/, "h").replace(/sName$/, "s"); else if ("width" !== l && "height" !== l && "href" !== l && "list" !== l && "form" !== l && "tabIndex" !== l && "download" !== l && l in n) try {
+                    n[l] = null == u ? "" : u;
+                    break n;
+                } catch (n) {}
+                "function" == typeof u || (null == u || !1 === u && -1 == l.indexOf("-") ? n.removeAttribute(l) : n.setAttribute(l, u));
+            }
+        }
+        function T(n) {
+            return this.l[n.type + !1](l.event ? l.event(n) : n);
+        }
+        function j(n) {
+            return this.l[n.type + !0](l.event ? l.event(n) : n);
+        }
+        function z(n, u, i, t, r, o, f, e, c) {
+            var s, h, v, y, p, k, b, g, m, x, A, P, C, $, H, I = u.type;
             if (void 0 !== u.constructor) return null;
             null != i.__h && (c = i.__h, e = u.__e = i.__e, u.__h = null, o = [ e ]), (s = l.__b) && s(u);
             try {
-                n: if ("function" == typeof $) {
-                    if (b = u.props, g = (s = $.contextType) && t[s.__c], m = s ? g ? g.props.value : s.__ : t, 
-                    i.__c ? k = (a = u.__c = i.__c).__ = a.__E : ("prototype" in $ && $.prototype.render ? u.__c = a = new $(b, m) : (u.__c = a = new x(b, m), 
-                    a.constructor = $, a.render = B), g && g.sub(a), a.props = b, a.state || (a.state = {}), 
-                    a.context = m, a.__n = t, v = a.__d = !0, a.__h = [], a._sb = []), null == a.__s && (a.__s = a.state), 
-                    null != $.getDerivedStateFromProps && (a.__s == a.state && (a.__s = h({}, a.__s)), 
-                    h(a.__s, $.getDerivedStateFromProps(b, a.__s))), y = a.props, p = a.state, a.__v = u, 
-                    v) null == $.getDerivedStateFromProps && null != a.componentWillMount && a.componentWillMount(), 
-                    null != a.componentDidMount && a.__h.push(a.componentDidMount); else {
-                        if (null == $.getDerivedStateFromProps && b !== y && null != a.componentWillReceiveProps && a.componentWillReceiveProps(b, m), 
-                        !a.__e && null != a.shouldComponentUpdate && !1 === a.shouldComponentUpdate(b, a.__s, m) || u.__v === i.__v) {
-                            for (u.__v !== i.__v && (a.props = b, a.state = a.__s, a.__d = !1), u.__e = i.__e, 
-                            u.__k = i.__k, u.__k.forEach((function(n) {
+                n: if ("function" == typeof I) {
+                    if (g = u.props, m = (s = I.contextType) && t[s.__c], x = s ? m ? m.props.value : s.__ : t, 
+                    i.__c ? b = (h = u.__c = i.__c).__ = h.__E : ("prototype" in I && I.prototype.render ? u.__c = h = new I(g, x) : (u.__c = h = new _(g, x), 
+                    h.constructor = I, h.render = S), m && m.sub(h), h.props = g, h.state || (h.state = {}), 
+                    h.context = x, h.__n = t, v = h.__d = !0, h.__h = [], h._sb = []), null == h.__s && (h.__s = h.state), 
+                    null != I.getDerivedStateFromProps && (h.__s == h.state && (h.__s = preact_module_a({}, h.__s)), 
+                    preact_module_a(h.__s, I.getDerivedStateFromProps(g, h.__s))), y = h.props, p = h.state, 
+                    h.__v = u, v) null == I.getDerivedStateFromProps && null != h.componentWillMount && h.componentWillMount(), 
+                    null != h.componentDidMount && h.__h.push(h.componentDidMount); else {
+                        if (null == I.getDerivedStateFromProps && g !== y && null != h.componentWillReceiveProps && h.componentWillReceiveProps(g, x), 
+                        !h.__e && null != h.shouldComponentUpdate && !1 === h.shouldComponentUpdate(g, h.__s, x) || u.__v === i.__v) {
+                            for (u.__v !== i.__v && (h.props = g, h.state = h.__s, h.__d = !1), h.__e = !1, 
+                            u.__e = i.__e, u.__k = i.__k, u.__k.forEach((function(n) {
                                 n && (n.__ = u);
-                            })), w = 0; w < a._sb.length; w++) a.__h.push(a._sb[w]);
-                            a._sb = [], a.__h.length && f.push(a);
+                            })), A = 0; A < h._sb.length; A++) h.__h.push(h._sb[A]);
+                            h._sb = [], h.__h.length && f.push(h);
                             break n;
                         }
-                        null != a.componentWillUpdate && a.componentWillUpdate(b, a.__s, m), null != a.componentDidUpdate && a.__h.push((function() {
-                            a.componentDidUpdate(y, p, d);
+                        null != h.componentWillUpdate && h.componentWillUpdate(g, h.__s, x), null != h.componentDidUpdate && h.__h.push((function() {
+                            h.componentDidUpdate(y, p, k);
                         }));
                     }
-                    if (a.context = m, a.props = b, a.__P = n, A = l.__r, P = 0, "prototype" in $ && $.prototype.render) {
-                        for (a.state = a.__s, a.__d = !1, A && A(u), s = a.render(a.props, a.state, a.context), 
-                        C = 0; C < a._sb.length; C++) a.__h.push(a._sb[C]);
-                        a._sb = [];
+                    if (h.context = x, h.props = g, h.__P = n, P = l.__r, C = 0, "prototype" in I && I.prototype.render) {
+                        for (h.state = h.__s, h.__d = !1, P && P(u), s = h.render(h.props, h.state, h.context), 
+                        $ = 0; $ < h._sb.length; $++) h.__h.push(h._sb[$]);
+                        h._sb = [];
                     } else do {
-                        a.__d = !1, A && A(u), s = a.render(a.props, a.state, a.context), a.state = a.__s;
-                    } while (a.__d && ++P < 25);
-                    a.state = a.__s, null != a.getChildContext && (t = h(h({}, t), a.getChildContext())), 
-                    v || null == a.getSnapshotBeforeUpdate || (d = a.getSnapshotBeforeUpdate(y, p)), 
-                    T = null != s && s.type === _ && null == s.key ? s.props.children : s, H(n, Array.isArray(T) ? T : [ T ], u, i, t, r, o, f, e, c), 
-                    a.base = u.__e, u.__h = null, a.__h.length && f.push(a), k && (a.__E = a.__ = null), 
-                    a.__e = !1;
-                } else null == o && u.__v === i.__v ? (u.__k = i.__k, u.__e = i.__e) : u.__e = O(i.__e, u, i, t, r, o, f, c);
+                        h.__d = !1, P && P(u), s = h.render(h.props, h.state, h.context), h.state = h.__s;
+                    } while (h.__d && ++C < 25);
+                    h.state = h.__s, null != h.getChildContext && (t = preact_module_a(preact_module_a({}, t), h.getChildContext())), 
+                    v || null == h.getSnapshotBeforeUpdate || (k = h.getSnapshotBeforeUpdate(y, p)), 
+                    H = null != s && s.type === d && null == s.key ? s.props.children : s, w(n, Array.isArray(H) ? H : [ H ], u, i, t, r, o, f, e, c), 
+                    h.base = u.__e, u.__h = null, h.__h.length && f.push(h), b && (h.__E = h.__ = null), 
+                    h.__e = !1;
+                } else null == o && u.__v === i.__v ? (u.__k = i.__k, u.__e = i.__e) : u.__e = M(i.__e, u, i, t, r, o, f, c);
                 (s = l.diffed) && s(u);
             } catch (n) {
                 u.__v = null, (c || null != o) && (u.__e = e, u.__h = !!c, o[o.indexOf(e)] = null), 
                 l.__e(n, u, i);
             }
         }
-        function N(n, u) {
+        function L(n, u) {
             l.__c && l.__c(u, n), n.some((function(u) {
                 try {
                     n = u.__h, u.__h = [], n.some((function(n) {
@@ -795,8 +782,8 @@
                 }
             }));
         }
-        function O(l, u, i, t, r, o, f, e) {
-            var s, a, h, y = i.props, p = u.props, d = u.type, _ = 0;
+        function M(l, u, i, t, r, o, f, c) {
+            var s, a, v, y = i.props, p = u.props, d = u.type, _ = 0;
             if ("svg" === d && (r = !0), null != o) for (;_ < o.length; _++) if ((s = o[_]) && "setAttribute" in s == !!d && (d ? s.localName === d : 3 === s.nodeType)) {
                 l = s, o[_] = null;
                 break;
@@ -804,35 +791,35 @@
             if (null == l) {
                 if (null === d) return document.createTextNode(p);
                 l = r ? document.createElementNS("http://www.w3.org/2000/svg", d) : document.createElement(d, p.is && p), 
-                o = null, e = !1;
+                o = null, c = !1;
             }
-            if (null === d) y === p || e && l.data === p || (l.data = p); else {
-                if (o = o && n.call(l.childNodes), a = (y = i.props || c).dangerouslySetInnerHTML, 
-                h = p.dangerouslySetInnerHTML, !e) {
+            if (null === d) y === p || c && l.data === p || (l.data = p); else {
+                if (o = o && n.call(l.childNodes), a = (y = i.props || e).dangerouslySetInnerHTML, 
+                v = p.dangerouslySetInnerHTML, !c) {
                     if (null != o) for (y = {}, _ = 0; _ < l.attributes.length; _++) y[l.attributes[_].name] = l.attributes[_].value;
-                    (h || a) && (h && (a && h.__html == a.__html || h.__html === l.innerHTML) || (l.innerHTML = h && h.__html || ""));
+                    (v || a) && (v && (a && v.__html == a.__html || v.__html === l.innerHTML) || (l.innerHTML = v && v.__html || ""));
                 }
                 if (function(n, l, u, i, t) {
                     var r;
-                    for (r in u) "children" === r || "key" === r || r in l || g(n, r, null, u[r], i);
-                    for (r in l) t && "function" != typeof l[r] || "children" === r || "key" === r || "value" === r || "checked" === r || u[r] === l[r] || g(n, r, l[r], u[r], i);
-                }(l, p, y, r, e), h) u.__k = []; else if (_ = u.props.children, H(l, Array.isArray(_) ? _ : [ _ ], u, i, t, r && "foreignObject" !== d, o, f, o ? o[0] : i.__k && A(i, 0), e), 
-                null != o) for (_ = o.length; _--; ) null != o[_] && v(o[_]);
-                e || ("value" in p && void 0 !== (_ = p.value) && (_ !== l.value || "progress" === d && !_ || "option" === d && _ !== y.value) && g(l, "value", _, y.value, !1), 
-                "checked" in p && void 0 !== (_ = p.checked) && _ !== l.checked && g(l, "checked", _, y.checked, !1));
+                    for (r in u) "children" === r || "key" === r || r in l || I(n, r, null, u[r], i);
+                    for (r in l) t && "function" != typeof l[r] || "children" === r || "key" === r || "value" === r || "checked" === r || u[r] === l[r] || I(n, r, l[r], u[r], i);
+                }(l, p, y, r, c), v) u.__k = []; else if (_ = u.props.children, w(l, Array.isArray(_) ? _ : [ _ ], u, i, t, r && "foreignObject" !== d, o, f, o ? o[0] : i.__k && k(i, 0), c), 
+                null != o) for (_ = o.length; _--; ) null != o[_] && h(o[_]);
+                c || ("value" in p && void 0 !== (_ = p.value) && (_ !== l.value || "progress" === d && !_ || "option" === d && _ !== y.value) && I(l, "value", _, y.value, !1), 
+                "checked" in p && void 0 !== (_ = p.checked) && _ !== l.checked && I(l, "checked", _, y.checked, !1));
             }
             return l;
         }
-        function S(n, u, i) {
+        function N(n, u, i) {
             try {
                 "function" == typeof n ? n(u) : n.current = u;
             } catch (n) {
                 l.__e(n, i);
             }
         }
-        function q(n, u, i) {
+        function O(n, u, i) {
             var t, r;
-            if (l.unmount && l.unmount(n), (t = n.ref) && (t.current && t.current !== n.__e || S(t, null, u)), 
+            if (l.unmount && l.unmount(n), (t = n.ref) && (t.current && t.current !== n.__e || N(t, null, u)), 
             null != (t = n.__c)) {
                 if (t.componentWillUnmount) try {
                     t.componentWillUnmount();
@@ -841,13 +828,13 @@
                 }
                 t.base = t.__P = null, n.__c = void 0;
             }
-            if (t = n.__k) for (r = 0; r < t.length; r++) t[r] && q(t[r], u, i || "function" != typeof n.type);
-            i || null == n.__e || v(n.__e), n.__ = n.__e = n.__d = void 0;
+            if (t = n.__k) for (r = 0; r < t.length; r++) t[r] && O(t[r], u, i || "function" != typeof n.type);
+            i || null == n.__e || h(n.__e), n.__ = n.__e = n.__d = void 0;
         }
-        function B(n, l, u) {
+        function S(n, l, u) {
             return this.constructor(n, u);
         }
-        n = s.slice, l = {
+        n = c.slice, l = {
             __e: function(n, l, u, i) {
                 for (var t, r, o; l = l.__; ) if ((t = l.__c) && !t.__) try {
                     if ((r = t.constructor) && null != r.getDerivedStateFromError && (t.setState(r.getDerivedStateFromError(n)), 
@@ -858,15 +845,15 @@
                 }
                 throw n;
             }
-        }, preact_module_u = 0, preact_module_t = !1, x.prototype.setState = function(n, l) {
+        }, preact_module_u = 0, _.prototype.setState = function(n, l) {
             var u;
-            u = null != this.__s && this.__s !== this.state ? this.__s : this.__s = h({}, this.state), 
-            "function" == typeof n && (n = n(h({}, u), this.props)), n && h(u, n), null != n && this.__v && (l && this._sb.push(l), 
-            T(this));
-        }, x.prototype.forceUpdate = function(n) {
-            this.__v && (this.__e = !0, n && this.__h.push(n), T(this));
-        }, x.prototype.render = _, preact_module_r = [], f = "function" == typeof Promise ? Promise.prototype.then.bind(Promise.resolve()) : setTimeout, 
-        $.__r = 0;
+            u = null != this.__s && this.__s !== this.state ? this.__s : this.__s = preact_module_a({}, this.state), 
+            "function" == typeof n && (n = n(preact_module_a({}, u), this.props)), n && preact_module_a(u, n), 
+            null != n && this.__v && (l && this._sb.push(l), g(this));
+        }, _.prototype.forceUpdate = function(n) {
+            this.__v && (this.__e = !0, n && this.__h.push(n), g(this));
+        }, _.prototype.render = d, preact_module_t = [], preact_module_o = "function" == typeof Promise ? Promise.prototype.then.bind(Promise.resolve()) : setTimeout, 
+        m.__r = 0;
         var hooks_module_t, hooks_module_r, hooks_module_u, hooks_module_i, hooks_module_o = 0, hooks_module_f = [], hooks_module_c = [], hooks_module_e = l.__b, hooks_module_a = l.__r, hooks_module_v = l.diffed, hooks_module_l = l.__c, hooks_module_m = l.unmount;
         function hooks_module_d(t, u) {
             l.__h && l.__h(hooks_module_r, t, hooks_module_o || u), hooks_module_o = 0;
@@ -2981,18 +2968,18 @@
         };
         function ErrorMessage(_ref) {
             var resetFunc = _ref.resetFunc;
-            return y("div", {
+            return v("div", {
                 id: "error-view"
-            }, y("div", {
+            }, v("div", {
                 className: "error-message"
-            }, _ref.message || "An issue has occurred"), y("button", {
+            }, _ref.message || "An issue has occurred"), v("button", {
                 className: "reset-button",
                 type: "button",
                 onClick: resetFunc
             }, "Try scanning again"));
         }
         function QRCodeElement(_ref2) {
-            return y("img", {
+            return v("img", {
                 id: "qr-code",
                 src: "data:image/svg+xml;base64," + btoa(_ref2.svgString),
                 alt: "QR Code"
@@ -3030,7 +3017,7 @@
                 d: "M16.6660484,0.18 C17.3466626,1.3390991 17.6535069,2.53297297 17.6535069,4.04108108 C17.6535069,8.85117117 13.671346,15.0998198 10.439346,19.4875676 L3.05725952,19.4875676 L0.0966314879,1.23315315 L6.56045675,0.60036036 L8.12578201,13.5895495 C9.58835986,11.1326126 11.3932543,7.27153153 11.3932543,4.6390991 C11.3932543,3.1981982 11.1538599,2.21675676 10.7797405,1.40864865 L16.6660484,0.18 Z M24.9071592,11.6938739 C24.9071592,13.8367568 26.062718,14.6774775 27.5946678,14.6774775 C29.2629152,14.6774775 30.860218,14.2571171 32.9363097,13.1691892 L32.154346,18.6445045 C30.6915934,19.3814414 28.4119291,19.8731532 26.1991903,19.8731532 C20.5863512,19.8731532 18.5775346,16.3632432 18.5775346,11.9753153 C18.5775346,6.28810811 21.8451817,0.249369369 28.5819516,0.249369369 C32.2909931,0.249369369 34.3649879,2.39207207 34.3649879,5.37567568 C34.3653374,10.1855856 28.3783789,11.6590991 24.9071592,11.6938739 Z M25.0434567,8.2181982 C26.2329152,8.2181982 29.2274429,7.65711712 29.2274429,5.90216216 C29.2274429,5.05945946 28.6495761,4.6390991 27.9686125,4.6390991 C26.7772318,4.6390991 25.2138287,6.11225225 25.0434567,8.2181982 Z M53.0187093,4.4636036 C53.0187093,5.16558559 52.9154377,6.18378378 52.8126903,6.84918919 L50.8730709,19.4873874 L44.5790934,19.4873874 L46.3483408,7.90216216 C46.381891,7.58792793 46.4849879,6.95531532 46.4849879,6.60432432 C46.4849879,5.76162162 45.9743962,5.55135135 45.3605329,5.55135135 C44.5451938,5.55135135 43.7279325,5.93711712 43.1836159,6.21873874 L41.1768962,19.4875676 L34.8474464,19.4875676 L37.7390519,0.565945946 L43.2171661,0.565945946 L43.2865381,2.07621622 C44.5789187,1.19873874 46.2807163,0.24972973 48.6952803,0.24972973 C51.8942543,0.249369369 53.0187093,1.93495495 53.0187093,4.4636036 Z M71.7037093,2.32072072 C73.5063322,0.988108108 75.2084792,0.249369369 77.5554187,0.249369369 C80.7872439,0.249369369 81.9113495,1.93495495 81.9113495,4.4636036 C81.9113495,5.16558559 81.8084273,6.18378378 81.7056799,6.84918919 L79.7683322,19.4873874 L73.4726073,19.4873874 L75.2755796,7.6572973 C75.3087803,7.34108108 75.3785017,6.95531532 75.3785017,6.71063063 C75.3785017,5.7618018 74.8677353,5.55135135 74.2540467,5.55135135 C73.4722578,5.55135135 72.6908183,5.90234234 72.1106799,6.21873874 L70.1043097,19.4875676 L63.8101574,19.4875676 L65.6131298,7.65747748 C65.6463304,7.34126126 65.713955,6.9554955 65.713955,6.71081081 C65.713955,5.76198198 65.2030138,5.55153153 64.5914221,5.55153153 C63.7743356,5.55153153 62.9588218,5.9372973 62.4145052,6.21891892 L60.4062128,19.4877477 L54.0788599,19.4877477 L56.9701159,0.566126126 L62.3813045,0.566126126 L62.551327,2.14576577 C63.8101574,1.1990991 65.5105571,0.25009009 67.7900467,0.25009009 C69.7637405,0.249369369 71.0559464,1.12702703 71.7037093,2.32072072 Z M83.55059,11.7998198 C83.55059,5.83279279 86.6120433,0.249369369 93.6558322,0.249369369 C98.9633997,0.249369369 100.903543,3.47981982 100.903543,7.93873874 C100.903543,13.8365766 97.8751159,19.9443243 90.6614792,19.9443243 C85.3196626,19.9443243 83.55059,16.3281081 83.55059,11.7998198 Z M94.4374464,7.83279279 C94.4374464,6.28810811 94.0628028,5.23495495 92.9409689,5.23495495 C90.4570329,5.23495495 89.9469654,9.76306306 89.9469654,12.0794595 C89.9469654,13.8367568 90.4238322,14.9243243 91.5453166,14.9243243 C93.8931298,14.9243243 94.4374464,10.149009 94.4374464,7.83279279 Z"
             })))))), cdnUrl = function(logoName, logoColorMap, logoColor) {
                 !logoColorMap || logoColor && logoColorMap[logoColor] || (logoColor = "default");
-                return "https://www.paypalobjects.com/js-sdk-logos/2.2.4/" + function(logoName, logoColor) {
+                return "https://www.paypalobjects.com/js-sdk-logos/2.2.5/" + function(logoName, logoColor) {
                     return logoColor ? "venmo-" + logoColor + ".svg" : "venmo.svg";
                 }(0, logoColor);
             }(0, VENMO_LOGO_COLORS, logoColor), node_node(SVGLogo, _extends({}, props, {
@@ -3042,94 +3029,94 @@
                 }
             }))).render(Object(jsx_pragmatic.preact)({
                 Preact: {
-                    h: y
+                    h: v
                 }
             }));
             var _ref2, _ref2$logoColor, logoColor, props, svg, _ref, cdnUrl;
         }
         function InstructionIcon(_ref3) {
             var _ref3$stylingClass = _ref3.stylingClass;
-            return y("svg", {
+            return v("svg", {
                 className: void 0 === _ref3$stylingClass ? "instruction-icon" : _ref3$stylingClass,
                 width: "68",
                 height: "47",
                 viewBox: "0 0 68 47",
                 fill: "none",
                 xmlns: "http://www.w3.org/2000/svg"
-            }, y("rect", {
+            }, v("rect", {
                 x: "11.5",
                 y: "6.90039",
                 width: "20.7",
                 height: "29.9",
                 fill: "white"
-            }), y("path", {
+            }), v("path", {
                 "fill-rule": "evenodd",
                 "clip-rule": "evenodd",
                 d: "M30.82 2.2998H12.88C10.8475 2.2998 9.19995 3.98283 9.19995 6.05894V42.2407C9.19995 44.3168 10.8475 45.9998 12.88 45.9998H30.82C32.8524 45.9998 34.5 44.3168 34.5 42.2407V6.05894C34.5 3.98283 32.8524 2.2998 30.82 2.2998ZM21.8499 42.6635C20.8337 42.6635 20.0099 41.822 20.0099 40.784C20.0099 39.7459 20.8337 38.9044 21.8499 38.9044C22.8661 38.9044 23.6899 39.7459 23.6899 40.784C23.6899 41.822 22.8661 42.6635 21.8499 42.6635ZM11.9599 36.414H31.7399V7.32767H11.9599V36.414Z",
                 fill: "#888C94"
-            }), y("path", {
+            }), v("path", {
                 d: "M25.7367 12.4121C26.107 13.0217 26.274 13.6495 26.274 14.4425C26.274 16.9719 24.1071 20.2578 22.3483 22.5651H18.3314L16.7205 12.966L20.2378 12.6333L21.0894 19.4636C21.8853 18.1716 22.8674 16.1412 22.8674 14.757C22.8674 13.9992 22.7371 13.4832 22.5335 13.0582L25.7367 12.4121Z",
                 fill: "#008CFF"
-            }), y("circle", {
+            }), v("circle", {
                 cx: "14.5",
                 cy: "33.5",
                 r: "1.25",
                 fill: "white",
                 stroke: "#0074DE",
                 "stroke-width": "0.5"
-            }), y("circle", {
+            }), v("circle", {
                 cx: "18.5",
                 cy: "33.5",
                 r: "1.25",
                 fill: "white",
                 stroke: "#0074DE",
                 "stroke-width": "0.5"
-            }), y("rect", {
+            }), v("rect", {
                 x: "21",
                 y: "32",
                 width: "9",
                 height: "3",
                 rx: "1.5",
                 fill: "#0074DE"
-            }), y("circle", {
+            }), v("circle", {
                 cx: "49",
                 cy: "26",
                 r: "18",
                 fill: "white",
                 stroke: "#2F3033",
                 "stroke-width": "2"
-            }), y("path", {
+            }), v("path", {
                 "fill-rule": "evenodd",
                 "clip-rule": "evenodd",
                 d: "M56.7188 16.5H51.9688C50.985 16.5 50.1875 17.2975 50.1875 18.2812V23.0312C50.1875 24.015 50.985 24.8125 51.9688 24.8125H56.7188C57.7025 24.8125 58.5 24.015 58.5 23.0312V18.2812C58.5 17.2975 57.7025 16.5 56.7188 16.5ZM51.375 18.2812C51.375 17.9533 51.6408 17.6875 51.9688 17.6875H56.7188C57.0467 17.6875 57.3125 17.9533 57.3125 18.2812V23.0312C57.3125 23.3592 57.0467 23.625 56.7188 23.625H51.9688C51.6408 23.625 51.375 23.3592 51.375 23.0312V18.2812ZM41.875 19.5083C41.875 19.1585 42.1585 18.875 42.5083 18.875H44.8042C45.154 18.875 45.4375 19.1585 45.4375 19.5083V21.8042C45.4375 22.154 45.154 22.4375 44.8042 22.4375H42.5083C42.1585 22.4375 41.875 22.154 41.875 21.8042V19.5083ZM52.5625 19.5083C52.5625 19.1585 52.846 18.875 53.1958 18.875H55.4917C55.8415 18.875 56.125 19.1585 56.125 19.5083V21.8042C56.125 22.154 55.8415 22.4375 55.4917 22.4375H53.1958C52.846 22.4375 52.5625 22.154 52.5625 21.8042V19.5083ZM50.8208 27.1875C50.471 27.1875 50.1875 27.471 50.1875 27.8208V28.9292C50.1875 29.279 50.471 29.5625 50.8208 29.5625H51.9292C52.279 29.5625 52.5625 29.279 52.5625 28.9292V27.8208C52.5625 27.471 52.279 27.1875 51.9292 27.1875H50.8208ZM50.1875 33.7583C50.1875 33.4085 50.471 33.125 50.8208 33.125H51.9292C52.279 33.125 52.5625 33.4085 52.5625 33.7583V34.8667C52.5625 35.2165 52.279 35.5 51.9292 35.5H50.8208C50.471 35.5 50.1875 35.2165 50.1875 34.8667V33.7583ZM56.7583 27.1875C56.4085 27.1875 56.125 27.471 56.125 27.8208V28.9292C56.125 29.279 56.4085 29.5625 56.7583 29.5625H57.8667C58.2165 29.5625 58.5 29.279 58.5 28.9292V27.8208C58.5 27.471 58.2165 27.1875 57.8667 27.1875H56.7583ZM56.125 33.7583C56.125 33.4085 56.4085 33.125 56.7583 33.125H57.8667C58.2165 33.125 58.5 33.4085 58.5 33.7583V34.8667C58.5 35.2165 58.2165 35.5 57.8667 35.5H56.7583C56.4085 35.5 56.125 35.2165 56.125 34.8667V33.7583ZM53.7895 30.1562C53.4398 30.1562 53.1562 30.4398 53.1562 30.7895V31.898C53.1562 32.2477 53.4398 32.5312 53.7895 32.5312H54.898C55.2477 32.5312 55.5312 32.2477 55.5312 31.898V30.7895C55.5312 30.4398 55.2477 30.1562 54.898 30.1562H53.7895ZM41.875 30.1958C41.875 29.846 42.1585 29.5625 42.5083 29.5625H44.8042C45.154 29.5625 45.4375 29.846 45.4375 30.1958V32.4917C45.4375 32.8415 45.154 33.125 44.8042 33.125H42.5083C42.1585 33.125 41.875 32.8415 41.875 32.4917V30.1958ZM41.2812 27.1875H46.0312C47.015 27.1875 47.8125 27.985 47.8125 28.9688V33.7188C47.8125 34.7025 47.015 35.5 46.0312 35.5H41.2812C40.2975 35.5 39.5 34.7025 39.5 33.7188V28.9688C39.5 27.985 40.2975 27.1875 41.2812 27.1875ZM41.2812 28.375C40.9533 28.375 40.6875 28.6408 40.6875 28.9688V33.7188C40.6875 34.0467 40.9533 34.3125 41.2812 34.3125H46.0312C46.3592 34.3125 46.625 34.0467 46.625 33.7188V28.9688C46.625 28.6408 46.3592 28.375 46.0312 28.375H41.2812ZM41.2812 16.5H46.0312C47.015 16.5 47.8125 17.2975 47.8125 18.2812V23.0312C47.8125 24.015 47.015 24.8125 46.0312 24.8125H41.2812C40.2975 24.8125 39.5 24.015 39.5 23.0312V18.2812C39.5 17.2975 40.2975 16.5 41.2812 16.5ZM41.2812 17.6875C40.9533 17.6875 40.6875 17.9533 40.6875 18.2812V23.0312C40.6875 23.3592 40.9533 23.625 41.2812 23.625H46.0312C46.3592 23.625 46.625 23.3592 46.625 23.0312V18.2812C46.625 17.9533 46.3592 17.6875 46.0312 17.6875H41.2812Z",
                 fill: "#008CFF"
-            }), y("path", {
+            }), v("path", {
                 d: "M36 13.0004L15 33",
                 stroke: "#2F3033"
-            }), y("path", {
+            }), v("path", {
                 d: "M43.4999 43.4991L14.4999 32.9995",
                 stroke: "#2F3033"
             }));
         }
         function VenmoMark() {
-            return y("svg", {
+            return v("svg", {
                 id: "venmo-mark",
                 xmlns: "http://www.w3.org/2000/svg",
                 viewBox: "0 0 48 48"
-            }, y("path", {
+            }, v("path", {
                 d: "M42.3 2L28.5 4.8c.8 1.9 1.4 4.1 1.4 7.4 0 6-4.2 14.8-7.7 20.4L18.5 3 3.3 4.5l7 41.5h17.4c7.7-10 17-24.3 17-35.2 0-3.4-.8-6.1-2.4-8.8z",
                 fill: "#fff"
             }));
         }
         function AuthMark() {
-            return y("svg", {
+            return v("svg", {
                 id: "success-mark",
                 width: "59",
                 height: "59",
                 viewBox: "0 0 59 59",
                 fill: "none",
                 xmlns: "http://www.w3.org/2000/svg"
-            }, y("rect", {
+            }, v("rect", {
                 x: "1",
                 y: "1",
                 width: "57",
@@ -3137,17 +3124,17 @@
                 rx: "28.5",
                 fill: "#148572",
                 stroke: "#888C94"
-            }), y("g", {
+            }), v("g", {
                 "clip-path": "url(#clip0)"
-            }, y("path", {
+            }, v("path", {
                 d: "M24.0068 40.8397C22.921 39.7538 22.921 37.9933 24.0068 36.9075L39.2933 21.621C40.3791 20.5352 42.1396 20.5352 43.2255 21.621C44.3113 22.7069 44.3113 24.4674 43.2255 25.5532L27.939 40.8397C26.8532 41.9255 25.0927 41.9255 24.0068 40.8397Z",
                 fill: "white"
-            }), y("path", {
+            }), v("path", {
                 d: "M27.9763 40.8397C26.8905 41.9255 25.13 41.9255 24.0441 40.8397L17.1628 33.9583C16.0769 32.8725 16.0769 31.112 17.1628 30.0261C18.2486 28.9403 20.0091 28.9403 21.095 30.0261L27.9763 36.9075C29.0622 37.9933 29.0622 39.7538 27.9763 40.8397Z",
                 fill: "white"
-            })), y("defs", null, y("clipPath", {
+            })), v("defs", null, v("clipPath", {
                 id: "clip0"
-            }, y("rect", {
+            }, v("rect", {
                 width: "27.8049",
                 height: "27.8049",
                 fill: "white",
@@ -3231,7 +3218,7 @@
             logger.addTrackingBuilder((function() {
                 var _ref2;
                 return (_ref2 = {}).state_name = "smart_button", _ref2.context_type = "EC-Token", 
-                _ref2.context_id = orderID, _ref2.button_session_id = buttonSessionID, _ref2.button_version = "5.0.130", 
+                _ref2.context_id = orderID, _ref2.button_session_id = buttonSessionID, _ref2.button_version = "5.0.131", 
                 _ref2.selected_payment_method = fundingSource, _ref2.user_id = buttonSessionID, 
                 _ref2;
             }));
@@ -3267,13 +3254,13 @@
             }));
             return logger;
         }
-        var radioSvg = y("svg", {
+        var radioSvg = v("svg", {
             width: "40",
             height: "40",
             viewBox: "0 0 40 40",
             fill: "none",
             xmlns: "http://www.w3.org/2000/svg"
-        }, y("rect", {
+        }, v("rect", {
             x: "0.25",
             y: "0.25",
             width: "39.5",
@@ -3282,18 +3269,18 @@
             stroke: "#888C94",
             "stroke-width": "0.5"
         }));
-        var checkedRadioSvg = y("svg", {
+        var checkedRadioSvg = v("svg", {
             width: "40",
             height: "40",
             viewBox: "0 0 40 40",
             fill: "none",
             xmlns: "http://www.w3.org/2000/svg"
-        }, y("circle", {
+        }, v("circle", {
             cx: "20",
             cy: "20",
             r: "12",
             fill: "#148572"
-        }), y("rect", {
+        }), v("rect", {
             x: "0.25",
             y: "0.25",
             width: "39.5",
@@ -3321,29 +3308,29 @@
                 text: "I prefer not to say",
                 reason: "prefer_not_to_say"
             } ].map((function(answer) {
-                return y("div", {
+                return v("div", {
                     class: "answer"
-                }, y("input", {
+                }, v("input", {
                     type: "radio",
                     id: answer.reason,
                     value: answer.reason,
                     checked: answer.reason === survey.reason,
                     onChange: onChange
-                }), y("label", {
+                }), v("label", {
                     for: answer.reason
                 }, answer.reason === survey.reason ? checkedRadioSvg : radioSvg, answer.text));
             }));
-            return y("div", {
+            return v("div", {
                 id: "survey"
-            }, y("h1", null, "We’re sorry to see you leave!"), y("p", {
+            }, v("h1", null, "We’re sorry to see you leave!"), v("p", {
                 class: "message"
-            }, "Please let us know why. Your feedback is important to us."), y("div", {
+            }, "Please let us know why. Your feedback is important to us."), v("div", {
                 class: "answers"
-            }, answersElements), y("button", {
+            }, answersElements), v("button", {
                 type: "button",
                 class: "continue-button",
                 onClick: survey.disable
-            }, "Continue payment"), y("button", {
+            }, "Continue payment"), v("button", {
                 type: "button",
                 class: "leave-button",
                 onClick: onCloseClick
@@ -3474,63 +3461,63 @@
                 }
                 return cancel();
             };
-            var errorMessage = y(ErrorMessage, {
+            var errorMessage = v(ErrorMessage, {
                 message: errorText,
                 resetFunc: function() {
                     return setState("qr_default");
                 }
             });
-            var frontView = y("div", {
+            var frontView = v("div", {
                 id: "front-view",
                 className: "card"
-            }, y("p", {
+            }, v("p", {
                 id: "fee-disclaimer"
-            }, "No fees no matter how you pay"), y("div", {
+            }, "No fees no matter how you pay"), v("div", {
                 id: "instructions"
-            }, y(InstructionIcon, {
+            }, v(InstructionIcon, {
                 stylingClass: "instruction-icon"
-            }), y("span", null, "To pay, scan the QR code with your Venmo app")), y(QRCodeElement, {
+            }), v("span", null, "To pay, scan the QR code with your Venmo app")), v(QRCodeElement, {
                 svgString: svgString
-            }), y(Logo, null));
-            var surveyElement = y(Survey, {
+            }), v(Logo, null));
+            var surveyElement = v(Survey, {
                 survey: survey,
                 onCloseClick: onCloseClick
             });
             var content = survey.isEnabled && "qr_default" === state ? surveyElement : frontView;
-            var escapePathFooter = !survey.isEnabled && "qr_default" === state && y("p", {
+            var escapePathFooter = !survey.isEnabled && "qr_default" === state && v("p", {
                 className: "escape-path"
-            }, "Don't have the app? Pay with ", y("span", {
+            }, "Don't have the app? Pay with ", v("span", {
                 className: "escape-path__link",
                 onClick: function() {
                     return handleClick("paypal");
                 }
-            }, "PayPal"), " or ", y("span", {
+            }, "PayPal"), " or ", v("span", {
                 className: "escape-path__link",
                 onClick: function() {
                     return handleClick("card");
                 }
             }, "Credit/Debit card"));
-            return y(_, null, y("style", {
+            return v(d, null, v("style", {
                 nonce: window.xprops.cspNonce
-            }, " ", '\n    * {\n        box-sizing: border-box;\n        font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;\n        text-transform: none;\n    }\n    html, body {\n        display: flex;\n        position: fixed;\n        width: 100%;\n        height: 100%;\n        top: 0;\n        left: 0;\n        align-items: center;\n        justify-content: center;\n    }\n    body {\n        flex-direction: column;\n    }\n    #error-view {\n        width: 100%;\n        height: 100%;\n        padding: 1.5em;\n        justify-content: center;\n    }\n    #error-view .error-message,\n    #error-view .reset-button {\n        color: #FFFFFF;\n        text-align: center;\n        line-height: 16px;\n    }\n    #error-view .error-message {\n        margin-bottom: 2em;\n        word-break: break-word;\n    }\n    #error-view .reset-button {\n        cursor: pointer;\n        border: 0;\n        border-radius: 24px;\n        padding: 12px;\n        background: #3D93CE;\n        line-height: 24px;\n        font-weight: 700;\n        width: 300px;\n    }\n    .card,\n    #error-view {\n        display: inline-flex;\n        align-items: center;\n        flex-direction: column;\n    }\n    .card {\n        border-radius: 8px;\n        min-width: 280px;\n        min-height: 320px;\n        backface-visibility: hidden;\n        -webkit-backface-visibility: hidden;\n        transition: transform 1s;\n        transform-style: preserve-3d;\n    }\n    .card * {\n        box-sizing: content-box;\n    }\n    #view-boxes {\n        display: flex;\n        align-items: center;\n        justify-content: center;\n        height: 100%;\n        width: 100%;\n    }\n    #view-boxes.qr_scanned #front-view,\n    #view-boxes.qr_authorized #front-view {\n        transform: rotateY(180deg);\n        position: absolute;\n    }\n    #view-boxes #back-view {width: 320px;}\n    #view-boxes.qr_scanned #back-view,\n    #view-boxes.qr_authorized #back-view {\n        transform: rotateY(0deg);\n        position: relative;\n    }\n    #view-boxes #back-view #success-mark,\n    #view-boxes #back-view .success-message {\n        opacity: 0;\n    }\n    #view-boxes.qr_authorized #back-view #success-mark,\n    #view-boxes.qr_authorized #back-view .success-message {\n        opacity: 1;\n    }\n    #view-boxes.qr_authorized #back-view #success-mark {\n        transform: rotate(720deg);\n    }\n    #view-boxes.qr_authorized #back-view .auth-message {\n        opacity: 0;\n    }\n    #front-view {\n        background-color: white;\n        border: 1px solid #888C94;\n        z-index: 2;\n        transform: rotateY(0deg);\n        justify-content: flex-end;\n        width: 462px;\n    }\n    #front-view > svg,\n    #front-view > img {\n        padding: 16px 16px 0px;\n    }\n    #front-view > img + img {\n        padding-top: 12px;\n        padding-bottom: 32px;\n    }\n    #qr-code {\n        min-width: 160px;\n        min-height: 160px;\n        width: calc(100% - 32px);\n        max-width: 325px;\n    }\n    #instructions {\n        background-color: #FFFF;\n        border-top-left-radius: 8px;\n        border-top-right-radius: 8px;\n        box-sizing: border-box;\n        margin-top: 16px;\n        display: flex;\n        align-items: center;\n        font-size: 14px;\n        line-height: 16px;\n        max-width: 250px;\n        width: 100%;\n    }\n    .instruction-icon {\n        min-width: 68px;\n        min-height: 46px;\n        margin-right: 16px;\n    }\n    #fee-disclaimer{\n        margin: 0;\n        padding-top: 32px;\n        padding-left: 16px;\n        padding-right: 16px;\n        font-size: 20px;\n        color: #2F3033;\n    }\n    #back-view {\n        position: absolute;\n        transform: rotateY(-180deg);\n        background-color: #3D93CE;\n        justify-content: center;\n        font-size: 18px;\n        line-height: 16px;\n        text-align: center;\n        color: #FFFFFF;\n    }\n    #back-view .auth-message,\n    #back-view .success-message {\n        position: absolute;\n        bottom: -30px;\n        white-space: nowrap;\n        transition: opacity 500ms;\n    }\n    #back-view .mark {\n        position: relative ;\n    }\n    #venmo-mark{\n        width: 50%;\n    }\n    #success-mark {\n        position: absolute;\n        left: 50%;\n        bottom: -10%;\n        transition: transform 500ms, opacity 500ms;\n        transition-delay: 350ms;\n    }\n    #close {\n        position: absolute;\n        right: 16px;\n        top: 16px;\n        width: 16px;\n        height: 16px;\n        opacity: 0.6;\n        z-index: 10;\n    }\n    #close:hover {\n        opacity: 1;\n    }\n    #close:before, #close:after {\n        position: absolute;\n        left: 8px;\n        content: \' \';\n        height: 20px;\n        width: 2px;\n        background-color: #FFF;\n    }\n    #close:before {\n        transform: rotate(45deg);\n    }\n    #close:after {\n        transform: rotate(-45deg);\n    }\n    #survey {\n        background: #FFFFFF;\n        height: 542px;\n        width: 500px;\n        border-radius: 8px;\n    }\n    #survey h1 {\n        width: 423px;\n        font-weight: 500;\n        font-size: 24px;\n        line-height: 32px;\n        text-align: center;\n        margin: auto;\n        margin-top: 30px;\n    }\n    #survey button {\n        display: block;\n        margin: auto;\n        border: none;\n        font-family: sans-serif;\n        cursor: pointer;\n        font-weight: bold;\n    }\n    #survey button.continue-button {\n        margin-top: 40px;\n        min-height: 48px;\n        width:  335px;\n        background: #0074DE;\n        height: 24px;\n        font-size: 18px;\n        line-height: 24px;\n        text-align: center;\n        color: #FFFFFF;\n        border-radius: 24px;\n        display: block;\n    }\n    #survey button.leave-button {\n        margin-top: 10px;\n        height: 48px;\n        width:  335px;\n        color: #0074DE;\n        background: none;\n        font-size: 18px;\n        line-height: 24px;\n        text-align: center;\n        display: block;\n    }\n    #survey .message {\n        width: 333px;\n        font-family: sans-serif;\n        font-size: 16px;\n        line-height: 20px;\n        text-align: center;\n        margin: auto;\n        margin-top: 8px;\n    }\n\n    #survey .answers {\n        width: 400px;\n        font-size: 16px;\n        line-height: 20px;\n        margin: auto;\n        cursor: pointer;\n    }\n    #survey .answers .answer {\n        margin-top: 28px;\n        display: flex;\n        align-items: center;\n    }\n    #survey label {\n        font-family: sans-serif;\n        font-size: 16px;\n        cursor: pointer;\n        display: flex;\n        align-items: center;\n    }\n    #survey .answers svg{\n        margin-right: 8px;\n        min-width: 40px;\n    }\n    #survey .answers input{\n        display: none;\n    }\n    #survey .answers input:focus::after {\n        content: "";\n        min-width: 44px;\n        height: 44px;\n        position: absolute;\n        top: -2px;\n        left: -2px;\n        border: solid 1px black;\n        border-radius: 50%;\n    }\n    .escape-path {\n        background-color: white;\n        color: #2F3033;\n        width: 100%;\n        text-align: center;\n        padding: 1rem;\n        margin: 0;\n        border-bottom-left-radius: 16px;\n        border-bottom-right-radius: 16px;\n    }\n    .escape-path__link {\n        font-weight: 600;\n        color: #008CFF;\n    }\n    .escape-path__link:hover {\n        cursor: pointer;\n    }\n    ', " "), y("a", {
+            }, " ", '\n    * {\n        box-sizing: border-box;\n        font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;\n        text-transform: none;\n    }\n    html, body {\n        display: flex;\n        position: fixed;\n        width: 100%;\n        height: 100%;\n        top: 0;\n        left: 0;\n        align-items: center;\n        justify-content: center;\n    }\n    body {\n        flex-direction: column;\n    }\n    #error-view {\n        width: 100%;\n        height: 100%;\n        padding: 1.5em;\n        justify-content: center;\n    }\n    #error-view .error-message,\n    #error-view .reset-button {\n        color: #FFFFFF;\n        text-align: center;\n        line-height: 16px;\n    }\n    #error-view .error-message {\n        margin-bottom: 2em;\n        word-break: break-word;\n    }\n    #error-view .reset-button {\n        cursor: pointer;\n        border: 0;\n        border-radius: 24px;\n        padding: 12px;\n        background: #3D93CE;\n        line-height: 24px;\n        font-weight: 700;\n        width: 300px;\n    }\n    .card,\n    #error-view {\n        display: inline-flex;\n        align-items: center;\n        flex-direction: column;\n    }\n    .card {\n        border-radius: 8px;\n        min-width: 280px;\n        min-height: 320px;\n        backface-visibility: hidden;\n        -webkit-backface-visibility: hidden;\n        transition: transform 1s;\n        transform-style: preserve-3d;\n    }\n    .card * {\n        box-sizing: content-box;\n    }\n    #view-boxes {\n        display: flex;\n        align-items: center;\n        justify-content: center;\n        height: 100%;\n        width: 100%;\n    }\n    #view-boxes.qr_scanned #front-view,\n    #view-boxes.qr_authorized #front-view {\n        transform: rotateY(180deg);\n        position: absolute;\n    }\n    #view-boxes #back-view {width: 320px;}\n    #view-boxes.qr_scanned #back-view,\n    #view-boxes.qr_authorized #back-view {\n        transform: rotateY(0deg);\n        position: relative;\n    }\n    #view-boxes #back-view #success-mark,\n    #view-boxes #back-view .success-message {\n        opacity: 0;\n    }\n    #view-boxes.qr_authorized #back-view #success-mark,\n    #view-boxes.qr_authorized #back-view .success-message {\n        opacity: 1;\n    }\n    #view-boxes.qr_authorized #back-view #success-mark {\n        transform: rotate(720deg);\n    }\n    #view-boxes.qr_authorized #back-view .auth-message {\n        opacity: 0;\n    }\n    #front-view {\n        background-color: white;\n        border: 1px solid #888C94;\n        z-index: 2;\n        transform: rotateY(0deg);\n        justify-content: flex-end;\n        width: 462px;\n    }\n    #front-view > svg,\n    #front-view > img {\n        padding: 16px 16px 0px;\n    }\n    #front-view > img + img {\n        padding-top: 12px;\n        padding-bottom: 32px;\n    }\n    #qr-code {\n        min-width: 160px;\n        min-height: 160px;\n        width: calc(100% - 32px);\n        max-width: 325px;\n    }\n    #instructions {\n        background-color: #FFFF;\n        border-top-left-radius: 8px;\n        border-top-right-radius: 8px;\n        box-sizing: border-box;\n        margin-top: 16px;\n        display: flex;\n        align-items: center;\n        font-size: 14px;\n        line-height: 16px;\n        max-width: 250px;\n        width: 100%;\n    }\n    .instruction-icon {\n        min-width: 68px;\n        min-height: 46px;\n        margin-right: 16px;\n    }\n    #fee-disclaimer{\n        margin: 0;\n        padding-top: 32px;\n        padding-left: 16px;\n        padding-right: 16px;\n        font-size: 20px;\n        color: #2F3033;\n    }\n    #back-view {\n        position: absolute;\n        transform: rotateY(-180deg);\n        background-color: #3D93CE;\n        justify-content: center;\n        font-size: 18px;\n        line-height: 16px;\n        text-align: center;\n        color: #FFFFFF;\n    }\n    #back-view .auth-message,\n    #back-view .success-message {\n        position: absolute;\n        bottom: -30px;\n        white-space: nowrap;\n        transition: opacity 500ms;\n    }\n    #back-view .mark {\n        position: relative ;\n    }\n    #venmo-mark{\n        width: 50%;\n    }\n    #success-mark {\n        position: absolute;\n        left: 50%;\n        bottom: -10%;\n        transition: transform 500ms, opacity 500ms;\n        transition-delay: 350ms;\n    }\n    #close {\n        position: absolute;\n        right: 16px;\n        top: 16px;\n        width: 16px;\n        height: 16px;\n        opacity: 0.6;\n        z-index: 10;\n    }\n    #close:hover {\n        opacity: 1;\n    }\n    #close:before, #close:after {\n        position: absolute;\n        left: 8px;\n        content: \' \';\n        height: 20px;\n        width: 2px;\n        background-color: #FFF;\n    }\n    #close:before {\n        transform: rotate(45deg);\n    }\n    #close:after {\n        transform: rotate(-45deg);\n    }\n    #survey {\n        background: #FFFFFF;\n        height: 542px;\n        width: 500px;\n        border-radius: 8px;\n    }\n    #survey h1 {\n        width: 423px;\n        font-weight: 500;\n        font-size: 24px;\n        line-height: 32px;\n        text-align: center;\n        margin: auto;\n        margin-top: 30px;\n    }\n    #survey button {\n        display: block;\n        margin: auto;\n        border: none;\n        font-family: sans-serif;\n        cursor: pointer;\n        font-weight: bold;\n    }\n    #survey button.continue-button {\n        margin-top: 40px;\n        min-height: 48px;\n        width:  335px;\n        background: #0074DE;\n        height: 24px;\n        font-size: 18px;\n        line-height: 24px;\n        text-align: center;\n        color: #FFFFFF;\n        border-radius: 24px;\n        display: block;\n    }\n    #survey button.leave-button {\n        margin-top: 10px;\n        height: 48px;\n        width:  335px;\n        color: #0074DE;\n        background: none;\n        font-size: 18px;\n        line-height: 24px;\n        text-align: center;\n        display: block;\n    }\n    #survey .message {\n        width: 333px;\n        font-family: sans-serif;\n        font-size: 16px;\n        line-height: 20px;\n        text-align: center;\n        margin: auto;\n        margin-top: 8px;\n    }\n\n    #survey .answers {\n        width: 400px;\n        font-size: 16px;\n        line-height: 20px;\n        margin: auto;\n        cursor: pointer;\n    }\n    #survey .answers .answer {\n        margin-top: 28px;\n        display: flex;\n        align-items: center;\n    }\n    #survey label {\n        font-family: sans-serif;\n        font-size: 16px;\n        cursor: pointer;\n        display: flex;\n        align-items: center;\n    }\n    #survey .answers svg{\n        margin-right: 8px;\n        min-width: 40px;\n    }\n    #survey .answers input{\n        display: none;\n    }\n    #survey .answers input:focus::after {\n        content: "";\n        min-width: 44px;\n        height: 44px;\n        position: absolute;\n        top: -2px;\n        left: -2px;\n        border: solid 1px black;\n        border-radius: 50%;\n    }\n    .escape-path {\n        background-color: white;\n        color: #2F3033;\n        width: 100%;\n        text-align: center;\n        padding: 1rem;\n        margin: 0;\n        border-bottom-left-radius: 16px;\n        border-bottom-right-radius: 16px;\n    }\n    .escape-path__link {\n        font-weight: 600;\n        color: #008CFF;\n    }\n    .escape-path__link:hover {\n        cursor: pointer;\n    }\n    ', " "), v("a", {
                 href: "#",
                 id: "close",
                 "aria-label": "close",
                 role: "button",
                 onClick: onCloseClick
-            }), y("div", {
+            }), v("div", {
                 id: "view-boxes",
                 className: state
-            }, "qr_error" === state ? errorMessage : content, y("div", {
+            }, "qr_error" === state ? errorMessage : content, v("div", {
                 className: "card",
                 id: "back-view"
-            }, y("span", {
+            }, v("span", {
                 className: "mark"
-            }, y(VenmoMark, null), y(AuthMark, null)), y("div", {
+            }, v(VenmoMark, null), v(AuthMark, null)), v("div", {
                 className: "auth-message"
-            }, "Go to your Venmo app and authorize"), y("div", {
+            }, "Go to your Venmo app and authorize"), v("div", {
                 className: "success-message"
-            }, "Venmo account authorized")), window.xprops.debug && y("button", {
+            }, "Venmo account authorized")), window.xprops.debug && v("button", {
                 type: "button",
                 style: {
                     position: "absolute",
@@ -3546,13 +3533,11 @@
         function renderQRCode(_ref2) {
             var svgString = _ref2.svgString;
             qrcard_logger = setupNativeQRLogger();
-            !function(u, i, t) {
-                var o, f;
-                l.__ && l.__(u, i), o = !1 ? null : i.__k, f = [], M(i, u = i.__k = y(_, null, [ u ]), o || c, c, void 0 !== i.ownerSVGElement, o ? null : i.firstChild ? n.call(i.childNodes) : null, f, o ? o.__e : i.firstChild, !1), 
-                N(f, u);
-            }(y(QRCard, {
+            u = v(QRCard, {
                 svgString: svgString
-            }), util_getBody());
+            }), i = util_getBody(), l.__ && l.__(u, i), o = !1 ? null : i.__k, f = [], z(i, u = i.__k = v(d, null, [ u ]), o || e, e, void 0 !== i.ownerSVGElement, o ? null : i.firstChild ? n.call(i.childNodes) : null, f, o ? o.__e : i.firstChild, !1), 
+            L(f, u);
+            var u, i, o, f;
         }
     } ]);
 }));

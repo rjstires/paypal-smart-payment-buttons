@@ -9987,7 +9987,7 @@ window.spb = function(modules) {
             Object(lib.getLogger)().info("rest_api_create_order_token");
             var headers = ((_headers15 = {})[constants.HEADERS.AUTHORIZATION] = "Bearer " + accessToken, 
             _headers15[constants.HEADERS.PARTNER_ATTRIBUTION_ID] = partnerAttributionID, _headers15[constants.HEADERS.CLIENT_METADATA_ID] = clientMetadataID, 
-            _headers15[constants.HEADERS.APP_NAME] = constants.SMART_PAYMENT_BUTTONS, _headers15[constants.HEADERS.APP_VERSION] = "5.0.130", 
+            _headers15[constants.HEADERS.APP_NAME] = constants.SMART_PAYMENT_BUTTONS, _headers15[constants.HEADERS.APP_VERSION] = "5.0.131", 
             _headers15);
             var paymentSource = {
                 token: {
@@ -12614,17 +12614,17 @@ window.spb = function(modules) {
             };
         }
         function getCardFields() {
+            var card = {};
             var cardFrame = getExportsByFrameName(constants.FRAME_NAME.CARD_FIELD);
             if (cardFrame && cardFrame.isFieldValid()) return cardFrame.getFieldValue();
             var _getCardFrames = getCardFrames(), cardNumberFrame = _getCardFrames.cardNumberFrame, cardCVVFrame = _getCardFrames.cardCVVFrame, cardExpiryFrame = _getCardFrames.cardExpiryFrame, cardNameFrame = _getCardFrames.cardNameFrame, cardPostalFrame = _getCardFrames.cardPostalFrame;
-            if (cardNumberFrame && cardNumberFrame.isFieldValid() && cardCVVFrame && cardCVVFrame.isFieldValid() && cardExpiryFrame && cardExpiryFrame.isFieldValid() && (!cardNameFrame || cardNameFrame.isFieldValid()) && (!cardPostalFrame || cardPostalFrame.isFieldValid())) return {
-                number: cardNumberFrame.getFieldValue(),
-                cvv: cardCVVFrame.getFieldValue(),
-                expiry: cardExpiryFrame.getFieldValue(),
-                name: (null == cardNameFrame ? void 0 : cardNameFrame.getFieldValue()) || "",
-                postalCode: (null == cardPostalFrame ? void 0 : cardPostalFrame.getFieldValue()) || ""
-            };
-            throw new Error("Card fields not available to submit");
+            if (!(cardNumberFrame && cardNumberFrame.isFieldValid() && cardCVVFrame && cardCVVFrame.isFieldValid() && cardExpiryFrame && cardExpiryFrame.isFieldValid())) throw new Error("Card fields not available to submit");
+            card.number = cardNumberFrame.getFieldValue();
+            card.cvv = cardCVVFrame.getFieldValue();
+            card.expiry = cardExpiryFrame.getFieldValue();
+            cardNameFrame && cardNameFrame.isFieldValid() && (card.name = cardNameFrame.getFieldValue());
+            cardPostalFrame && cardPostalFrame.isFieldValid() && (card.postalCode = cardPostalFrame.getFieldValue());
+            return card;
         }
         var dist = __webpack_require__("./node_modules/card-validator/dist/index.js");
         var dist_default = __webpack_require__.n(dist);
@@ -12639,6 +12639,9 @@ window.spb = function(modules) {
         _VALIDATOR_TO_TYPE_MA[types.MASTERCARD] = sdk_constants_src.CARD.MASTERCARD, _VALIDATOR_TO_TYPE_MA[types.UNIONPAY] = sdk_constants_src.CARD.CUP, 
         _VALIDATOR_TO_TYPE_MA[types.VISA] = sdk_constants_src.CARD.VISA;
         var belter = __webpack_require__("./node_modules/@krakenjs/belter/index.js");
+        function reformatBillingKeys(str) {
+            return str.replace(/([a-z\d])([A-Z])/g, "$1_$2").replace(/([a-z\d])(\d)/g, "$1_$2").toLowerCase();
+        }
         dist_default.a.creditCardType.addCard({
             code: {
                 name: "CVV",
@@ -12688,14 +12691,11 @@ window.spb = function(modules) {
             if (dateString.match("^[0-9]{4}-([1-9]|0[1-9]|1[0-2])$")) return dateString;
             if (dateString.match("^([1-9]|0[1-9]|1[0-2])/?([0-9]{4}|[0-9]{2})$")) {
                 var _dateString$split = dateString.split("/"), monthString = _dateString$split[0], yearString = _dateString$split[1];
-                var date = new Date(parseInt(2 === yearString.length ? "20" + yearString : yearString, 10), parseInt(monthString, 10));
-                var rawMonth = date.getMonth();
-                var formattedMonth = rawMonth < 10 ? "0" + rawMonth : rawMonth.toString();
-                return date.getFullYear() + "-" + formattedMonth;
+                return (2 === yearString.length ? "20" + yearString : yearString) + "-" + (1 === monthString.length ? "0" + monthString : monthString);
             }
             throw new Error("can not convert invalid expiry date: " + dateString);
         };
-        var convertCardToPaymentSource = function(card) {
+        var convertCardToPaymentSource = function(card, extraFields) {
             var paymentSource = {
                 card: {
                     number: card.number,
@@ -12703,6 +12703,7 @@ window.spb = function(modules) {
                     expiry: cardExpiryToPaymentSourceExpiry(card.expiry)
                 }
             };
+            extraFields && 0 !== Object.keys(extraFields).length && (paymentSource.card.billingAddress = extraFields.billingAddress);
             card.name && (paymentSource.card.name = card.name);
             card.postalCode && (paymentSource.card.billingAddress = {
                 postalCode: card.postalCode
@@ -12713,15 +12714,27 @@ window.spb = function(modules) {
             var _getCardFrames = getCardFrames();
             return Boolean(_getCardFrames.cardFrame || _getCardFrames.cardNumberFrame && _getCardFrames.cardCVVFrame && _getCardFrames.cardExpiryFrame);
         }
-        function reformatExpiry(expiry) {
-            if ("string" == typeof expiry) {
-                var _expiry$split = expiry.split("/");
-                return _expiry$split[1] + "-" + _expiry$split[0];
-            }
-        }
         var props_createVaultSetupToken = __webpack_require__("./src/props/createVaultSetupToken.js");
         var disallowedPropsWithSave = [ "onApprove", "onCancel", "onComplete", "createOrder" ];
         var api_api = __webpack_require__("./src/api/api.js");
+        var vault_without_purchase_onVaultWithoutPurchaseError = function(_ref) {
+            var vaultToken = _ref.vaultToken, onError = _ref.onError;
+            return function(error) {
+                !function(_ref5) {
+                    var _payload;
+                    var vaultToken = _ref5.vaultToken, error = _ref5.error;
+                    var payload = ((_payload = {})[sdk_constants_src.FPTI_KEY.ERROR_CODE] = "hcf_vault_without_purchase_error", 
+                    _payload[sdk_constants_src.FPTI_KEY.ERROR_DESC] = Object(src.stringifyErrorMessage)(error), 
+                    _payload);
+                    vaultToken && (payload.vault_token = vaultToken);
+                    Object(lib.getLogger)().track(payload);
+                }({
+                    vaultToken: vaultToken,
+                    error: error
+                });
+                onError(error);
+            };
+        };
         var cardField = {
             name: "card_field",
             setup: function() {},
@@ -12837,8 +12850,8 @@ window.spb = function(modules) {
                             return zalgo_promise_src.ZalgoPromise.try((function() {
                                 if (!hasCardFields()) throw new Error("Card fields not available to submit");
                                 var card = getCardFields();
-                                return cardProps.save ? function(_ref) {
-                                    var save = _ref.save, facilitatorAccessToken = _ref.facilitatorAccessToken, clientID = _ref.clientID, userIDToken = _ref.userIDToken, paymentSource = _ref.paymentSource;
+                                return cardProps.save ? function(_ref2) {
+                                    var save = _ref2.save, onError = _ref2.onError, facilitatorAccessToken = _ref2.facilitatorAccessToken, clientID = _ref2.clientID, userIDToken = _ref2.userIDToken, paymentSource = _ref2.paymentSource;
                                     var onApprove = save.onApprove;
                                     return (0, save.createVaultSetupToken)().then((function(vaultSetupToken) {
                                         return function(_ref) {
@@ -12865,36 +12878,56 @@ window.spb = function(modules) {
                                                     }
                                                 });
                                             }({
+                                                vaultSetupToken: vaultSetupToken,
                                                 clientID: clientID,
                                                 userIDToken: userIDToken,
-                                                vaultSetupToken: vaultSetupToken,
                                                 paymentSource: paymentSource
-                                            }).then((function() {
-                                                return onApprove({
-                                                    vaultSetupToken: vaultSetupToken
-                                                });
-                                            }));
+                                            });
+                                        })).then((function() {
+                                            return onApprove({
+                                                vaultSetupToken: vaultSetupToken
+                                            });
+                                        })).then((function() {
+                                            return vaultToken = {
+                                                vaultToken: vaultSetupToken
+                                            }.vaultToken, void Object(lib.getLogger)().track(((_getLogger$track = {})[sdk_constants_src.FPTI_KEY.TRANSITION] = "hcf_vault_without_purchase_success", 
+                                            _getLogger$track[sdk_constants_src.FPTI_KEY.EVENT_NAME] = "hcf_vault_without_purchase_success", 
+                                            _getLogger$track.vault_token = vaultToken, _getLogger$track));
+                                            var _getLogger$track, vaultToken;
+                                        })).catch(vault_without_purchase_onVaultWithoutPurchaseError({
+                                            onError: onError,
+                                            vaultToken: vaultSetupToken
                                         }));
+                                    })).catch(vault_without_purchase_onVaultWithoutPurchaseError({
+                                        onError: onError
                                     }));
                                 }({
                                     save: cardProps.save,
+                                    onError: cardProps.onError,
                                     facilitatorAccessToken: facilitatorAccessToken,
                                     clientID: cardProps.clientID,
                                     userIDToken: cardProps.userIDToken,
-                                    paymentSource: convertCardToPaymentSource(card)
+                                    paymentSource: convertCardToPaymentSource(card, extraFields)
                                 }) : cardProps.createOrder().then((function(orderID) {
-                                    var cardObject = Object(esm_extends.default)({
-                                        name: card.name,
-                                        number: card.number,
-                                        expiry: reformatExpiry(card.expiry),
-                                        security_code: card.cvv
-                                    }, extraFields);
-                                    card.name && (cardObject.name = card.name);
+                                    var payment_source = convertCardToPaymentSource(card, extraFields);
                                     var data = {
                                         payment_source: {
-                                            card: cardObject
+                                            card: (paymentSource = payment_source.card, Object.keys(paymentSource).reduce((function(newObj, key) {
+                                                var transformedKey = reformatBillingKeys(key);
+                                                if ("billingAddress" === key) {
+                                                    if (paymentSource.billingAddress && 0 !== Object.keys(paymentSource.billingAddress).length) {
+                                                        newObj.billing_address = {};
+                                                        Object.keys(paymentSource.billingAddress).forEach((function(billingKey) {
+                                                            var snakeCaseBillingKey = reformatBillingKeys(billingKey);
+                                                            newObj.billing_address[snakeCaseBillingKey] = paymentSource.billingAddress[billingKey];
+                                                        }));
+                                                    }
+                                                } else newObj[transformedKey] = paymentSource[key];
+                                                return newObj;
+                                            }), {}))
                                         }
                                     };
+                                    var paymentSource;
                                     return Object(api.confirmOrderAPI)(orderID, data, {
                                         facilitatorAccessToken: facilitatorAccessToken,
                                         partnerAttributionID: ""
@@ -14672,9 +14705,11 @@ window.spb = function(modules) {
             isEligible: function(_ref6) {
                 var _fundingEligibility$v;
                 var props = _ref6.props, serviceData = _ref6.serviceData;
-                var fundingSource = props.fundingSource, onShippingChange = props.onShippingChange, createBillingAgreement = props.createBillingAgreement, createSubscription = props.createSubscription, platform = props.platform;
+                var fundingSource = props.fundingSource, onShippingChange = props.onShippingChange, createBillingAgreement = props.createBillingAgreement, createSubscription = props.createSubscription, env = props.env, platform = props.platform;
                 var cookies = serviceData.cookies, merchantID = serviceData.merchantID, fundingEligibility = serviceData.fundingEligibility;
                 var isVenmoEligible = null == fundingEligibility || null == (_fundingEligibility$v = fundingEligibility.venmo) ? void 0 : _fundingEligibility$v.eligible;
+                var isVenmoButton = fundingSource === sdk_constants_src.FUNDING.VENMO;
+                var isLocalOrStageEnv = env === sdk_constants_src.ENV.LOCAL || env === sdk_constants_src.ENV.STAGE;
                 return !(!_ref6.config.firebase || platform && platform === sdk_constants_src.PLATFORM.DESKTOP && !isVenmoEligible || !canUsePopupAppSwitch({
                     fundingSource: fundingSource
                 }) && !canUseNativeQRCode({
@@ -14689,7 +14724,7 @@ window.spb = function(modules) {
                     return optOutLifetime > now;
                 }() || !isNativeOptedIn({
                     props: props
-                }) && (!cookies && fundingSource === sdk_constants_src.FUNDING.PAYPAL || !Object(src.supportsPopups)() || onShippingChange || createBillingAgreement || createSubscription || merchantID.length > 1 || !serviceData.featureFlags.isLsatUpgradable));
+                }) && (!cookies && fundingSource === sdk_constants_src.FUNDING.PAYPAL || !Object(src.supportsPopups)() || onShippingChange || createBillingAgreement || createSubscription || !isVenmoButton && isLocalOrStageEnv || merchantID.length > 1 || !serviceData.featureFlags.isLsatUpgradable));
             },
             isPaymentEligible: function(_ref7) {
                 var payment = _ref7.payment;
@@ -15282,7 +15317,7 @@ window.spb = function(modules) {
                                         },
                                         orderID: orderID
                                     });
-                                    if (buttonLabel === constants.BUTTON_LABEL.DONATE) {
+                                    if (!window.xprops.createBillingAgreement && buttonLabel === constants.BUTTON_LABEL.DONATE) {
                                         var category = constants.ITEM_CATEGORY.DONATION;
                                         var itemCategory = cart.category || "";
                                         itemCategory && itemCategory === category || triggerIntegrationError({
@@ -15473,7 +15508,7 @@ window.spb = function(modules) {
             }
         } catch (err) {}
         function setupButton(_ref) {
-            var facilitatorAccessToken = _ref.facilitatorAccessToken, eligibility = _ref.eligibility, fundingEligibility = _ref.fundingEligibility, buyerGeoCountry = _ref.buyerCountry, sdkMeta = _ref.sdkMeta, buyerAccessToken = _ref.buyerAccessToken, wallet = _ref.wallet, cookies = _ref.cookies, serverCSPNonce = _ref.cspNonce, serverMerchantID = _ref.merchantID, firebaseConfig = _ref.firebaseConfig, content = _ref.content, personalization = _ref.personalization, _ref$correlationID = _ref.correlationID, buttonCorrelationID = void 0 === _ref$correlationID ? "" : _ref$correlationID, _ref$brandedDefault = _ref.brandedDefault, brandedDefault = void 0 === _ref$brandedDefault ? null : _ref$brandedDefault, featureFlags = _ref.featureFlags, smartWalletOrderID = _ref.smartWalletOrderID, enableOrdersApprovalSmartWallet = _ref.enableOrdersApprovalSmartWallet, product = _ref.product;
+            var facilitatorAccessToken = _ref.facilitatorAccessToken, eligibility = _ref.eligibility, fundingEligibility = _ref.fundingEligibility, buyerGeoCountry = _ref.buyerCountry, sdkMeta = _ref.sdkMeta, buyerAccessToken = _ref.buyerAccessToken, wallet = _ref.wallet, cookies = _ref.cookies, serverCSPNonce = _ref.cspNonce, serverMerchantID = _ref.merchantID, firebaseConfig = _ref.firebaseConfig, content = _ref.content, personalization = _ref.personalization, _ref$correlationID = _ref.correlationID, buttonCorrelationID = void 0 === _ref$correlationID ? "" : _ref$correlationID, _ref$brandedDefault = _ref.brandedDefault, brandedDefault = void 0 === _ref$brandedDefault ? null : _ref$brandedDefault, featureFlags = _ref.featureFlags, smartWalletOrderID = _ref.smartWalletOrderID, enableOrdersApprovalSmartWallet = _ref.enableOrdersApprovalSmartWallet, product = _ref.product, dumbledoreCurrentReleaseHash = _ref.dumbledoreCurrentReleaseHash, dumbledoreServiceWorker = _ref.dumbledoreServiceWorker;
             if (!window.paypal) throw new Error("PayPal SDK not loaded");
             var clientID = window.xprops.clientID;
             buyerAccessToken && smartWalletOrderID && Object(lib.setBuyerAccessToken)(buyerAccessToken);
@@ -15495,7 +15530,7 @@ window.spb = function(modules) {
             var props = getButtonProps({
                 facilitatorAccessToken: facilitatorAccessToken,
                 brandedDefault: brandedDefault,
-                paymentSource: null,
+                paymentSource: enableOrdersApprovalSmartWallet ? sdk_constants_src.FUNDING.PAYPAL : null,
                 featureFlags: featureFlags,
                 enableOrdersApprovalSmartWallet: enableOrdersApprovalSmartWallet,
                 smartWalletOrderID: smartWalletOrderID
@@ -15816,7 +15851,7 @@ window.spb = function(modules) {
                     var _ref3;
                     return (_ref3 = {})[sdk_constants_src.FPTI_KEY.CONTEXT_TYPE] = constants.FPTI_CONTEXT_TYPE.BUTTON_SESSION_ID, 
                     _ref3[sdk_constants_src.FPTI_KEY.CONTEXT_ID] = buttonSessionID, _ref3[sdk_constants_src.FPTI_KEY.BUTTON_SESSION_UID] = buttonSessionID, 
-                    _ref3[sdk_constants_src.FPTI_KEY.BUTTON_VERSION] = "5.0.130", _ref3[constants.FPTI_BUTTON_KEY.BUTTON_CORRELATION_ID] = buttonCorrelationID, 
+                    _ref3[sdk_constants_src.FPTI_KEY.BUTTON_VERSION] = "5.0.131", _ref3[constants.FPTI_BUTTON_KEY.BUTTON_CORRELATION_ID] = buttonCorrelationID, 
                     _ref3[sdk_constants_src.FPTI_KEY.STICKINESS_ID] = Object(lib.isAndroidChrome)() ? stickinessID : null, 
                     _ref3[sdk_constants_src.FPTI_KEY.PARTNER_ATTRIBUTION_ID] = partnerAttributionID, 
                     _ref3[sdk_constants_src.FPTI_KEY.USER_ACTION] = commit ? sdk_constants_src.FPTI_USER_ACTION.COMMIT : sdk_constants_src.FPTI_USER_ACTION.CONTINUE, 
@@ -16058,6 +16093,16 @@ window.spb = function(modules) {
                     featureFlags: featureFlags
                 });
             }));
+            if (eligibility.isServiceWorkerEligible) {
+                Object(lib.getLogger)().info("SERVICE_WORKER_ELIGIBLE");
+                Object(lib.registerServiceWorker)({
+                    dumbledoreCurrentReleaseHash: dumbledoreCurrentReleaseHash,
+                    dumbledoreServiceWorker: dumbledoreServiceWorker
+                });
+            } else {
+                Object(lib.getLogger)().info("SERVICE_WORKER_NOT_ELIGIBLE");
+                Object(lib.unregisterServiceWorker)();
+            }
             return zalgo_promise_src.ZalgoPromise.hash({
                 initPromise: initPromise,
                 facilitatorAccessToken: facilitatorAccessToken,
@@ -16252,6 +16297,9 @@ window.spb = function(modules) {
         __webpack_require__.d(__webpack_exports__, "STATUS_CODES", (function() {
             return STATUS_CODES;
         }));
+        __webpack_require__.d(__webpack_exports__, "SERVICE_WORKER", (function() {
+            return SERVICE_WORKER;
+        }));
         var SMART_PAYMENT_BUTTONS = "smart-payment-buttons";
         var BUYER_INTENT = {
             PAY: "pay",
@@ -16290,7 +16338,8 @@ window.spb = function(modules) {
         };
         var CLASS = {
             LOADING: "paypal-button-loading",
-            CLICKED: "paypal-button-clicked"
+            CLICKED: "paypal-button-clicked",
+            BUTTON: "paypal-button"
         };
         var PREFER = {
             REPRESENTATION: "return=representation"
@@ -16486,6 +16535,13 @@ window.spb = function(modules) {
         var STATUS_CODES = {
             TOO_MANY_REQUESTS: 429
         };
+        var SERVICE_WORKER = {
+            SERVICE_WORKER_URL: "https://www.paypal.com/checkout-sw",
+            SW_SCOPE: "/checkoutweb",
+            GET_SW_LOGS_EVENT_NAME: "GET_SW_LOGS",
+            LOGS_CHANNEL_NAME: "logs-channel",
+            GET_SW_LOGS_RESPONSE_EVENT_NAME: "GET_SW_LOGS_RESPONSE"
+        };
     },
     "./src/lib/index.js": function(module, __webpack_exports__, __webpack_require__) {
         "use strict";
@@ -16597,6 +16653,12 @@ window.spb = function(modules) {
         }));
         __webpack_require__.d(__webpack_exports__, "prepareLatencyInstrumentationPayload", (function() {
             return prepareLatencyInstrumentationPayload;
+        }));
+        __webpack_require__.d(__webpack_exports__, "registerServiceWorker", (function() {
+            return registerServiceWorker;
+        }));
+        __webpack_require__.d(__webpack_exports__, "unregisterServiceWorker", (function() {
+            return unregisterServiceWorker;
         }));
         var util = __webpack_require__("./src/lib/util.js");
         var logger = __webpack_require__("./src/lib/logger.js");
@@ -16769,6 +16831,77 @@ window.spb = function(modules) {
                     }
                 }
             };
+        }
+        var SERVICE_WORKER_URL = constants.SERVICE_WORKER.SERVICE_WORKER_URL, SW_SCOPE = constants.SERVICE_WORKER.SW_SCOPE, GET_SW_LOGS_EVENT_NAME = constants.SERVICE_WORKER.GET_SW_LOGS_EVENT_NAME, LOGS_CHANNEL_NAME = constants.SERVICE_WORKER.LOGS_CHANNEL_NAME, GET_SW_LOGS_RESPONSE_EVENT_NAME = constants.SERVICE_WORKER.GET_SW_LOGS_RESPONSE_EVENT_NAME;
+        var LOG_PREFIX = "SERVICE_WORKER_";
+        var broadcastChannel = {};
+        var requestSwLogs = function() {
+            broadcastChannel.postMessage({
+                type: GET_SW_LOGS_EVENT_NAME
+            });
+        };
+        var register_service_worker_unRegisterButtonHandlers = function() {
+            var paypalButtons = document.getElementsByClassName(constants.CLASS.BUTTON);
+            for (var i = 0; i < paypalButtons.length; i++) paypalButtons[i].removeEventListener("click", requestSwLogs);
+        };
+        function registerServiceWorker(_ref) {
+            var dumbledoreCurrentReleaseHash = _ref.dumbledoreCurrentReleaseHash, dumbledoreServiceWorker = _ref.dumbledoreServiceWorker;
+            if ("serviceWorker" in navigator != 0) if (dumbledoreCurrentReleaseHash) if (dumbledoreServiceWorker) try {
+                !function() {
+                    var paypalButtons = document.getElementsByClassName(constants.CLASS.BUTTON);
+                    for (var i = 0; i < paypalButtons.length; i++) paypalButtons[i].addEventListener("click", requestSwLogs);
+                }();
+                (broadcastChannel = new BroadcastChannel(LOGS_CHANNEL_NAME)).addEventListener("message", (function(event) {
+                    var _event$data = event.data, _event$data$payload = _event$data.payload, payload = void 0 === _event$data$payload ? [] : _event$data$payload;
+                    payload && _event$data.eventName === GET_SW_LOGS_RESPONSE_EVENT_NAME && Object(logger.getLogger)().info(LOG_PREFIX + "LOGS", {
+                        logs: JSON.stringify(payload)
+                    });
+                }));
+                !function(releaseHash, serviceWorker) {
+                    var swUrl = SERVICE_WORKER_URL + "/" + serviceWorker + "?releaseHash=" + releaseHash;
+                    Object(logger.getLogger)().info(LOG_PREFIX + "REGISTER_START", {
+                        url: swUrl
+                    });
+                    !function(swUrl) {
+                        var _navigator$serviceWor;
+                        null == (_navigator$serviceWor = navigator.serviceWorker) || _navigator$serviceWor.register(swUrl, {
+                            scope: SW_SCOPE
+                        }).then((function(registration) {
+                            Object(logger.getLogger)().info(LOG_PREFIX + "REGISTERED");
+                            registration.addEventListener("updatefound", (function() {
+                                var installingWorker = registration.installing;
+                                installingWorker && installingWorker.addEventListener("statechange", (function() {
+                                    "activated" === installingWorker.state && requestSwLogs();
+                                    Object(logger.getLogger)().info(LOG_PREFIX + "REGISTERING: " + installingWorker.state);
+                                }));
+                            }));
+                        })).catch((function(err) {
+                            Object(logger.getLogger)().error(LOG_PREFIX + "ERROR_REGISTERING", {
+                                err: Object(belter_src.stringifyError)(err)
+                            });
+                            register_service_worker_unRegisterButtonHandlers();
+                        }));
+                    }(swUrl);
+                }(dumbledoreCurrentReleaseHash, dumbledoreServiceWorker);
+            } catch (err) {
+                Object(logger.getLogger)().error(LOG_PREFIX + "ERROR_DURING_INITIALIZATION", {
+                    err: Object(belter_src.stringifyError)(err)
+                });
+            } else Object(logger.getLogger)().error(LOG_PREFIX + "SERVICE_WORKER_URL_NOT_PROVIDED", {
+                serviceWorker: dumbledoreServiceWorker
+            }); else Object(logger.getLogger)().error(LOG_PREFIX + "RELEASE_HASH_NOT_PROVIDED", {
+                releaseHash: dumbledoreCurrentReleaseHash
+            }); else Object(logger.getLogger)().info(LOG_PREFIX + "NOT_SUPPORTED");
+        }
+        function unregisterServiceWorker() {
+            if ("serviceWorker" in navigator) {
+                var _navigator$serviceWor2;
+                null == (_navigator$serviceWor2 = navigator.serviceWorker) || _navigator$serviceWor2.ready.then((function(registration) {
+                    Object(logger.getLogger)().info(LOG_PREFIX + "UNREGISTER");
+                    registration.unregister();
+                    register_service_worker_unRegisterButtonHandlers();
+                }));
+            }
         }
     },
     "./src/lib/logger.js": function(module, __webpack_exports__, __webpack_require__) {
