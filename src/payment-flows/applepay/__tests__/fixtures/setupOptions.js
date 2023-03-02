@@ -199,6 +199,9 @@ export default {
       satispay: {
         eligible: false,
       },
+      paidy: {
+        eligible: false,
+      },
     },
     wallet: {
       paypal: {

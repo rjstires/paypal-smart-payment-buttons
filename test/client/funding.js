@@ -351,4 +351,33 @@ describe('funding source cases', () => {
             await clickButton(fundingSource);
         });
     });
+
+    it('should render a button, click the button, and render checkout with paidy funding source', async () => {
+        return await wrapPromise(async ({ expect }) => {
+            const fundingSource = FUNDING.PAIDY;
+
+            mockFunction(window.paypal, 'Checkout', expect('Checkout', ({ args: [ props ] }) => {
+                if (props.fundingSource !== fundingSource) {
+                    throw new Error(`Expected fundingSource to be ${ fundingSource }, got ${ props.fundingSource }`);
+                }
+
+                return {
+                    renderTo: promiseNoop
+                };
+            }));
+
+            const fundingEligibility = {
+                paidy: {
+                    eligible: true,
+                    branded: false
+                }
+            };
+
+            createButtonHTML({ fundingEligibility });
+
+            await mockSetupButton({ merchantID: [ 'XYZ12345' ], fundingEligibility });
+
+            await clickButton(fundingSource);
+        });
+    });
 });
