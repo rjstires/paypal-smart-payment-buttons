@@ -195,11 +195,11 @@ export default {
       },
       multibanco: {
         eligible: false,
-      }, 
-      paidy: {
-        eligible: false,
       },
       satispay: {
+        eligible: false,
+      },
+      paidy: {
         eligible: false,
       },
     },
