@@ -1,0 +1,10 @@
+.husky/
+.npm
+.nvm
+.vscode/
+cdn/
+config/
+coverage/
+dist/
+flow-typed/
+node_modules/

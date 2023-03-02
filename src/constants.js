@@ -28,17 +28,18 @@ export const HEADERS = {
 };
 
 export const DATA_ATTRIBUTES = {
-    FUNDING_SOURCE:      'data-funding-source',
-    CARD:                'data-card',
-    PAYMENT_METHOD_ID:   'data-payment-method-id',
-    INSTRUMENT_ID:       'data-instrument-id',
-    INSTRUMENT_TYPE:     'data-instrument-type',
-    MENU:                'data-menu',
-    NONCE:               'data-nonce',
-    RENDER_VERSION:      'data-render-version',
-    CLIENT_VERSION:      'data-client-version',
-    PAY_NOW:             'data-pay-now',
-    RESPONSE_START_TIME: 'data-response-start-time'
+    FUNDING_SOURCE:            'data-funding-source',
+    CARD:                      'data-card',
+    PAYMENT_METHOD_ID:         'data-payment-method-id',
+    INSTRUMENT_ID:             'data-instrument-id',
+    INSTRUMENT_TYPE:           'data-instrument-type',
+    SECONDARY_INSTRUMENT_TYPE: 'data-secondary-instrument-type',
+    MENU:                      'data-menu',
+    NONCE:                     'data-nonce',
+    RENDER_VERSION:            'data-render-version',
+    CLIENT_VERSION:            'data-client-version',
+    PAY_NOW:                   'data-pay-now',
+    RESPONSE_START_TIME:       'data-response-start-time'
 };
 
 export const CLASS = {
@@ -87,9 +88,11 @@ export const FPTI_CONTEXT_TYPE = {
 };
 
 export const FPTI_STATE = {
-    BUTTON:   ('smart_button' : 'smart_button'),
-    WALLET:   ('smart_wallet' : 'smart_wallet'),
-    PXP:      ('PXP_CHECK' : 'PXP_CHECK')
+    BUTTON:            ('smart_button' : 'smart_button'),
+    CARD:               ('card_field': 'card_field'),
+    WALLET:            ('smart_wallet' : 'smart_wallet'),
+    PXP:               ('PXP_CHECK' : 'PXP_CHECK'),
+    ELIGIBILITY_CHECK: ('eligibility_check' : 'eligibility_check')
 };
 
 export const FPTI_TRANSITION = {
@@ -180,7 +183,9 @@ export const FPTI_TRANSITION = {
     
     HONEY_IDENTIFY:                         ('honey_identify' : 'honey_identify'),
     
-    CALL_REST_API:                          ('call_rest_api' : 'call_rest_api')
+    CALL_REST_API:                          ('call_rest_api' : 'call_rest_api'),
+
+    ORDER_VALIDATE:                         ('process_order_validate', 'process_order_validate')
 };
 
 export const FPTI_MENU_OPTION = {
@@ -242,7 +247,8 @@ export const FRAME_NAME = {
     CARD_NUMBER_FIELD: 'card-number-field',
     CARD_CVV_FIELD:    'card-cvv-field',
     CARD_EXPIRY_FIELD: 'card-expiry-field',
-    CARD_NAME_FIELD:   'card-name-field'
+    CARD_NAME_FIELD:   'card-name-field',
+    CARD_POSTAL_FIELD: 'card-postal-field'
 };
 
 export const AMPLITUDE_KEY = {

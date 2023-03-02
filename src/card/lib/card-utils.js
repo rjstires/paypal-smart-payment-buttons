@@ -1,73 +1,27 @@
 /* @flow */
 
-import { camelToDasherize, noop, values } from '@krakenjs/belter';
-import creditCardType from 'credit-card-type';
-import luhn10 from 'card-validator/src/luhn-10';
-import cardValidator from 'card-validator';
+import { values } from '@krakenjs/belter';
 
-import type { CardType, CardNavigation, InputState, FieldValidity, FieldStyle, InputEvent, Card, ExtraFields } from '../types';
-import { CARD_ERRORS, FIELD_STYLE, VALIDATOR_TO_TYPE_MAP, DEFAULT_CARD_TYPE, GQL_ERRORS, CARD_FIELD_TYPE, VALID_EXTRA_FIELDS } from '../constants';
-import { getActiveElement } from '../../lib/dom';
-
-// Add additional supported card types
-creditCardType.addCard({
-    code: {
-        name: 'CVV',
-        size: 3
-    },
-    gaps:     [ 4, 8, 12 ],
-    lengths:  [ 16, 18, 19 ],
-    niceType: 'Carte Bancaire',
-    patterns: [],
-    type:     'cb-nationale'
-});
-
-creditCardType.addCard({
-    code: {
-        name: 'CVV',
-        size: 3
-    },
-    gaps:     [ 4, 8, 12, 16 ],
-    lengths:  [ 19 ],
-    niceType: 'Carte Aurore',
-    patterns: [],
-    type:     'cetelem'
-});
-
-creditCardType.addCard({
-    code: {
-        name: '',
-        size: 0
-    },
-    gaps:     [ 4, 8, 12, 16 ],
-    lengths:  [ 17 ],
-    niceType: 'Cofinoga ou Privilège',
-    patterns: [],
-    type:     'cofinoga'
-});
-
-creditCardType.addCard({
-    code: {
-        name: '',
-        size: 0
-    },
-    gaps:     [ 4, 8 ],
-    lengths:  [ 8, 9 ],
-    niceType: '4 étoiles',
-    patterns: [],
-    type:     'cofidis'
-});
-
-export const defaultNavigation : CardNavigation = {
-    next:     () => noop,
-    previous: () => noop
-};
+import type { InputState, FieldValidity, ExtraFields, CardType, ParsedCardType } from '../types';
+import {
+    CARD_ERRORS,
+    CARD_FIELD_TYPE,
+    DEFAULT_STYLE,
+    FIELD_STYLE,
+    FILTER_CSS_SELECTORS,
+    FILTER_CSS_VALUES,
+    GQL_ERRORS,
+    VALID_EXTRA_FIELDS,
+    ALLOWED_ATTRIBUTES
+} from '../constants';
+import { getLogger } from '../../lib';
 
 export const defaultInputState : InputState = {
     inputValue:         '',
     maskedInputValue:   '',
     cursorStart:        0,
     cursorEnd:          0,
+    isFocused:          false,
     keyStrokeCount:     0,
     isPotentiallyValid:  true,
     isValid:            false
@@ -78,7 +32,6 @@ export const initFieldValidity : FieldValidity = { isValid: false, isPotentially
 export function splice(str : string, idx : number, insert : string) : string {
     return str.slice(0, idx) + insert + str.slice(idx);
 }
-
 
 export function assertType(assertion : () => void, errorMsg : string) : void | TypeError {
     if (!assertion) {
@@ -95,42 +48,6 @@ export function removeSpaces(value : string) : string {
     return value.replace(/\s/g, '');
 }
 
-// Detect the card type metadata for a card number
-export function detectCardType(number : string) : CardType {
-    const cardType = creditCardType(number)?.[0];
-
-    if (cardType) {
-        return {
-            ...cardType,
-            type: VALIDATOR_TO_TYPE_MAP[cardType.type]
-        };
-    }
-
-    return DEFAULT_CARD_TYPE;
-}
-
-// Mask a card number for display given a card type. If a card type is
-// not provided, attempt to detect it and mask based on that type.
-export function maskCard(number : string, cardType? : CardType) : string {
-    assertString(number);
-    number = number.trim().replace(/[^0-9]/g, '').replace(/\s/g, '');
-    // $FlowFixMe
-    const gaps = cardType?.gaps || detectCardType(number)?.gaps;
-
-    if (gaps) {
-        for (let idx = 0; idx < gaps.length; idx++) {
-            const splicePoint = gaps[idx] + idx;
-            if (splicePoint > number.length - 1) {
-                // We're beyond the end of the number
-                break;
-            }
-
-            number = splice(number, splicePoint, ' ');
-        }
-    }
-    return number;
-}
-
 // Return the last 4 digits of a valid card number
 export function maskValidCard(number : string) : string {
     const trimmedValue = removeSpaces(number);
@@ -140,84 +57,114 @@ export function maskValidCard(number : string) : string {
     return maskedNumber + lastFour;
 }
 
-export function removeDateMask(date : string) : string {
-    return date.trim().replace(/\s|\//g, '');
+export function shouldUseZeroPaddedExpiryPattern(value: string, key: string) : boolean {
+    if (value.length === 0) {
+        return false;
+    }
+    if (value[0] === "1" && key === "/") {
+        return true;
+    }
+    if (value[0] !== "1" && value[0] !== "0") {
+        return true;
+    }
+    if (value[0] === "1") {
+        return false;
+    }
+    return false;
 }
 
-
-// Format expiry date
-export function formatDate(date : string, prevFormat? : string = '') : string {
-    assertString(date);
-
-    if (prevFormat && prevFormat.includes('/')) {
-        const [ month ] = removeSpaces(prevFormat).split('/');
-        if (month.length < 2) {
-            return prevFormat;
-        }
-    }
-
-    if (date.trim().slice(-1) === '/') {
-        return date.slice(0, 2);
-    }
-
-    date = removeDateMask(date);
-
-    if (date.length < 2) {
-        const first = date[0];
-        if (parseInt(first, 10) > 1) {
-            return `0${ first } / `;
-        }
-        return date;
-    }
-
-    const month = date.slice(0, 2);
-    if (parseInt(month, 10) > 12) {
-        const first = month[0];
-        const second = month[1];
-        return `0${ first } / ${ second }`;
-    }
-
-    const year = date.slice(2, 4);
-    return `${ month } / ${ year }`;
-
+// from https://github.com/braintree/inject-stylesheet/blob/main/src/lib/filter-style-values.ts
+function isValidValue(value : string | number) : boolean {
+    return !FILTER_CSS_VALUES.some((regex) => regex.test(String(value)));
 }
 
-// Removed invalid and/or unsupported style props
-export function filterStyles(rawStyles : Object = {}) : FieldStyle {
-    const camelKey = Object.keys(FIELD_STYLE);
-    const dashKey = values(FIELD_STYLE);
+// from https://github.com/braintree/inject-stylesheet/blob/main/src/lib/validate-selector.ts
+function isValidSelector(selector : string) : boolean {
+    return !FILTER_CSS_SELECTORS.some((regex) => regex.test(selector));
+}
 
-    // $FlowFixMe
-    return Object.keys(rawStyles).reduce((acc : Object, key : string) => {
-        if (typeof rawStyles[key] === 'object') {
-            acc[key] = rawStyles[key];
-        } else if (camelKey.includes(key) || dashKey.includes(key)) {
-            acc[key] = rawStyles[key];
+export function isValidAttribute(attribute: string) : boolean {
+    if(!ALLOWED_ATTRIBUTES.includes(attribute.toLocaleLowerCase())) {
+        getLogger().warn('attribute_warning', { warn: `HTML Attribute "${attribute}" was ignored. See allowed attribute list.`})
+        return false
+    };
+
+    return true
+}
+
+export function filterStyle(style : Object) : Object {
+    const result = {};
+    Object.keys(style).forEach((key) => {
+        const value = style[key];
+        // if the key is pointing to a string or a number, it must be a CSS property
+        if (typeof value === 'string' || typeof value === 'number') {
+            // so normalize the property name and filter based on FIELD_STYLE (allow list)
+            let property;
+            if (FIELD_STYLE[key]) {
+                // normalize from camelCase to kebab-case
+                property = FIELD_STYLE[key];
+                if (isValidValue(value)) {
+                    result[property] = value;
+                }
+            } else if (values(FIELD_STYLE).includes(key.toLowerCase())) {
+                // normalize to lower case
+                property = key.toLowerCase();
+                if (isValidValue(value)) {
+                    result[property] = value;
+                }
+            } else {
+                getLogger().warn('style_warning', { warn: `CSS property "${key}" was ignored. See allowed CSS property list.`});
+            }
+        // if the key is pointing to an object, it must be a CSS selector
+        } else if (typeof value === 'object') {
+            if (isValidSelector(key)) {
+                // so normalize the object it's pointing to
+                result[key] = filterStyle(value);
+            }
         }
-        return acc;
-    }, { });
-
+    });
+    return result;
 }
 
 // Converts style object to valid style string
 export function styleToString(style : Object = { }) : string {
-    const filteredStyles = filterStyles(style);
-    return Object.keys(filteredStyles).reduce((acc : string, key : string) => (
-        `${ acc }  ${ camelToDasherize(key) } ${ typeof style[key] === 'object' ? `{ ${ styleToString(style[key]) } }` : `: ${ style[key] } ;` }`
-    ), '');
+    const s = [];
+    Object.keys(style).forEach((key) => {
+        const value = style[key];
+        if (typeof value === 'string' || typeof value === 'number') {
+            s.push(` ${ key }: ${ value };`);
+        } else if (typeof value === 'object') {
+            s.push(`${ key } {`);
+            s.push(styleToString(value));
+            s.push('}');
+        }
+    });
+    return s.join('\n');
 }
 
-// Destructures nested style objects
-export function getStyles(style : Object) : [Object, Object] {
-    // $FlowFixMe
-    return Object.keys(style).reduce((acc : [{| |}, {| |}], key : string) => {
-        if (typeof style[key] === 'object') {
-            acc[0][key] = style[key];
-        } else {
-            acc[1][key] = style[key];
+// convert default and custom styles to CSS text
+export function getCSSText(cardFieldStyle : Object, customStyle : Object) : string {
+    const s = [];
+    s.push('/* default style */');
+    s.push(styleToString(DEFAULT_STYLE));
+    s.push(styleToString(cardFieldStyle));
+    s.push('/* custom style */');
+    s.push(styleToString(filterStyle(customStyle)));
+    return s.join('\n');
+}
+
+// mark the ref's HTMLElement as valid or invalid
+export function markValidity(ref : Object, validity : FieldValidity, hasFocus?: boolean, touched?: boolean ) {
+    const element = ref?.current?.base;
+    if (element) {
+        if (validity.isValid || (validity.isPotentiallyValid && hasFocus)) {
+            element.classList.add('valid');
+            element.classList.remove('invalid');
+        } else if(touched){
+            element.classList.add('invalid');
+            element.classList.remove('valid');
         }
-        return acc;
-    }, [ {}, {} ]);
+    }
 }
 
 export function removeNonDigits(value : string) : string {
@@ -229,76 +176,19 @@ export function checkForNonDigits(value : string) : boolean {
     return (/\D/g).test(removeSpaces(value));
 }
 
-export function getCvvLength(cardType? : CardType) : number {
-    if (cardType && typeof cardType === 'object') {
-        const { code } = cardType;
+export function setErrors({ isCardEligible, isNumberValid, isCvvValid, isExpiryValid, isNameValid, isPostalCodeValid, gqlErrorsObject = {} } : {| isCardEligible? : boolean, isNumberValid? : boolean, isCvvValid? : boolean, isExpiryValid? : boolean, isNameValid? : boolean, isPostalCodeValid? : boolean, gqlErrorsObject? : {| field : string, errors : [] |} |}) : [$Values<typeof CARD_ERRORS>] | [] {
+    const errors = [];
+    const { field, errors: gqlErrors } = gqlErrorsObject;
 
-        if (typeof code === 'object') {
-            const { size } = code;
-
-            if (typeof size === 'number') {
-                return size;
-            }
+    if (isCardEligible === false) {
+        if (field === CARD_FIELD_TYPE.NUMBER && gqlErrors.length) {
+            errors.push(...gqlErrors);
+        } else {
+            errors.push(CARD_ERRORS.INELIGIBLE_CARD_VENDOR);
         }
     }
 
-    return 3;
-}
-
-export function checkCardNumber(value : string, cardType : CardType) : {| isValid : boolean, isPotentiallyValid : boolean |} {
-    const trimmedValue = removeSpaces(value);
-    const { lengths } = cardType;
-
-    const validLength = lengths.some((length) => length === trimmedValue.length);
-    const validLuhn = luhn10(trimmedValue);
-
-    const maxLength = Math.max.apply(null, lengths);
-
-    return {
-        isValid:            validLength && validLuhn,
-        isPotentiallyValid: validLength || trimmedValue.length < maxLength
-    };
-}
-
-export function checkCVV(value : string, cardType : CardType) : {| isValid : boolean, isPotentiallyValid : boolean |} {
-    let isValid = false;
-    if (value.length === getCvvLength(cardType)) {
-        isValid = true;
-    }
-    return {
-        isValid,
-        isPotentiallyValid: true
-    };
-}
-
-export function checkName(value : string) : {| isValid : boolean, isPotentiallyValid : boolean |} {
-    let isValid = false;
-    if (value.length >= 1 && value.length <= 255) {
-        isValid = true;
-    }
-    return {
-        isValid,
-        isPotentiallyValid: true
-    };
-}
-
-export function checkExpiry(value : string) : {| isValid : boolean, isPotentiallyValid : boolean |} {
-    const { expirationDate } = cardValidator;
-    const { isValid } = expirationDate(value);
-
-    return {
-        isValid,
-        isPotentiallyValid: true
-    };
-}
-
-export function setErrors({ isNumberValid, isCvvValid, isExpiryValid, isNameValid, gqlErrorsObject = {} } : {| isNumberValid? : boolean, isCvvValid? : boolean, isExpiryValid? : boolean, isNameValid? : boolean, gqlErrorsObject? : {| field : string, errors : [] |} |}) : [$Values<typeof CARD_ERRORS>] | [] {
-    const errors = [];
-
-    const { field, errors: gqlErrors } = gqlErrorsObject;
-
     if (isNumberValid === false) {
-
         if (field === CARD_FIELD_TYPE.NUMBER && gqlErrors.length) {
             errors.push(...gqlErrors);
         } else {
@@ -307,17 +197,14 @@ export function setErrors({ isNumberValid, isCvvValid, isExpiryValid, isNameVali
     }
 
     if (isExpiryValid === false) {
-
         if (field === CARD_FIELD_TYPE.EXPIRY  && gqlErrors.length) {
             errors.push(...gqlErrors);
         } else {
             errors.push(CARD_ERRORS.INVALID_EXPIRY);
         }
-
     }
 
     if (isCvvValid === false) {
-
         if (field === CARD_FIELD_TYPE.CVV  && gqlErrors.length) {
             errors.push(...gqlErrors);
         } else {
@@ -326,7 +213,6 @@ export function setErrors({ isNumberValid, isCvvValid, isExpiryValid, isNameVali
     }
 
     if (isNameValid === false) {
-
         if (field === CARD_FIELD_TYPE.NAME && gqlErrors.length) {
             errors.push(...gqlErrors);
         } else {
@@ -334,49 +220,15 @@ export function setErrors({ isNumberValid, isCvvValid, isExpiryValid, isNameVali
         }
     }
 
-    return errors;
-}
-
-// Move cursor within a field
-export function moveCursor(element : HTMLInputElement, start : number, end? : number) : void {
-    window.requestAnimationFrame(() => {
-        element.selectionStart = start;
-        element.selectionEnd = end ?? start;
-    });
-}
-
-// Navigation helper to go to the next field putting the cursor at the start
-export function goToNextField(ref : {| current : {| base : HTMLInputElement |} |}) : () => void {
-    return () => {
-        moveCursor(ref.current.base, 0);
-        setTimeout(() => ref.current.base.focus());
-    };
-}
-
-// Navigation helper to go to the previous field putting the curser at the end
-export function goToPreviousField(ref : {| current : {| base : HTMLInputElement |} |}) : () => void {
-    return () => {
-        const { value } = ref.current.base;
-
-        if (value) {
-            const valueLength = value.length;
-            moveCursor(ref.current.base, valueLength);
+    if (isPostalCodeValid === false) {
+        if (field === CARD_FIELD_TYPE.POSTAL && gqlErrors.length) {
+            errors.push(...gqlErrors);
+        } else {
+            errors.push(CARD_ERRORS.INVALID_POSTAL);
         }
-        setTimeout(() => ref.current.base.focus());
-    };
-}
-
-// Navigate between fields using the arrow keys and/or the backspace
-export function navigateOnKeyDown(event : InputEvent, navigation : CardNavigation) : void {
-    const { target: { value, selectionStart, selectionEnd }, key } = event;
-
-    if (selectionStart === 0 && (value.length === 0 || value.length !== selectionEnd)  && [ 'Backspace', 'ArrowLeft' ].includes(key)) {
-        navigation.previous();
     }
 
-    if (selectionStart === value.length && [ 'ArrowRight' ].includes(key)) {
-        navigation.next();
-    }
+    return errors;
 }
 
 // Format expity date to MM/YYYY
@@ -391,71 +243,6 @@ export function convertDateFormat(date : string) : string {
     }
 
     return formattedDate;
-}
-
-
-// Safari (both iOS and Desktop) has an unconvential behavior,
-// where it won't let an iframe that includes an input get
-// focus programatically from outisde of the input.
-// Big props to the devs at Stripe that figured out
-// you run this selection range hack to force the focus back
-// onto the input.
-function applyFocusWorkaroundForSafari (input : HTMLInputElement) {
-    const inputIsEmptyInitially = input.value === '';
-
-    // Safari can't set selection if the input is empty
-    if (inputIsEmptyInitially) {
-        input.value = ' ';
-    }
-
-    const start = input.selectionStart;
-    const end = input.selectionEnd;
-
-    input.setSelectionRange(0, 0);
-    input.setSelectionRange(start, end);
-
-    if (inputIsEmptyInitially) {
-        input.value = '';
-    }
-}
-
-export function autoFocusOnFirstInput(input? : HTMLInputElement) {
-    if (!input) {
-        return;
-    }
-
-    window.addEventListener('focus', () => {
-        // the set timeout is required here, because in some browsers (Firefox, for instance)
-        // when tabbing backward into the iframe, it will have the html element focussed
-        // initially, but then passes focus to the input
-        setTimeout(() => {
-            const activeEl = getActiveElement();
-
-            if (activeEl !== document.body && activeEl !== document.documentElement) {
-                return;
-            }
-
-            applyFocusWorkaroundForSafari(input);
-
-            // for Safari, setting the selection range is enough to give
-            // it focus, but Firefox requires an explicit focus call.
-            // Also, just calling `focus` on Safari does not work at all
-            input.focus();
-        }, 1);
-    });
-}
-
-// Function that returns the field value in the correct format
-export function formatFieldValue(value : string | Card) : string | Card {
-    let newValue;
-    // Single card field case
-    if (typeof value === 'object') {
-        newValue = { ...value };
-    // Individual field case
-    } else {
-        newValue = value;
-    }
-    return newValue;
 }
 
 // Parse errors from ProcessPayment GQL mutation
@@ -516,4 +303,26 @@ export function filterExtraFields(extraData : Object) : ExtraFields | Object {
         }
         return acc;
     }, {});
+}
+
+
+export function parsedCardType(potentialCardTypes: $ReadOnlyArray<CardType>) : $ReadOnlyArray<ParsedCardType> {
+    
+    return potentialCardTypes.map(({ type, niceType, code }) => ({
+        type, niceType, code
+      }));
+    
+}
+
+export function getContext(win : Object) : string {
+    return win.xprops?.parent?.uid || win.xprops?.uid;
+}
+
+export function kebabToCamelCase(field: string): string {
+    const camelCase = field.split("-");
+    camelCase.forEach((word, i) => {
+        camelCase[i] =  i !== 0 ? word.toLowerCase().replace(/^\w/, c => c.toUpperCase()) : word.toLowerCase();
+        
+    })
+    return camelCase.join("");
 }

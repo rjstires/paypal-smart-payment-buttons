@@ -3,7 +3,7 @@
 
 import { ZalgoPromise } from '@krakenjs/zalgo-promise/src';
 import { CURRENCY, FPTI_KEY, FUNDING, WALLET_INSTRUMENT, INTENT } from '@paypal/sdk-constants/src';
-import { request, noop, memoize, uniqueID, stringifyError } from '@krakenjs/belter/src';
+import { request, noop, memoize, stringifyError } from '@krakenjs/belter/src';
 
 import { SMART_API_URI, ORDERS_API_URL, VALIDATE_PAYMENT_METHOD_API } from '../config';
 import { getLogger, setBuyerAccessToken } from '../lib';
@@ -621,10 +621,17 @@ type OneClickApproveOrderOptions = {|
     instrumentType : $Values<typeof WALLET_INSTRUMENT>,
     instrumentID : string,
     buyerAccessToken : string,
-    clientMetadataID : ?string
+    clientMetadataID : ?string,
+    planID? : ?string,
+    useExistingPlanning? : boolean,
+    enableOrdersApprovalSmartWallet? : boolean
 |};
 
-export function oneClickApproveOrder({ orderID, instrumentType, instrumentID, buyerAccessToken, clientMetadataID } : OneClickApproveOrderOptions) : ZalgoPromise<ApproveData> {
+export function oneClickApproveOrder({ orderID, instrumentType, instrumentID, buyerAccessToken, clientMetadataID, planID, useExistingPlanning = false, enableOrdersApprovalSmartWallet } : OneClickApproveOrderOptions) : ZalgoPromise<ApproveData> {
+    const accessTokenQuery = `auth {
+        accessToken
+    }`;
+
     return callGraphQL({
         name:  'OneClickApproveOrder',
         query: `
@@ -632,27 +639,31 @@ export function oneClickApproveOrder({ orderID, instrumentType, instrumentID, bu
                 $orderID : String!
                 $instrumentType : String!
                 $instrumentID : String!
+                $planID: String
+                $useExistingPlanning: Boolean
             ) {
                 oneClickPayment(
                     token: $orderID
                     selectedInstrumentType : $instrumentType
                     selectedInstrumentId : $instrumentID
+                    selectedPlanId: $planID
+                    useExistingPlanning: $useExistingPlanning
                 ) {
                     userId
-                    auth {
-                        accessToken
-                    }
+                    ${ !enableOrdersApprovalSmartWallet ? accessTokenQuery : '' }
                 }
             }
         `,
-        variables: { orderID, instrumentType, instrumentID },
+        variables: { orderID, instrumentType, instrumentID, planID, useExistingPlanning },
         headers:   {
             [HEADERS.ACCESS_TOKEN]:       buyerAccessToken,
             [HEADERS.CLIENT_CONTEXT]:     orderID,
             [HEADERS.CLIENT_METADATA_ID]: clientMetadataID || orderID
         }
     }).then(({ oneClickPayment }) => {
-        setBuyerAccessToken(oneClickPayment?.auth?.accessToken);
+        if (oneClickPayment?.auth?.accessToken) {
+            setBuyerAccessToken(oneClickPayment.auth.accessToken);
+        }
         return {
             payerID: oneClickPayment.userId
         };
@@ -954,29 +965,6 @@ export function updateButtonClientConfig({ orderID, productFlow, fundingSource, 
         userExperienceFlow:  userExperienceFlow ? userExperienceFlow : experienceFlow,
         productFlow:         productFlow || PRODUCT_FLOW.SMART_PAYMENT_BUTTONS,
         buttonSessionID
-    });
-}
-
-type TokenizeCardOptions = {|
-    card : {|
-        number : string,
-        cvv? : string,
-        expiry? : string,
-        name? : string
-    |}
-|};
-
-type TokenizeCardResult = {|
-    paymentMethodToken : string
-|};
-
-export function tokenizeCard({ card } : TokenizeCardOptions) : ZalgoPromise<TokenizeCardResult> {
-    return ZalgoPromise.try(() => {
-        // eslint-disable-next-line no-console
-        console.info('Card Tokenize GQL mutation not yet implemented', { card });
-        return {
-            paymentMethodToken: uniqueID()
-        };
     });
 }
 

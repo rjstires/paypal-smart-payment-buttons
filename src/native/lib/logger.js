@@ -24,7 +24,7 @@ type NativeLoggerOptions = {|
 export function setupNativeLogger({ env, sessionID, buttonSessionID, sdkCorrelationID, clientID, fundingSource, sdkVersion, locale, buyerCountry } : NativeLoggerOptions) : LoggerType {
     const logger = getLogger();
 
-    setupLogger({ env, sessionID, clientID, sdkCorrelationID, locale, sdkVersion, buyerCountry, fundingSource });
+    setupLogger({ env, sessionID, clientID, sdkCorrelationID, locale, sdkVersion, buyerCountry });
     enableAmplitude({ env });
 
     logger.addPayloadBuilder(() => {
@@ -42,6 +42,7 @@ export function setupNativeLogger({ env, sessionID, buttonSessionID, sdkCorrelat
             [FPTI_KEY.CONTEXT_ID]:                   buttonSessionID,
             [FPTI_KEY.BUTTON_SESSION_UID]:           buttonSessionID,
             [FPTI_KEY.BUTTON_VERSION]:               __SMART_BUTTONS__.__MINOR_VERSION__,
+            [FPTI_KEY.CHOSEN_FUNDING]:               fundingSource,
             [AMPLITUDE_KEY.USER_ID]:                 buttonSessionID,
             [AMPLITUDE_KEY.TIME]:                    Date.now().toString()
         };

@@ -1,117 +1,38 @@
 /* @flow */
 
-import { getActiveElement } from '../../lib/dom';
+import { getLogger } from '../../lib';
 
 import {
-    autoFocusOnFirstInput,
     maskValidCard,
-    formatDate,
     parseGQLErrors,
+    filterStyle,
     styleToString,
-    getStyles,
-    filterExtraFields
+    filterExtraFields,
+    isValidAttribute,
+    removeNonDigits,
+    checkForNonDigits,
+    convertDateFormat,
+    getContext,
+    markValidity,
+    assertType,
+    shouldUseZeroPaddedExpiryPattern,
+    parsedCardType,
+    kebabToCamelCase
 } from './card-utils';
+
 
 jest.mock('../../lib/dom');
 
-function triggerFocusListener() {
-    const cb = window.addEventListener.mock.calls.find((args) => {
-        return args[0] === 'focus';
-    })[1];
-
-    cb();
-
-    jest.runAllTimers();
-}
-
 describe('card utils', () => {
-    describe('autoFocusOnFirstInput', () => {
-        let input : HTMLInputElement;
 
-        beforeEach(() => {
-            jest.useFakeTimers();
-            jest.spyOn(window, 'addEventListener').mockImplementation(jest.fn());
-            input = document.createElement('input');
+    describe('assertType', () => {
+        it('throws an error with the provided message when the assertion criteria is not met', () => {
+            function assertNumber() {
+                // $FlowFixMe
+                assertType( typeof '5' === 'number' , 'Expected a number')
+            }
 
-            (getActiveElement : JestMockFn<[], null | HTMLElement>).mockReturnValue(null);
-        });
-
-        it('noops when no input is passed', () => {
-            autoFocusOnFirstInput();
-
-            expect(window.addEventListener).not.toBeCalled();
-        });
-
-        it('adds a focus listener when input is available', () => {
-            autoFocusOnFirstInput(input);
-
-            expect(window.addEventListener).toBeCalledTimes(1);
-        });
-
-        it('noops when the active element is not the body or the document element', () => {
-            const spy = jest.spyOn(input, 'focus');
-
-            autoFocusOnFirstInput(input);
-
-            triggerFocusListener();
-
-            expect(spy).not.toBeCalled();
-        });
-
-        it('focuses on input when the document body is the active element', () => {
-            const spy = jest.spyOn(input, 'focus');
-
-            (getActiveElement : JestMockFn<[], null | HTMLElement>).mockReturnValue(document.body);
-
-            autoFocusOnFirstInput(input);
-
-            triggerFocusListener();
-
-            expect(spy).toBeCalledTimes(1);
-        });
-
-        it('focuses on input when the document element is the active element', () => {
-            const spy = jest.spyOn(input, 'focus');
-
-            (getActiveElement : JestMockFn<[], null | HTMLElement>).mockReturnValue(document.documentElement);
-
-            autoFocusOnFirstInput(input);
-
-            triggerFocusListener();
-
-            expect(spy).toBeCalledTimes(1);
-        });
-
-        it('applies a focus patch for Safari using setSelectionRange', () => {
-            (getActiveElement : JestMockFn<[], null | HTMLElement>).mockReturnValue(document.body);
-
-            input.value = 'foo';
-
-            input.setSelectionRange(1, 2);
-
-            const spy = jest.spyOn(input, 'setSelectionRange');
-            autoFocusOnFirstInput(input);
-
-            triggerFocusListener();
-
-            expect(spy).toBeCalledTimes(2);
-            expect(spy).toBeCalledWith(0, 0);
-            expect(spy).toBeCalledWith(1, 2);
-        });
-
-        it('adjusts and resets the inputs value when it is empty to accomodate Safari quirk', () => {
-            (getActiveElement : JestMockFn<[], null | HTMLElement>).mockReturnValue(document.body);
-
-            input.value = '';
-
-            const spy = jest.spyOn(input, 'value', 'set');
-            autoFocusOnFirstInput(input);
-
-            triggerFocusListener();
-
-            expect(spy).toBeCalledTimes(2);
-            expect(spy).toBeCalledWith(' ');
-            expect(spy).toBeCalledWith('');
+            expect(assertNumber).toThrow(/Expected a number/)
         });
     });
 
@@ -135,39 +56,6 @@ describe('card utils', () => {
             expect(maskValidCard('1')).toBe('1');
             expect(maskValidCard('')).toBe('');
         });
-    });
-
-    describe('formatDate', () => {
-        it('format valid number sequence', () => {
-            const masked = formatDate('1022');
-
-            expect(masked).toBe('10 / 22');
-        });
-
-        it('add slash at the end of a valid month', () => {
-            const masked = formatDate('10');
-
-            expect(masked).toBe('10 / ');
-        });
-
-        it('format number by adding a slash to separate the month from the year', () => {
-            const masked = formatDate('22');
-
-            expect(masked).toBe('02 / 2');
-        });
-
-        it('returns prevMask if it is valid', () => {
-            const masked = formatDate('22');
-
-            expect(masked).toBe('02 / 2');
-        });
-
-        it('returns only the month section when the string finished with slash', () => {
-            const masked = formatDate('12 /');
-
-            expect(masked).toBe('12');
-        });
-
     });
 
     describe('parseGQLErrors', () => {
@@ -369,45 +257,72 @@ describe('card utils', () => {
         });
     });
 
-    describe('styleToString', () => {
-
-        it('should stringify a style object into a valid style string', () => {
-
-            const objectStyle = {
-                height:     '60px',
-                padding:    '10px',
-                fontSize:   '18px',
-                fontFamily: '"Open Sans", sans-serif',
-                transition: 'all 0.5s ease-out'
+    describe('filterStyle', () => {
+        it('normalizes css properties from camelCase to kebab-case', () => {
+            const styles = {
+                'input': {
+                    paddingTop:    '20px'
+                }
             };
-            const stringStyle = styleToString(objectStyle);
-
-            expect(stringStyle).toBe('  height : 60px ;  padding : 10px ;  font-size : 18px ;  font-family : "Open Sans", sans-serif ;  transition : all 0.5s ease-out ;');
+            const filteredStyles = filterStyle(styles)
+            const expectedStyles = {
+                'input': {
+                    'padding-top': '20px'
+                }
+           };
+           expect(filteredStyles).toEqual(expectedStyles);
         });
-
+        it('normalizes all css properties to lower case', () => {
+            const styles = {
+                'input': {
+                    'pAdDiNg-ToP':    '20px'
+                }
+            };
+            const filteredStyles = filterStyle(styles)
+            const expectedStyles = {
+                'input': {
+                    'padding-top': '20px'
+                }
+           };
+           expect(filteredStyles).toEqual(expectedStyles);
+        });
+        it('excludes css properties that are not on the allowlist and log a warning', () => {
+            const styles = {
+                'input': {
+                    boxShadow:    '20px',
+                    paddingTop:    '20px'
+                }
+            };
+            const originalLoggerWarn = getLogger().warn;
+            getLogger().warn = jest.fn();
+            const filteredStyles = filterStyle(styles)
+            const expectedStyles = {
+                'input': {
+                    'padding-top': '20px'
+                }
+            };
+            expect(filteredStyles).toEqual(expectedStyles);
+            expect(getLogger().warn).toHaveBeenCalledWith('style_warning', { warn: 'CSS property "boxShadow" was ignored. See allowed CSS property list.' });
+            getLogger().warn = originalLoggerWarn;
+        });
     });
 
-    describe('getStyles', () => {
-        it('should separate nested sub-styles into their own style objects', () => {
-            const objectStyle = {
-                'height':          '60px',
-                'padding':         '10px',
-                'fontSize':        '18px',
-                'fontFamily':      '"Open Sans", sans-serif',
-                'transition':        'all 0.5s ease-out',
-                'input.invalid': {
-                    color: 'red'
+    describe('styleToString', () => {
+        it('converts a style object to a valid style string', () => {
+            const styleObject = {
+                'input': {
+                    'font-size': '16 px',
+                    'font-color': 'red'
                 }
             };
 
-            const [ generalStyle, inputStyle ] = getStyles(objectStyle);
+            const targetString = `input {\n font-size: 16 px;\n font-color: red;\n}`
 
-            expect(Object.keys(generalStyle).length).toBe(1);
-            expect(generalStyle['input.invalid'].color).toBe('red');
+            expect(typeof styleObject).toBe('object');
 
-            expect(Object.keys(inputStyle).length).toBe(5);
-            expect(inputStyle.height).toBe('60px');
-
+            const styleString = styleToString(styleObject);
+            expect(typeof styleString).toBe('string');
+            expect(styleString).toBe(targetString)
         });
     });
 
@@ -435,4 +350,323 @@ describe('card utils', () => {
         });
     });
 
+    describe('isValidAttribute', () => {
+
+        it('should return true if the attribute name is valid', () => {
+            expect(isValidAttribute('aria-invalid')).toBe(true);
+            expect(isValidAttribute('Aria-Invalid')).toBe(true);
+            expect(isValidAttribute('aria-required')).toBe(true);
+            expect(isValidAttribute('disabled')).toBe(true);
+            expect(isValidAttribute('placeholder')).toBe(true);
+        });
+
+        it('should return false and log a warning if the attribute name is not valid', () => {
+            const originalLoggerWarn = getLogger().warn;
+            getLogger().warn = jest.fn();
+            expect(isValidAttribute('invalid')).toBe(false);
+            expect(getLogger().warn).toHaveBeenCalledWith('attribute_warning', { warn: 'HTML Attribute "invalid" was ignored. See allowed attribute list.' });
+            getLogger().warn = originalLoggerWarn;
+        });
+
+    });
+
+    describe('removeNonDigits', () => {
+
+        it('should remove non-digits', () => {
+            expect(removeNonDigits('abc123')).toBe('123');
+        });
+
+    });
+
+    describe('checkForNonDigits', () => {
+
+        it('should check for non-digits', () => {
+            expect(checkForNonDigits('abc123')).toBe(true);
+            expect(checkForNonDigits('123123')).toBe(false);
+        });
+
+    });
+
+    describe('convertDateFormat', () => {
+
+        it('should format the date as MM/YYYY', () => {
+            expect(convertDateFormat('11/23')).toBe('11/2023');
+            expect(convertDateFormat('11 / 23')).toBe('11/2023');
+            expect(convertDateFormat('11 / 2023')).toBe('11/2023');
+        });
+
+    });
+
+    describe('getContext', () => {
+
+        beforeEach(() => {
+            window.xprops = {};
+        });
+
+        it('should return the UID of the component', () => {
+            window.xprops.uid = 'abc123';
+            expect(getContext(window)).toBe('abc123');
+        });
+
+        it('should return the UID of the parent of the component', () => {
+            window.xprops.uid = 'abc123';
+            window.xprops.parent = {
+                uid: 'xyz789'
+            };
+            expect(getContext(window)).toBe('xyz789');
+        });
+
+    });
+
+    describe('markValidity', () => {
+
+        it('marks the refs HTMLelement as valid when isValid is true, it has focus, and it has been touched', () => {
+
+            const element = document.createElement('div')
+
+            const ref = {
+                current: {
+                    base: element
+                }
+            };
+
+            const validity = {
+                isValid: true,
+                isPotentiallyValid: false
+            };
+
+            const hasFocus = true;
+
+            const touched = true;
+
+            markValidity(ref, validity, hasFocus, touched)
+
+            expect(element.classList.contains('valid')).toBe(true)
+        })
+
+        it('marks the refs HTMLelement as invalid when isValid is false, it does not have focus, and it has been touched', () => {
+
+            const element = document.createElement('div')
+
+            const ref = {
+                current: {
+                    base: element
+                }
+            };
+
+            const validity = {
+                isValid: false,
+                isPotentiallyValid: true
+            };
+
+            const hasFocus = false;
+
+            const touched = true;
+
+            markValidity(ref, validity, hasFocus, touched)
+
+            expect(element.classList.contains('invalid')).toBe(true)
+            expect(element.classList.contains('valid')).toBe(false)
+        })
+
+        it('marks the refs HTMLelement as neither valid or invalid. isValid, isPotentiallyValid, hasFocus, and touched are all false', () => {
+
+            const element = document.createElement('div')
+
+            const ref = {
+                current: {
+                    base: element
+                }
+            };
+
+            const validity = {
+                isValid: false,
+                isPotentiallyValid: false
+            };
+
+            const hasFocus = false;
+
+            const touched = false;
+
+            markValidity(ref, validity, hasFocus, touched)
+
+            expect(element.classList.contains('invalid')).toBe(false)
+            expect(element.classList.contains('valid')).toBe(false)
+        })
+
+        it('marks the refs HTMLelement as invalid when not valid, potentiallyValid, or focused but has been touched', () => {
+
+            const element = document.createElement('div')
+
+            const ref = {
+                current: {
+                    base: element
+                }
+            };
+
+            const validity = {
+                isValid: false,
+                isPotentiallyValid: false
+            };
+
+            const hasFocus = false;
+
+            const touched = true;
+
+            markValidity(ref, validity, hasFocus, touched)
+
+            expect(element.classList.contains('invalid')).toBe(true)
+            expect(element.classList.contains('valid')).toBe(false)
+        })
+
+        it('marks the refs HTMLelement as valid when focused and potentiallyValid, but not valid or touched', () => {
+
+            const element = document.createElement('div')
+
+            const ref = {
+                current: {
+                    base: element
+                }
+            };
+
+            const validity = {
+                isValid: false,
+                isPotentiallyValid: true
+            };
+
+            const hasFocus = true;
+
+            const touched = false;
+
+            markValidity(ref, validity, hasFocus, touched)
+
+            expect(element.classList.contains('invalid')).toBe(false)
+            expect(element.classList.contains('valid')).toBe(true)
+        })
+
+        it('marks the refs HTMLelement as valid when isValid and potentiallyValid, but not focused or touched', () => {
+
+            const element = document.createElement('div')
+
+            const ref = {
+                current: {
+                    base: element
+                }
+            };
+
+            const validity = {
+                isValid: true,
+                isPotentiallyValid: true
+            };
+
+            const hasFocus = false;
+
+            const touched = false;
+
+            markValidity(ref, validity, hasFocus, touched)
+
+            expect(element.classList.contains('invalid')).toBe(false)
+            expect(element.classList.contains('valid')).toBe(true)
+        })
+
+        it('marks the refs HTMLelement as valid when isValid, potentiallyValid, and focused but not touched', () => {
+
+            const element = document.createElement('div')
+
+            const ref = {
+                current: {
+                    base: element
+                }
+            };
+
+            const validity = {
+                isValid: true,
+                isPotentiallyValid: true
+            };
+
+            const hasFocus = true;
+
+            const touched = false;
+
+            markValidity(ref, validity, hasFocus, touched)
+
+            expect(element.classList.contains('invalid')).toBe(false)
+            expect(element.classList.contains('valid')).toBe(true)
+        })
+    });
+
+    describe('shouldUseZeroPaddedExpiryPattern', () => {
+        it('should return false if the value is an empty string', () => {
+            const result = shouldUseZeroPaddedExpiryPattern('','backspace')
+
+            expect(result).toBe(false)
+        });
+
+        it('should return true if the first digit is a 1 and the key typed is a forward slash', () => {
+            const result = shouldUseZeroPaddedExpiryPattern('1','/')
+
+            expect(result).toBe(true)
+        });
+
+        it('should return true if the first digit is 2-9', () => {
+            const result = shouldUseZeroPaddedExpiryPattern('2','2')
+
+            expect(result).toBe(true)
+        });
+
+        it('should return false if the first digit is a 1', () => {
+            const result = shouldUseZeroPaddedExpiryPattern('1', '2')
+
+            expect(result).toBe(false)
+        });
+
+        it('should default to false', () => {
+            const result = shouldUseZeroPaddedExpiryPattern('0','5')
+
+            expect(result).toBe(false)
+        });
+
+    });
+
+  describe("parsedCardType", () => {
+    it("returns only the type, niceType, and code objecs returned from the card validator module", () => {
+      const cardType = [
+        {
+          niceType: "Visa",
+          type: "visa",
+          patterns: [4],
+          matchStrength: 1,
+          gaps: [4, 8, 12],
+          lengths: [16, 18, 19],
+          code: {
+            name: "CVV",
+            size: 3,
+          },
+        },
+      ];
+
+      expect(parsedCardType(cardType)).toStrictEqual([
+        {
+          niceType: "Visa",
+          type: "visa",
+          code: {
+            name: "CVV",
+            size: 3,
+          },
+        },
+      ])
+    });
+  });
+
+    describe("kebabToCamelCase", () => {
+        it('converts a string from kebab-case to camelCase', () => {
+            const string = 'kebab-case-string'
+            expect(kebabToCamelCase(string)).toStrictEqual('kebabCaseString')
+            expect(kebabToCamelCase('string')).toStrictEqual('string')
+            expect(kebabToCamelCase('')).toStrictEqual('')
+            expect(kebabToCamelCase('HELLO-WORLD')).toStrictEqual('helloWorld')
+            expect(kebabToCamelCase('HELLOWORLD')).toStrictEqual('helloworld')
+            expect(kebabToCamelCase('hELlO-W1rLd')).toStrictEqual('helloW1rld')
+        })
+    })
 });

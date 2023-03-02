@@ -68,6 +68,17 @@
         __webpack_require__.d(__webpack_exports__, "NativeFallback", (function() {
             return NativeFallback;
         }));
+        function _setPrototypeOf(o, p) {
+            return (_setPrototypeOf = Object.setPrototypeOf || function(o, p) {
+                o.__proto__ = p;
+                return o;
+            })(o, p);
+        }
+        function _inheritsLoose(subClass, superClass) {
+            subClass.prototype = Object.create(superClass.prototype);
+            subClass.prototype.constructor = subClass;
+            _setPrototypeOf(subClass, superClass);
+        }
         function utils_isPromise(item) {
             try {
                 if (!item) return !1;
@@ -679,6 +690,55 @@
             };
             return CrossDomainSafeWeakMap;
         }();
+        function _getPrototypeOf(o) {
+            return (_getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function(o) {
+                return o.__proto__ || Object.getPrototypeOf(o);
+            })(o);
+        }
+        function _isNativeReflectConstruct() {
+            if ("undefined" == typeof Reflect || !Reflect.construct) return !1;
+            if (Reflect.construct.sham) return !1;
+            if ("function" == typeof Proxy) return !0;
+            try {
+                Date.prototype.toString.call(Reflect.construct(Date, [], (function() {})));
+                return !0;
+            } catch (e) {
+                return !1;
+            }
+        }
+        function construct_construct(Parent, args, Class) {
+            return (construct_construct = _isNativeReflectConstruct() ? Reflect.construct : function(Parent, args, Class) {
+                var a = [ null ];
+                a.push.apply(a, args);
+                var instance = new (Function.bind.apply(Parent, a));
+                Class && _setPrototypeOf(instance, Class.prototype);
+                return instance;
+            }).apply(null, arguments);
+        }
+        function wrapNativeSuper_wrapNativeSuper(Class) {
+            var _cache = "function" == typeof Map ? new Map : void 0;
+            return (wrapNativeSuper_wrapNativeSuper = function(Class) {
+                if (null === Class || !(fn = Class, -1 !== Function.toString.call(fn).indexOf("[native code]"))) return Class;
+                var fn;
+                if ("function" != typeof Class) throw new TypeError("Super expression must either be null or a function");
+                if (void 0 !== _cache) {
+                    if (_cache.has(Class)) return _cache.get(Class);
+                    _cache.set(Class, Wrapper);
+                }
+                function Wrapper() {
+                    return construct_construct(Class, arguments, _getPrototypeOf(this).constructor);
+                }
+                Wrapper.prototype = Object.create(Class.prototype, {
+                    constructor: {
+                        value: Wrapper,
+                        enumerable: !1,
+                        writable: !0,
+                        configurable: !0
+                    }
+                });
+                return _setPrototypeOf(Wrapper, Class);
+            })(Class);
+        }
         function getFunctionName(fn) {
             return fn.name || fn.__name__ || fn.displayName || "anonymous";
         }
@@ -785,7 +845,19 @@
             for (var key in obj) obj.hasOwnProperty(key) && result.push(obj[key]);
             return result;
         }));
-        Error;
+        var util_ExtendableError = function(_Error) {
+            _inheritsLoose(ExtendableError, _Error);
+            function ExtendableError(message) {
+                var _this6;
+                (_this6 = _Error.call(this, message) || this).name = _this6.constructor.name;
+                "function" == typeof Error.captureStackTrace ? Error.captureStackTrace(function(self) {
+                    if (void 0 === self) throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+                    return self;
+                }(_this6), _this6.constructor) : _this6.stack = new Error(message).stack;
+                return _this6;
+            }
+            return ExtendableError;
+        }(wrapNativeSuper_wrapNativeSuper(Error));
         function isDocumentReady() {
             return Boolean(document.body) && "complete" === document.readyState;
         }
@@ -803,6 +875,10 @@
                 }), 10);
             }));
         }));
+        _inheritsLoose((function() {
+            return _ExtendableError.apply(this, arguments) || this;
+        }), _ExtendableError = util_ExtendableError);
+        var _ExtendableError;
         var currentScript = "undefined" != typeof document ? document.currentScript : null;
         var getCurrentScript = memoize((function() {
             if (currentScript) return currentScript;

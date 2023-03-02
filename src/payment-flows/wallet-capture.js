@@ -6,9 +6,9 @@ import { FUNDING, WALLET_INSTRUMENT, FPTI_KEY } from '@paypal/sdk-constants/src'
 
 import type { MenuChoices, Wallet, WalletInstrument } from '../types';
 import { getSupplementalOrderInfo, oneClickApproveOrder, getSmartWallet, loadFraudnet, updateButtonClientConfig } from '../api';
-import { BUYER_INTENT, FPTI_TRANSITION, FPTI_MENU_OPTION } from '../constants';
+import { BUYER_INTENT, FPTI_TRANSITION, FPTI_MENU_OPTION, FPTI_STATE } from '../constants';
 import { type ButtonProps } from '../button/props';
-import { getLogger } from '../lib';
+import { getBuyerAccessToken, getLogger } from '../lib';
 
 import type { PaymentFlow, PaymentFlowInstance, SetupOptions, IsEligibleOptions, IsPaymentEligibleOptions, InitOptions, MenuOptions, Payment } from './types';
 import { checkout, CHECKOUT_POPUP_DIMENSIONS } from './checkout';
@@ -116,7 +116,7 @@ function isWalletCapturePaymentEligible({ serviceData, payment } : IsPaymentElig
 }
 
 function initWalletCapture({ props, components, payment, serviceData, config, restart: fullRestart } : InitOptions) : PaymentFlowInstance {
-    const { createOrder, onApprove, clientMetadataID, vault, onAuth } = props;
+    const { createOrder, onApprove, clientMetadataID, vault, onAuth, enableOrdersApprovalSmartWallet } = props;
     const { fundingSource, instrumentID } = payment;
     const { wallet } = serviceData;
 
@@ -130,11 +130,19 @@ function initWalletCapture({ props, components, payment, serviceData, config, re
 
     const instrument = getInstrument(wallet, fundingSource, instrumentID);
 
+    const planID = instrument?.planID;
+
     const createAccessToken = () => {
         if (!smartWalletPromise) {
             throw new Error(`No smart wallet found`);
         }
-                    
+
+        const buyerAccessToken = getBuyerAccessToken();
+
+        if(buyerAccessToken && enableOrdersApprovalSmartWallet) {
+            return buyerAccessToken;
+        }
+
         return smartWalletPromise.then(smartWallet => {
             const { accessToken } = getInstrument(smartWallet, fundingSource, instrumentID);
 
@@ -163,7 +171,7 @@ function initWalletCapture({ props, components, payment, serviceData, config, re
         return getWebCheckoutFallback().start();
     };
 
-    if (!instrument.oneClick || smartWalletErrored || vault) {
+    if (!instrument.oneClick || smartWalletErrored || (vault && !enableOrdersApprovalSmartWallet)) {
         return getWebCheckoutFallback();
     }
 
@@ -188,7 +196,7 @@ function initWalletCapture({ props, components, payment, serviceData, config, re
             orderID:     createOrder(),
             smartWallet: smartWalletPromise
         }).then(({ orderID, smartWallet }) => {
-            const { accessToken: buyerAccessToken } = getInstrument(smartWallet, fundingSource, instrumentID);
+            const buyerAccessToken = (enableOrdersApprovalSmartWallet && getBuyerAccessToken()) || getInstrument(smartWallet, fundingSource, instrumentID).accessToken;
 
             if (!buyerAccessToken) {
                 throw new Error(`No access token available for instrument`);
@@ -198,10 +206,12 @@ function initWalletCapture({ props, components, payment, serviceData, config, re
             if (!instrumentType) {
                 throw new Error(`Instrument has no type`);
             }
-            
+
+            const useExistingPlanning = Boolean(props.smartWalletOrderID);
+
             return ZalgoPromise.hash({
                 requireShipping: shippingRequired(orderID),
-                orderApproval:   oneClickApproveOrder({ orderID, instrumentType, buyerAccessToken, instrumentID, clientMetadataID }),
+                orderApproval:   oneClickApproveOrder({ orderID, instrumentType, buyerAccessToken, instrumentID, clientMetadataID, planID, useExistingPlanning, enableOrdersApprovalSmartWallet }),
                 onAuth:          onAuth({ accessToken: buyerAccessToken })
             }).then(({ requireShipping, orderApproval }) => {
                 if (requireShipping) {
@@ -230,7 +240,7 @@ const POPUP_OPTIONS = {
 };
 
 function setupWalletMenu({ props, payment, serviceData, components, config, restart } : MenuOptions) : MenuChoices {
-    const { createOrder } = props;
+    const { createOrder, enableOrdersApprovalSmartWallet } = props;
     const { fundingSource, instrumentID } = payment;
     const { wallet, content } = serviceData;
 
@@ -272,6 +282,7 @@ function setupWalletMenu({ props, payment, serviceData, components, config, rest
         onSelect: ({ win }) => {
 
             getLogger().info('click_choose_funding').track({
+                [FPTI_KEY.STATE]:           FPTI_STATE.BUTTON,
                 [FPTI_KEY.TRANSITION]:      FPTI_TRANSITION.CLICK_CHOOSE_FUNDING,
                 [FPTI_KEY.OPTION_SELECTED]: FPTI_MENU_OPTION.CHOOSE_FUNDING
             }).flush();
@@ -287,6 +298,11 @@ function setupWalletMenu({ props, payment, serviceData, components, config, rest
                         fundingSource:     newFundingSource,
                         createAccessToken: () => {
                             return smartWalletPromise.then(smartWallet => {
+                                const buyerAccessToken = getBuyerAccessToken();
+                                if(enableOrdersApprovalSmartWallet && buyerAccessToken) {
+                                    return buyerAccessToken;
+                                }
+
                                 const smartInstrument = getInstrument(smartWallet, fundingSource, instrumentID);
 
                                 if (!smartInstrument) {
@@ -312,6 +328,7 @@ function setupWalletMenu({ props, payment, serviceData, components, config, rest
         onSelect: ({ win }) => {
 
             getLogger().info('click_choose_account').track({
+                [FPTI_KEY.STATE]:           FPTI_STATE.BUTTON,
                 [FPTI_KEY.TRANSITION]:      FPTI_TRANSITION.CLICK_CHOOSE_ACCOUNT,
                 [FPTI_KEY.OPTION_SELECTED]: FPTI_MENU_OPTION.CHOOSE_ACCOUNT
             }).flush();
@@ -323,6 +340,10 @@ function setupWalletMenu({ props, payment, serviceData, components, config, rest
     };
 
     if (fundingSource === FUNDING.PAYPAL || fundingSource === FUNDING.CREDIT) {
+        if (props.smartWalletOrderID) {
+            return [CHOOSE_FUNDING_SHIPPING];
+        }
+        
         return [
             CHOOSE_FUNDING_SHIPPING,
             CHOOSE_ACCOUNT

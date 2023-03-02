@@ -3633,6 +3633,17 @@
             }
             return !1;
         }
+        function _setPrototypeOf(o, p) {
+            return (_setPrototypeOf = Object.setPrototypeOf || function(o, p) {
+                o.__proto__ = p;
+                return o;
+            })(o, p);
+        }
+        function _inheritsLoose(subClass, superClass) {
+            subClass.prototype = Object.create(superClass.prototype);
+            subClass.prototype.constructor = subClass;
+            _setPrototypeOf(subClass, superClass);
+        }
         function _extends() {
             return (_extends = Object.assign || function(target) {
                 for (var i = 1; i < arguments.length; i++) {
@@ -4254,6 +4265,55 @@
             };
             return CrossDomainSafeWeakMap;
         }();
+        function _getPrototypeOf(o) {
+            return (_getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function(o) {
+                return o.__proto__ || Object.getPrototypeOf(o);
+            })(o);
+        }
+        function _isNativeReflectConstruct() {
+            if ("undefined" == typeof Reflect || !Reflect.construct) return !1;
+            if (Reflect.construct.sham) return !1;
+            if ("function" == typeof Proxy) return !0;
+            try {
+                Date.prototype.toString.call(Reflect.construct(Date, [], (function() {})));
+                return !0;
+            } catch (e) {
+                return !1;
+            }
+        }
+        function construct_construct(Parent, args, Class) {
+            return (construct_construct = _isNativeReflectConstruct() ? Reflect.construct : function(Parent, args, Class) {
+                var a = [ null ];
+                a.push.apply(a, args);
+                var instance = new (Function.bind.apply(Parent, a));
+                Class && _setPrototypeOf(instance, Class.prototype);
+                return instance;
+            }).apply(null, arguments);
+        }
+        function wrapNativeSuper_wrapNativeSuper(Class) {
+            var _cache = "function" == typeof Map ? new Map : void 0;
+            return (wrapNativeSuper_wrapNativeSuper = function(Class) {
+                if (null === Class || !(fn = Class, -1 !== Function.toString.call(fn).indexOf("[native code]"))) return Class;
+                var fn;
+                if ("function" != typeof Class) throw new TypeError("Super expression must either be null or a function");
+                if (void 0 !== _cache) {
+                    if (_cache.has(Class)) return _cache.get(Class);
+                    _cache.set(Class, Wrapper);
+                }
+                function Wrapper() {
+                    return construct_construct(Class, arguments, _getPrototypeOf(this).constructor);
+                }
+                Wrapper.prototype = Object.create(Class.prototype, {
+                    constructor: {
+                        value: Wrapper,
+                        enumerable: !1,
+                        writable: !0,
+                        configurable: !0
+                    }
+                });
+                return _setPrototypeOf(Wrapper, Class);
+            })(Class);
+        }
         function getFunctionName(fn) {
             return fn.name || fn.__name__ || fn.displayName || "anonymous";
         }
@@ -4401,7 +4461,19 @@
             for (var key in obj) obj.hasOwnProperty(key) && filter(obj[key], key) && (result[key] = obj[key]);
             return result;
         }
-        Error;
+        var util_ExtendableError = function(_Error) {
+            _inheritsLoose(ExtendableError, _Error);
+            function ExtendableError(message) {
+                var _this6;
+                (_this6 = _Error.call(this, message) || this).name = _this6.constructor.name;
+                "function" == typeof Error.captureStackTrace ? Error.captureStackTrace(function(self) {
+                    if (void 0 === self) throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+                    return self;
+                }(_this6), _this6.constructor) : _this6.stack = new Error(message).stack;
+                return _this6;
+            }
+            return ExtendableError;
+        }(wrapNativeSuper_wrapNativeSuper(Error));
         function isDocumentReady() {
             return Boolean(document.body) && "complete" === document.readyState;
         }
@@ -4455,6 +4527,10 @@
                 return !1;
             }));
         }
+        _inheritsLoose((function() {
+            return _ExtendableError.apply(this, arguments) || this;
+        }), _ExtendableError = util_ExtendableError);
+        var _ExtendableError;
         var currentScript = "undefined" != typeof document ? document.currentScript : null;
         var getCurrentScript = memoize((function() {
             if (currentScript) return currentScript;
@@ -4596,106 +4672,106 @@
             for (var key in source) source.hasOwnProperty(key) && (target[key] = source[key]);
         };
         function Logger(_ref) {
-            var url = _ref.url, prefix = _ref.prefix, _ref$logLevel = _ref.logLevel, logLevel = void 0 === _ref$logLevel ? "warn" : _ref$logLevel, _ref$transport = _ref.transport, transport = void 0 === _ref$transport ? function(httpWin) {
-                void 0 === httpWin && (httpWin = window);
-                var win = isSameDomain(httpWin) ? function(win) {
-                    if (!isSameDomain(win)) throw new Error("Expected window to be same domain");
-                    return win;
-                }(httpWin) : window;
-                return function(_ref) {
-                    var url = _ref.url, method = _ref.method, headers = _ref.headers, json = _ref.json, _ref$enableSendBeacon = _ref.enableSendBeacon, enableSendBeacon = void 0 !== _ref$enableSendBeacon && _ref$enableSendBeacon;
-                    return promise_ZalgoPromise.try((function() {
-                        var beaconResult = !1;
-                        (function(_ref) {
-                            var headers = _ref.headers, enableSendBeacon = _ref.enableSendBeacon;
-                            var hasHeaders = headers && Object.keys(headers).length;
-                            return !!(window && window.navigator.sendBeacon && !hasHeaders && enableSendBeacon && window.Blob);
-                        })({
-                            headers: headers,
-                            enableSendBeacon: enableSendBeacon
-                        }) && (beaconResult = function(url) {
-                            return "https://api2.amplitude.com/2/httpapi" === url;
-                        }(url) ? sendBeacon({
-                            win: win,
-                            url: url,
-                            data: json,
-                            useBlob: !1
-                        }) : sendBeacon({
-                            win: win,
-                            url: url,
-                            data: json,
-                            useBlob: !0
+            var url = _ref.url, prefix = _ref.prefix, _ref$logLevel = _ref.logLevel, logLevel = void 0 === _ref$logLevel ? "warn" : _ref$logLevel, _ref$transport = _ref.transport, transport = void 0 === _ref$transport ? function(_ref) {
+                var url = _ref.url, method = _ref.method, headers = _ref.headers, json = _ref.json, _ref$enableSendBeacon = _ref.enableSendBeacon, enableSendBeacon = void 0 !== _ref$enableSendBeacon && _ref$enableSendBeacon;
+                return promise_ZalgoPromise.try((function() {
+                    var httpWindow = httpWin || window;
+                    var win = isSameDomain(httpWindow) ? function(win) {
+                        if (!isSameDomain(win)) throw new Error("Expected window to be same domain");
+                        return win;
+                    }(httpWindow) : window;
+                    var beaconResult = !1;
+                    (function(_ref) {
+                        var headers = _ref.headers, enableSendBeacon = _ref.enableSendBeacon;
+                        var hasHeaders = headers && Object.keys(headers).length;
+                        return !!(window && window.navigator.sendBeacon && !hasHeaders && enableSendBeacon && window.Blob);
+                    })({
+                        headers: headers,
+                        enableSendBeacon: enableSendBeacon
+                    }) && (beaconResult = function(url) {
+                        return "https://api2.amplitude.com/2/httpapi" === url;
+                    }(url) ? sendBeacon({
+                        win: win,
+                        url: url,
+                        data: json,
+                        useBlob: !1
+                    }) : sendBeacon({
+                        win: win,
+                        url: url,
+                        data: json,
+                        useBlob: !0
+                    }));
+                    return beaconResult || function(_ref) {
+                        var url = _ref.url, _ref$method = _ref.method, method = void 0 === _ref$method ? "get" : _ref$method, _ref$headers = _ref.headers, headers = void 0 === _ref$headers ? {} : _ref$headers, json = _ref.json, data = _ref.data, body = _ref.body, _ref$win = _ref.win, win = void 0 === _ref$win ? window : _ref$win, _ref$timeout = _ref.timeout, timeout = void 0 === _ref$timeout ? 0 : _ref$timeout;
+                        return new promise_ZalgoPromise((function(resolve, reject) {
+                            if (json && data || json && body || data && json) throw new Error("Only options.json or options.data or options.body should be passed");
+                            var normalizedHeaders = {};
+                            for (var _i4 = 0, _Object$keys2 = Object.keys(headers); _i4 < _Object$keys2.length; _i4++) {
+                                var _key2 = _Object$keys2[_i4];
+                                normalizedHeaders[_key2.toLowerCase()] = headers[_key2];
+                            }
+                            json ? normalizedHeaders["content-type"] = normalizedHeaders["content-type"] || "application/json" : (data || body) && (normalizedHeaders["content-type"] = normalizedHeaders["content-type"] || "application/x-www-form-urlencoded; charset=utf-8");
+                            normalizedHeaders.accept = normalizedHeaders.accept || "application/json";
+                            for (var _i6 = 0; _i6 < http_headerBuilders.length; _i6++) {
+                                var builtHeaders = (0, http_headerBuilders[_i6])();
+                                for (var _i8 = 0, _Object$keys4 = Object.keys(builtHeaders); _i8 < _Object$keys4.length; _i8++) {
+                                    var _key3 = _Object$keys4[_i8];
+                                    normalizedHeaders[_key3.toLowerCase()] = builtHeaders[_key3];
+                                }
+                            }
+                            var xhr = new win.XMLHttpRequest;
+                            xhr.addEventListener("load", (function() {
+                                var responseHeaders = function(rawHeaders) {
+                                    void 0 === rawHeaders && (rawHeaders = "");
+                                    var result = {};
+                                    for (var _i2 = 0, _rawHeaders$trim$spli2 = rawHeaders.trim().split("\n"); _i2 < _rawHeaders$trim$spli2.length; _i2++) {
+                                        var _line$split = _rawHeaders$trim$spli2[_i2].split(":"), _key = _line$split[0], values = _line$split.slice(1);
+                                        result[_key.toLowerCase()] = values.join(":").trim();
+                                    }
+                                    return result;
+                                }(this.getAllResponseHeaders());
+                                if (!this.status) return reject(new Error("Request to " + method.toLowerCase() + " " + url + " failed: no response status code."));
+                                var contentType = responseHeaders["content-type"];
+                                var isJSON = contentType && (0 === contentType.indexOf("application/json") || 0 === contentType.indexOf("text/json"));
+                                var responseBody = this.responseText;
+                                try {
+                                    responseBody = JSON.parse(responseBody);
+                                } catch (err) {
+                                    if (isJSON) return reject(new Error("Invalid json: " + this.responseText + "."));
+                                }
+                                return resolve({
+                                    status: this.status,
+                                    headers: responseHeaders,
+                                    body: responseBody
+                                });
+                            }), !1);
+                            xhr.addEventListener("error", (function(evt) {
+                                reject(new Error("Request to " + method.toLowerCase() + " " + url + " failed: " + evt.toString() + "."));
+                            }), !1);
+                            xhr.open(method, url, !0);
+                            for (var _key4 in normalizedHeaders) normalizedHeaders.hasOwnProperty(_key4) && xhr.setRequestHeader(_key4, normalizedHeaders[_key4]);
+                            json ? body = JSON.stringify(json) : data && (body = Object.keys(data).map((function(key) {
+                                return encodeURIComponent(key) + "=" + (data ? encodeURIComponent(data[key]) : "");
+                            })).join("&"));
+                            xhr.timeout = timeout;
+                            xhr.ontimeout = function() {
+                                reject(new Error("Request to " + method.toLowerCase() + " " + url + " has timed out"));
+                            };
+                            xhr.send(body);
                         }));
-                        return beaconResult || function(_ref) {
-                            var url = _ref.url, _ref$method = _ref.method, method = void 0 === _ref$method ? "get" : _ref$method, _ref$headers = _ref.headers, headers = void 0 === _ref$headers ? {} : _ref$headers, json = _ref.json, data = _ref.data, body = _ref.body, _ref$win = _ref.win, win = void 0 === _ref$win ? window : _ref$win, _ref$timeout = _ref.timeout, timeout = void 0 === _ref$timeout ? 0 : _ref$timeout;
-                            return new promise_ZalgoPromise((function(resolve, reject) {
-                                if (json && data || json && body || data && json) throw new Error("Only options.json or options.data or options.body should be passed");
-                                var normalizedHeaders = {};
-                                for (var _i4 = 0, _Object$keys2 = Object.keys(headers); _i4 < _Object$keys2.length; _i4++) {
-                                    var _key2 = _Object$keys2[_i4];
-                                    normalizedHeaders[_key2.toLowerCase()] = headers[_key2];
-                                }
-                                json ? normalizedHeaders["content-type"] = normalizedHeaders["content-type"] || "application/json" : (data || body) && (normalizedHeaders["content-type"] = normalizedHeaders["content-type"] || "application/x-www-form-urlencoded; charset=utf-8");
-                                normalizedHeaders.accept = normalizedHeaders.accept || "application/json";
-                                for (var _i6 = 0; _i6 < http_headerBuilders.length; _i6++) {
-                                    var builtHeaders = (0, http_headerBuilders[_i6])();
-                                    for (var _i8 = 0, _Object$keys4 = Object.keys(builtHeaders); _i8 < _Object$keys4.length; _i8++) {
-                                        var _key3 = _Object$keys4[_i8];
-                                        normalizedHeaders[_key3.toLowerCase()] = builtHeaders[_key3];
-                                    }
-                                }
-                                var xhr = new win.XMLHttpRequest;
-                                xhr.addEventListener("load", (function() {
-                                    var responseHeaders = function(rawHeaders) {
-                                        void 0 === rawHeaders && (rawHeaders = "");
-                                        var result = {};
-                                        for (var _i2 = 0, _rawHeaders$trim$spli2 = rawHeaders.trim().split("\n"); _i2 < _rawHeaders$trim$spli2.length; _i2++) {
-                                            var _line$split = _rawHeaders$trim$spli2[_i2].split(":"), _key = _line$split[0], values = _line$split.slice(1);
-                                            result[_key.toLowerCase()] = values.join(":").trim();
-                                        }
-                                        return result;
-                                    }(this.getAllResponseHeaders());
-                                    if (!this.status) return reject(new Error("Request to " + method.toLowerCase() + " " + url + " failed: no response status code."));
-                                    var contentType = responseHeaders["content-type"];
-                                    var isJSON = contentType && (0 === contentType.indexOf("application/json") || 0 === contentType.indexOf("text/json"));
-                                    var responseBody = this.responseText;
-                                    try {
-                                        responseBody = JSON.parse(responseBody);
-                                    } catch (err) {
-                                        if (isJSON) return reject(new Error("Invalid json: " + this.responseText + "."));
-                                    }
-                                    return resolve({
-                                        status: this.status,
-                                        headers: responseHeaders,
-                                        body: responseBody
-                                    });
-                                }), !1);
-                                xhr.addEventListener("error", (function(evt) {
-                                    reject(new Error("Request to " + method.toLowerCase() + " " + url + " failed: " + evt.toString() + "."));
-                                }), !1);
-                                xhr.open(method, url, !0);
-                                for (var _key4 in normalizedHeaders) normalizedHeaders.hasOwnProperty(_key4) && xhr.setRequestHeader(_key4, normalizedHeaders[_key4]);
-                                json ? body = JSON.stringify(json) : data && (body = Object.keys(data).map((function(key) {
-                                    return encodeURIComponent(key) + "=" + (data ? encodeURIComponent(data[key]) : "");
-                                })).join("&"));
-                                xhr.timeout = timeout;
-                                xhr.ontimeout = function() {
-                                    reject(new Error("Request to " + method.toLowerCase() + " " + url + " has timed out"));
-                                };
-                                xhr.send(body);
-                            }));
-                        }({
-                            win: win,
-                            url: url,
-                            method: method,
-                            headers: headers,
-                            json: json
-                        });
-                    })).then(src_util_noop);
-                };
-            }() : _ref$transport, amplitudeApiKey = _ref.amplitudeApiKey, _ref$flushInterval = _ref.flushInterval, flushInterval = void 0 === _ref$flushInterval ? 6e4 : _ref$flushInterval, _ref$enableSendBeacon = _ref.enableSendBeacon, enableSendBeacon = void 0 !== _ref$enableSendBeacon && _ref$enableSendBeacon;
+                    }({
+                        win: win,
+                        url: url,
+                        method: method,
+                        headers: headers,
+                        json: json
+                    });
+                })).then(src_util_noop);
+            } : _ref$transport, amplitudeApiKey = _ref.amplitudeApiKey, _ref$flushInterval = _ref.flushInterval, flushInterval = void 0 === _ref$flushInterval ? 6e4 : _ref$flushInterval, _ref$enableSendBeacon = _ref.enableSendBeacon, enableSendBeacon = void 0 !== _ref$enableSendBeacon && _ref$enableSendBeacon;
+            var httpWin;
             var events = [];
             var tracking = [];
+            var metrics = [];
             var payloadBuilders = [];
             var metaBuilders = [];
             var trackingBuilders = [];
@@ -4712,7 +4788,7 @@
             }
             function immediateFlush() {
                 return promise_ZalgoPromise.try((function() {
-                    if (dom_isBrowser() && "file:" !== window.location.protocol && (events.length || tracking.length)) {
+                    if (dom_isBrowser() && "file:" !== window.location.protocol && (events.length || tracking.length || metrics.length)) {
                         var meta = {};
                         for (var _i2 = 0; _i2 < metaBuilders.length; _i2++) extendIfDefined(meta, (0, metaBuilders[_i2])(meta));
                         var headers = {};
@@ -4726,7 +4802,8 @@
                             json: {
                                 events: events,
                                 meta: meta,
-                                tracking: tracking
+                                tracking: tracking,
+                                metrics: metrics
                             },
                             enableSendBeacon: enableSendBeacon
                         }).catch(src_util_noop));
@@ -4747,6 +4824,7 @@
                         }).catch(src_util_noop);
                         events = [];
                         tracking = [];
+                        metrics = [];
                         return promise_ZalgoPromise.resolve(res).then(src_util_noop);
                     }
                 }));
@@ -4833,6 +4911,12 @@
                     trackingBuilders[_i8])(trackingPayload));
                     print("debug", "track", trackingPayload);
                     tracking.push(trackingPayload);
+                    return logger;
+                },
+                metric: function(metricPayload) {
+                    if (!dom_isBrowser()) return logger;
+                    print("debug", "metric." + metricPayload.name, metricPayload.dimensions);
+                    metrics.push(metricPayload);
                     return logger;
                 },
                 flush: flush,
@@ -4923,7 +5007,7 @@
                 var env = _ref.env, sessionID = _ref.sessionID, buttonSessionID = _ref.buttonSessionID, sdkCorrelationID = _ref.sdkCorrelationID, clientID = _ref.clientID, fundingSource = _ref.fundingSource, sdkVersion = _ref.sdkVersion, locale = _ref.locale, buyerCountry = _ref.buyerCountry;
                 var logger = getLogger();
                 !function(_ref2) {
-                    var env = _ref2.env, sessionID = _ref2.sessionID, clientID = _ref2.clientID, sdkCorrelationID = _ref2.sdkCorrelationID, buyerCountry = _ref2.buyerCountry, locale = _ref2.locale, sdkVersion = _ref2.sdkVersion, fundingSource = _ref2.fundingSource;
+                    var env = _ref2.env, sessionID = _ref2.sessionID, clientID = _ref2.clientID, sdkCorrelationID = _ref2.sdkCorrelationID, buyerCountry = _ref2.buyerCountry, locale = _ref2.locale, _ref2$sdkVersion = _ref2.sdkVersion, sdkVersion = void 0 === _ref2$sdkVersion ? window.paypal.version : _ref2$sdkVersion;
                     var logger = getLogger();
                     logger.addPayloadBuilder((function() {
                         return {
@@ -4936,17 +5020,15 @@
                     }));
                     logger.addTrackingBuilder((function() {
                         var _ref3;
-                        var lang = locale.lang, country = locale.country;
                         return (_ref3 = {}).feed_name = "payments_sdk", _ref3.serverside_data_source = "checkout", 
                         _ref3.client_id = clientID, _ref3.page_session_id = sessionID, _ref3.referer_url = window.location.host, 
-                        _ref3.buyer_cntry = buyerCountry, _ref3.locale = lang + "_" + country, _ref3.integration_identifier = clientID, 
-                        _ref3.sdk_environment = isIos() ? "iOS" : function(ua) {
+                        _ref3.buyer_cntry = buyerCountry, _ref3.locale = locale.lang + "_" + locale.country, 
+                        _ref3.integration_identifier = clientID, _ref3.sdk_environment = isIos() ? "iOS" : function(ua) {
                             void 0 === ua && (ua = getUserAgent());
                             return /Android/.test(ua);
                         }() ? "android" : null, _ref3.sdk_name = "payments_sdk", _ref3.sdk_version = sdkVersion, 
                         _ref3.user_agent = window.navigator && window.navigator.userAgent, _ref3.context_correlation_id = sdkCorrelationID, 
-                        _ref3.t = Date.now().toString(), _ref3.selected_payment_method = fundingSource, 
-                        _ref3;
+                        _ref3.t = Date.now().toString(), _ref3;
                     }));
                     promise_ZalgoPromise.onPossiblyUnhandledException((function(err) {
                         var _logger$track;
@@ -4964,8 +5046,7 @@
                     sdkCorrelationID: sdkCorrelationID,
                     locale: locale,
                     sdkVersion: sdkVersion,
-                    buyerCountry: buyerCountry,
-                    fundingSource: fundingSource
+                    buyerCountry: buyerCountry
                 });
                 !function(_ref) {
                     var env = _ref.env;
@@ -4984,8 +5065,9 @@
                 logger.addTrackingBuilder((function() {
                     var _ref3;
                     return (_ref3 = {}).state_name = "smart_button", _ref3.context_type = "button_session_id", 
-                    _ref3.context_id = buttonSessionID, _ref3.button_session_id = buttonSessionID, _ref3.button_version = "5.0.120", 
-                    _ref3.user_id = buttonSessionID, _ref3.time = Date.now().toString(), _ref3;
+                    _ref3.context_id = buttonSessionID, _ref3.button_session_id = buttonSessionID, _ref3.button_version = "5.0.130", 
+                    _ref3.selected_payment_method = fundingSource, _ref3.user_id = buttonSessionID, 
+                    _ref3.time = Date.now().toString(), _ref3;
                 }));
                 (function() {
                     if (window.document.documentMode) try {

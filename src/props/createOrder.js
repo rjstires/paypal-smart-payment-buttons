@@ -6,7 +6,7 @@ import { FPTI_KEY, SDK_QUERY_KEYS, INTENT, CURRENCY, FUNDING } from '@paypal/sdk
 import { getDomain } from '@krakenjs/cross-domain-utils/src';
 
 import { createOrderID, billingTokenToOrderID, subscriptionIdToCartId, createPaymentToken } from '../api';
-import { FPTI_STATE, FPTI_TRANSITION, FPTI_CONTEXT_TYPE } from '../constants';
+import { FPTI_STATE, FPTI_TRANSITION, FPTI_CONTEXT_TYPE, FPTI_BUTTON_KEY } from '../constants';
 import { getLogger, isEmailAddress } from '../lib';
 import { ENABLE_PAYMENT_API } from '../config';
 
@@ -160,7 +160,7 @@ type CreateOrderXProps = {|
     paymentSource : $Values<typeof FUNDING> | null
 |};
 
-export function getCreateOrder({ createOrder, intent, currency, merchantID, partnerAttributionID, paymentSource } : CreateOrderXProps, { facilitatorAccessToken, createBillingAgreement, createSubscription } : {| facilitatorAccessToken : string, createBillingAgreement? : ?CreateBillingAgreement, createSubscription? : ?CreateSubscription |}) : CreateOrder {
+export function getCreateOrder({ createOrder, intent, currency, merchantID, partnerAttributionID, paymentSource } : CreateOrderXProps, { facilitatorAccessToken, createBillingAgreement, createSubscription, enableOrdersApprovalSmartWallet, smartWalletOrderID } : {| facilitatorAccessToken : string, createBillingAgreement? : ?CreateBillingAgreement, createSubscription? : ?CreateSubscription, enableOrdersApprovalSmartWallet? : boolean, smartWalletOrderID? : string |}) : CreateOrder {
     const data = buildXCreateOrderData({ paymentSource });
     const actions = buildXCreateOrderActions({ facilitatorAccessToken, intent, currency, merchantID, partnerAttributionID });
 
@@ -168,6 +168,10 @@ export function getCreateOrder({ createOrder, intent, currency, merchantID, part
         const queryOrderID = getQueryParam('orderID');
         if (queryOrderID) {
             return ZalgoPromise.resolve(queryOrderID);
+        }
+
+        if(enableOrdersApprovalSmartWallet && smartWalletOrderID) {
+            return ZalgoPromise.resolve(smartWalletOrderID);
         }
 
         const startTime = Date.now();
@@ -220,13 +224,14 @@ export function getCreateOrder({ createOrder, intent, currency, merchantID, part
                     };
                 })
                 .track({
-                    [FPTI_KEY.STATE]:              FPTI_STATE.BUTTON,
-                    [FPTI_KEY.TRANSITION]:         FPTI_TRANSITION.RECEIVE_ORDER,
-                    [FPTI_KEY.EVENT_NAME]:         FPTI_TRANSITION.RECEIVE_ORDER,
-                    [FPTI_KEY.CONTEXT_TYPE]:       FPTI_CONTEXT_TYPE.ORDER_ID,
-                    [FPTI_KEY.CONTEXT_ID]:         orderID,
-                    [FPTI_KEY.TOKEN]:              orderID,
-                    [FPTI_KEY.RESPONSE_DURATION]:  duration.toString()
+                    [FPTI_KEY.STATE]:               FPTI_STATE.BUTTON,
+                    [FPTI_KEY.TRANSITION]:          FPTI_TRANSITION.RECEIVE_ORDER,
+                    [FPTI_KEY.EVENT_NAME]:          FPTI_TRANSITION.RECEIVE_ORDER,
+                    [FPTI_KEY.CONTEXT_TYPE]:        FPTI_CONTEXT_TYPE.ORDER_ID,
+                    [FPTI_BUTTON_KEY.BUTTON_WIDTH]: window.innerWidth,
+                    [FPTI_KEY.CONTEXT_ID]:          orderID,
+                    [FPTI_KEY.TOKEN]:               orderID,
+                    [FPTI_KEY.RESPONSE_DURATION]:   duration.toString()
                 })
                 .flush();
 

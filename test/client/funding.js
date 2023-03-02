@@ -323,9 +323,15 @@ describe('funding source cases', () => {
         });
     });
 
+<<<<<<< HEAD
     it('should render a button, click the button, and render checkout with paidy funding source', async () => {
         return await wrapPromise(async ({ expect }) => {
             const fundingSource = FUNDING.PAIDY;
+=======
+    it('should render a button, click the button, and render checkout with satispay funding source', async () => {
+        return await wrapPromise(async ({ expect }) => {
+            const fundingSource = FUNDING.SATISPAY;
+>>>>>>> d275590293fc21c70652fe36e63ed5bed776dc75
 
             mockFunction(window.paypal, 'Checkout', expect('Checkout', ({ args: [ props ] }) => {
                 if (props.fundingSource !== fundingSource) {
@@ -338,7 +344,11 @@ describe('funding source cases', () => {
             }));
 
             const fundingEligibility = {
+<<<<<<< HEAD
                 paidy: {
+=======
+                satispay: {
+>>>>>>> d275590293fc21c70652fe36e63ed5bed776dc75
                     eligible: true,
                     branded: false
                 }
@@ -351,5 +361,8 @@ describe('funding source cases', () => {
             await clickButton(fundingSource);
         });
     });
+<<<<<<< HEAD
 
+=======
+>>>>>>> d275590293fc21c70652fe36e63ed5bed776dc75
 });

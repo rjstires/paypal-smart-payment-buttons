@@ -21,7 +21,6 @@ const loggerProps = {
     clientID: '',
     sdkVersion: '',
     sessionID: '',
-    fundingSource: 'venmo',
     sdkCorrelationID: ''
 };
 

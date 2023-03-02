@@ -8,7 +8,7 @@ import { INTENT, SDK_QUERY_KEYS, FPTI_KEY, FUNDING } from '@paypal/sdk-constants
 import { type OrderResponse, type PaymentResponse, getOrder, captureOrder, authorizeOrder, patchOrder,
     getSubscription, activateSubscription, type SubscriptionResponse, getPayment, executePayment, patchPayment,
     getSupplementalOrderInfo, isProcessorDeclineError, isUnprocessableEntityError } from '../api';
-import { FPTI_TRANSITION, FPTI_CONTEXT_TYPE } from '../constants';
+import { FPTI_TRANSITION, FPTI_CONTEXT_TYPE, FPTI_STATE } from '../constants';
 import { unresolvedPromise, getLogger } from '../lib';
 import { ENABLE_PAYMENT_API } from '../config';
 import type {FeatureFlags} from '../types'
@@ -369,6 +369,7 @@ export function getOnApproveOrder({ intent, onApprove = getDefaultOnApproveOrder
             getLogger()
                 .info('button_approve')
                 .track({
+                    [FPTI_KEY.STATE]:        FPTI_STATE.BUTTON,
                     [FPTI_KEY.TRANSITION]:   FPTI_TRANSITION.CHECKOUT_APPROVE,
                     [FPTI_KEY.CONTEXT_TYPE]: FPTI_CONTEXT_TYPE.ORDER_ID,
                     [FPTI_KEY.TOKEN]:        orderID,
@@ -578,3 +579,25 @@ export function getOnApprove({ intent, createBillingAgreement, createSubscriptio
 
     throw new Error(`Unsupported intent: ${ intent }`);
 }
+
+export type SaveActionOnApproveData = {| vaultSetupToken: string |};
+export type SaveActionOnApprove = (SaveActionOnApproveData) => ZalgoPromise<void>;
+
+export const getSaveActionOnApprove =
+  ({
+    onApprove,
+    onError,
+  }: {|
+    onApprove: SaveActionOnApprove,
+    onError: (error: mixed) => ZalgoPromise<void>,
+  |}): ((SaveActionOnApproveData) => ZalgoPromise<void>) =>
+  (data) => {
+    try {
+      return onApprove(data)?.catch((error) => {
+        return onError(error);
+      });
+    } catch (error) {
+      return onError(error);
+    }
+  };
+

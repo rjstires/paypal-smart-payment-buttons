@@ -10,6 +10,7 @@ import type { ContentType, ProxyWindow, Wallet, CheckoutFlowType, CardFormFlowTy
 import { type FirebaseConfig } from '../api';
 import { getNonce } from '../lib';
 import { getProps, type XProps, type Props } from '../props/props';
+import { getLegacyProps, type LegacyProps, type LegacyPropOptions } from '../props/legacyProps';
 
 // export something to force webpack to see this as an ES module
 export const TYPES = true;
@@ -32,14 +33,14 @@ export type ButtonStyle = {|
 
 export type ButtonXProps = {|
     ...XProps,
-
+    ...LegacyPropOptions,
     style : ButtonStyle,
     buttonSessionID : string
 |};
-
+    
 export type ButtonProps = {|
     ...Props,
-
+    ...LegacyProps,
     style : ButtonStyle,
     inlinexo : boolean,
     buttonSessionID : string
@@ -49,12 +50,16 @@ export function getButtonProps({
     facilitatorAccessToken,
     brandedDefault,
     paymentSource,
-    featureFlags
+    featureFlags,
+    enableOrdersApprovalSmartWallet,
+    smartWalletOrderID
 } : {|
     facilitatorAccessToken : string,
     brandedDefault : boolean | null,
     paymentSource : $Values<typeof FUNDING> | null,
-    featureFlags: FeatureFlags
+    featureFlags: FeatureFlags,
+    enableOrdersApprovalSmartWallet? : boolean,
+    smartWalletOrderID? : string
 |}) : ButtonProps {
     const xprops : ButtonXProps = window.xprops;
 
@@ -63,7 +68,14 @@ export function getButtonProps({
         style,
         branded,
         experience,
-        intent
+        intent,
+
+        partnerAttributionID,
+        merchantID,
+        clientID,
+        clientAccessToken,
+        vault = false,
+        currency
     } = xprops;
 
     branded = branded ?? brandedDefault;
@@ -112,8 +124,37 @@ export function getButtonProps({
         }
     }
 
+    const props = getProps({ branded, enableOrdersApprovalSmartWallet, smartWalletOrderID })
+
+    // TODO: This is a lot...maybe we consider just passing in `xprops` and having the function handle splitting things off.
+    const legacyProps = getLegacyProps({
+      paymentSource,
+      partnerAttributionID,
+      merchantID,
+      clientID,
+      facilitatorAccessToken,
+      currency,
+      intent,
+      enableOrdersApprovalSmartWallet,
+      smartWalletOrderID,
+      branded,
+      clientAccessToken,
+      vault,
+      featureFlags,
+      createBillingAgreement: xprops.createBillingAgreement,
+      createSubscription: xprops.createSubscription,
+      createOrder: xprops.createOrder,
+      onError: props.onError,
+      onApprove: xprops.onApprove,
+      onComplete: xprops.onComplete,
+      onCancel: xprops.onCancel,
+      onShippingChange: xprops.onShippingChange,
+      onShippingAddressChange: xprops.onShippingAddressChange,
+      onShippingOptionsChange: xprops.onShippingOptionsChange
+    })
     return {
-        ...getProps({ facilitatorAccessToken, branded, paymentSource, featureFlags }),
+        ...props,
+        ...legacyProps,
         style,
         buttonSessionID,
         branded,

@@ -1,6 +1,6 @@
 {
   "name": "@paypal/smart-payment-buttons",
-  "version": "5.0.120",
+  "version": "5.0.130",
   "publishConfig": {
     "registry": "https://registry.npmjs.org"
   },
@@ -17,7 +17,14 @@
     ],
     "globals": {
       "__DEBUG__": true
-    }
+    },
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "/fixtures/",
+      "<rootDir>/src/button/logger.test.js",
+      "<rootDir>/src/props/",
+      "<rootDir>/src/card/props.test.js"
+    ]
   },
   "files": [
     "dist",
@@ -35,15 +42,17 @@
   "scripts": {
     "all-ci": "npm run lint && npm run typecheck && npm run test",
     "babel": "babel webpack.config.js globals.js --out-dir .",
-    "build": "npm run webpack:release",
+    "build": "npm run webpack",
     "build-commit": "npm run build && git add dist && (git commit -m 'Dist' || echo 'Nothing to commit') && git push",
     "cdnify": "grabthar-cdnify --cdn=https://www.paypalobjects.com",
     "clean": "rimraf dist coverage",
+    "coverage": "vitest run --coverage",
     "debug": "cross-env NODE_ENV=debug",
     "deploy": "npm run cdnify",
     "flow": "flow",
     "flow-typed": "rm -rf ./flow-typed && flow-typed install --ignoreDeps peer && flow-typed install jest@24 mocha@4 && flow-typed install express@4.16 && sed -i -e 's/http$IncomingMessage,/http$IncomingMessage<>,/g' ./flow-typed/npm/express_v4.16.x.js",
-    "jest:client": "jest src/ --collectCoverage --collectCoverageFrom='src/' --testPathIgnorePatterns=/fixtures/ --no-cache --runInBand --env=jsdom",
+    "jest:client": "jest src/ --collectCoverage --collectCoverageFrom='src/' --no-cache --runInBand --env=jsdom",
+    "jest:watch": "jest src/--env=jsdom --watch",
     "karma": "cross-env NODE_ENV=test babel-node --plugins=transform-es2015-modules-commonjs ./node_modules/.bin/karma start",
     "lint": "eslint --ext .js --ext .jsx src/ test/ *.js",
     "postactivate": "npm run cdnify -- --commitonly",
@@ -55,10 +64,12 @@
     "release:cli": "rm -rf node_modules && npm i && npm run all-ci && npm run build-commit && grabthar-release",
     "release:dry-run": "DRY_RUN=true grabthar-release",
     "setup": "npm install && npm run flow-typed",
-    "test": "npm run karma && npm run jest:client",
+    "start": "npm run webpack -- --progress --watch",
+    "test": "npm run karma && npm run jest:client && npm run vitest",
     "typecheck": "npm run flow-typed && npm run flow -- check",
-    "webpack": "babel-node --plugins=transform-es2015-modules-commonjs ./node_modules/.bin/webpack --progress",
-    "webpack:release": "babel-node --plugins=transform-es2015-modules-commonjs ./node_modules/.bin/webpack"
+    "vitest": "vitest",
+    "webpack": "babel-node --plugins=transform-es2015-modules-commonjs $(npm bin)/webpack",
+    "prepare": "husky install"
   },
   "peerDependencies": {
     "express": "^4.16.3"
@@ -66,21 +77,20 @@
   "alias": {},
   "dependencies": {
     "@krakenjs/beaver-logger": "^5.0.1",
-    "@krakenjs/belter": "^2.0.0",
+    "@krakenjs/belter": "^2.1.0",
     "@krakenjs/cross-domain-utils": "^3.0.0",
     "@krakenjs/grabthar": "^6.2.0",
     "@krakenjs/jsx-pragmatic": "^3.0.0",
     "@krakenjs/post-robot": "^11.0.0",
     "@krakenjs/zalgo-promise": "^2.0.0",
     "@paypal/checkout-components": "^5.0.238",
-    "@paypal/common-components": "^1.0.33",
+    "@paypal/common-components": "^1.0.34",
     "@paypal/installments": "^1.0.0",
     "@paypal/sdk-client": "^4.0.156",
-    "@paypal/sdk-constants": "^1.0.123",
-    "@paypal/sdk-logos": "^2.0.0",
+    "@paypal/sdk-constants": "^1.0.127",
+    "@paypal/sdk-logos": "^2.0.2",
     "@paypal/sdk-release": "^5.0.138",
     "card-validator": "^8.1.1",
-    "credit-card-type": "^9.1.0",
     "get-browser-fingerprint": "^1.1.0",
     "module-alias": "^2.2.2",
     "preact": "^10",
@@ -89,16 +99,30 @@
     "typed-graphqlify": "^2.2.3"
   },
   "devDependencies": {
+    "@bunchtogether/vite-plugin-flow": "^1.0.2",
     "@krakenjs/grabthar-release": "^3.0.0",
     "@krakenjs/grumbler-scripts": "^8.0.4",
     "@krakenjs/sync-browser-mocks": "^3.0.0",
-    "@krakenjs/webpack-mem-compile": "^2.0.1",
+    "@vitest/ui": "^0.25.3",
     "babel-core": "^7.0.0-bridge.0",
     "cross-env": "^7.0.3",
     "express": "^4.16.3",
     "flow-bin": "0.155.0",
     "flow-typed": "^3.8.0",
-    "jest": "^27"
+    "happy-dom": "^7.7.0",
+    "husky": "^8.0.2",
+    "jest": "^27.5.1",
+    "lint-staged": "^13.0.4",
+    "prettier": "^2.8.0",
+    "vite": "^3.2.4",
+    "vitest": "^0.25.3"
+  },
+  "lint-staged": {
+    "vite.config.js": "prettier --write",
+    "**/button/logger.test.js": "prettier --write",
+    "**/src/props/*.test.js": "prettier --write",
+    "**/src/card/props.test.js": "prettier --write",
+    "**/tests/*.{js}": "prettier --write"
   },
   "license": "Apache-2.0"
 }

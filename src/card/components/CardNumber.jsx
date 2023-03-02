@@ -1,21 +1,23 @@
 /* @flow */
 /** @jsx h */
 
-import { h } from 'preact';
-import { useState, useEffect } from 'preact/hooks';
+import { h, Fragment } from 'preact';
+import { useState, useEffect, useRef } from 'preact/hooks';
+import cardValidator from 'card-validator';
 
-
+import { getPostRobot } from '../../lib';
 import {
-    maskCard,
+    addGapsToCardNumber,
     checkForNonDigits,
     removeNonDigits,
     detectCardType,
-    checkCardNumber,
+    checkCardEligibility,
     moveCursor,
     defaultNavigation,
     defaultInputState,
     navigateOnKeyDown,
-    maskValidCard
+    maskValidCard,
+    exportMethods
 } from '../lib';
 import type {
     CardNumberChangeEvent,
@@ -27,28 +29,39 @@ import type {
 } from '../types';
 import {  DEFAULT_CARD_TYPE } from '../constants';
 
+import { Icon } from './Icons';
+import { AriaMessage } from './AriaMessage'
+
 // Helper method to check if navigation to next field should be allowed
 function validateNavigation({ allowNavigation,  inputState } : {| allowNavigation : boolean, inputState : InputState |}) : boolean {
     const { inputValue, isValid, maskedInputValue, cursorStart, contentPasted } = inputState;
     return Boolean(allowNavigation && inputValue && isValid && (maskedInputValue.length === cursorStart || contentPasted));
 }
 
+function getIconId(type) : string {
+    const iconId = `icon-${type}`;
+    const element = document.getElementById(iconId);
+    if (element) {
+        return iconId;
+    }
+    return 'icon-unknown';
+}
+
 type CardNumberProps = {|
     name : string,
     autocomplete? : string,
-    ref : () => void,
     type : string,
     state? : InputState,
-    className : string,
     placeholder : string,
     style : Object,
-    maxLength : string,
     navigation? : CardNavigation,
     allowNavigation? : boolean,
     onChange : (numberEvent : CardNumberChangeEvent) => void,
     onFocus? : (event : InputEvent) => void,
     onBlur? : (event : InputEvent) => void,
-    onValidityChange? : (numberValidity : FieldValidity) => void
+    onKeyDown? : (keyDown : boolean) => void,
+    onValidityChange? : (numberValidity : FieldValidity) => void,
+    onEligibilityChange? : (isCardEligible : boolean) => void,
 |};
 
 export function CardNumber(
@@ -58,28 +71,68 @@ export function CardNumber(
         navigation = defaultNavigation,
         allowNavigation = false,
         state,
-        ref,
         type,
-        className,
         placeholder,
         style,
-        maxLength,
         onChange,
         onFocus,
         onBlur,
-        onValidityChange
+        onKeyDown,
+        onValidityChange,
+        onEligibilityChange,
     } : CardNumberProps
 ) : mixed {
-    const [ cardType, setCardType ] : [ CardType, (CardType) => CardType ] = useState(DEFAULT_CARD_TYPE);
+    const [ attributes, setAttributes ] : [ Object, (Object) => Object ] = useState({ placeholder });
+    const [ cardTypes, setCardTypes ] : [ CardType, ($ReadOnlyArray<CardType>) => $ReadOnlyArray<CardType> ] = useState([DEFAULT_CARD_TYPE]);
+    const [ maxLength, setMaxLength ] : [ number, (number) => number ] = useState(24);
     const [ inputState, setInputState ] : [ InputState, (InputState | InputState => InputState) => InputState ] = useState({ ...defaultInputState, ...state });
-
     const { inputValue, maskedInputValue, cursorStart, cursorEnd, keyStrokeCount, isValid, isPotentiallyValid, contentPasted } = inputState;
+    const [ cardType, setCardType ] : [ CardType, (CardType) => CardType ] = useState(DEFAULT_CARD_TYPE);
+
+    const numberRef = useRef()
+    const ariaMessageRef = useRef()
 
     useEffect(() => {
-        const validity = checkCardNumber(inputValue, cardType);
-        setInputState(newState => ({ ...newState, ...validity }));
-    }, [ inputValue, maskedInputValue ]);
+        if (!allowNavigation) {
+            exportMethods(numberRef, setAttributes, setInputState, ariaMessageRef);
+        }
+    }, []);
 
+    useEffect(() => {
+        setCardType(cardTypes[0])
+    }, [cardTypes])
+
+    useEffect(() => {
+        onChange({ cardNumber: inputState.inputValue, potentialCardTypes: cardTypes});
+    }, [ inputState ]);
+
+    useEffect(() => {
+        if (typeof onEligibilityChange === 'function') {
+            onEligibilityChange(checkCardEligibility(inputValue, cardType));
+        }
+        
+        if (cardType && cardType.lengths) {
+            // get the maximum card length for the given card type
+            const cardMaxLength = cardType.lengths.reduce((previousValue, currentValue) => {
+                return Math.max(previousValue, currentValue);
+            });
+            if (cardMaxLength) {
+                // set maxLength to the maximum card length, plus the number of spaces for the gaps
+                setMaxLength(cardMaxLength + (cardType.gaps?.length ?? 0));
+            }
+        }
+        // communicate card type change to sibling components
+        const postRobot = getPostRobot();
+        if (postRobot) {
+            const frames = window.parent.frames;
+            for (const frame of frames) {
+                postRobot.send(frame, 'cardTypeChange', cardType, {
+                    domain: window.location.origin,
+                    fireAndForget: true
+                });
+            }
+        }
+    }, [ cardType ]);
 
     useEffect(() => {
         if (typeof onValidityChange === 'function') {
@@ -92,13 +145,12 @@ export function CardNumber(
 
     }, [ isValid, isPotentiallyValid ]);
 
-
     const setValueAndCursor : (InputEvent) => void = (event : InputEvent) : void => {
         const { value: rawValue, selectionStart, selectionEnd } = event.target;
         const value = removeNonDigits(rawValue);
         const detectedCardType = detectCardType(value);
-        const maskedValue = maskCard(value);
-
+        const validity = cardValidator.number(value);
+        const maskedValue = addGapsToCardNumber(value);
         let startCursorPosition = selectionStart;
         let endCursorPosition = selectionEnd;
         
@@ -117,9 +169,10 @@ export function CardNumber(
 
         moveCursor(event.target, startCursorPosition, endCursorPosition);
 
-        setCardType(detectedCardType);
+        setCardTypes(detectedCardType);
         setInputState({
             ...inputState,
+            ...validity,
             inputValue:       value,
             maskedInputValue: maskedValue,
             cursorStart:      startCursorPosition,
@@ -128,7 +181,6 @@ export function CardNumber(
             keyStrokeCount:   keyStrokeCount + 1
         });
 
-        onChange({ event, cardNumber: value, cardMaskedNumber: maskedValue, cardType: detectedCardType });
     };
 
     const onFocusEvent : (InputEvent) => void = (event : InputEvent) : void => {
@@ -136,26 +188,37 @@ export function CardNumber(
             onFocus(event);
         }
 
-        const maskedValue = maskCard(inputValue);
-        const updatedState = { ...inputState, maskedInputValue: maskedValue };
-        if (!isValid) {
-            updatedState.isPotentiallyValid = true;
+        const element = numberRef?.current;
+        if (element) {
+            element.classList.add('display-icon');
         }
+        const maskedValue = addGapsToCardNumber(inputValue);
+        const updatedState = { ...inputState, maskedInputValue: maskedValue, displayCardIcon: true };
 
         setInputState((newState) => ({ ...newState, ...updatedState }));
     };
 
     const onBlurEvent : (InputEvent) => void = (event : InputEvent) : void => {
-        const updatedState = { maskedInputValue, isPotentiallyValid, contentPasted: false };
+        const updatedState = { maskedInputValue, isPotentiallyValid, contentPasted: false, displayCardIcon: inputState.inputValue.length > 0 };
+
+        const element = numberRef?.current;
+        if (element) {
+            if (inputState.inputValue.length > 0) {
+                element.classList.add('display-icon');
+            } else {
+                element.classList.remove('display-icon');
+            }
+        }
 
         if (isValid) {
             updatedState.maskedInputValue = maskValidCard(maskedInputValue);
-        } else {
-            updatedState.isPotentiallyValid = false;
         }
 
         if (typeof onBlur === 'function') {
             onBlur(event);
+        }
+        if ( typeof onKeyDown === 'function') {
+            onKeyDown(false)
         }
 
         setInputState((newState) => ({ ...newState, ...updatedState }));
@@ -164,6 +227,14 @@ export function CardNumber(
     };
 
     const onKeyDownEvent : (InputEvent) => void = (event : InputEvent) : void => {
+        if (typeof onKeyDown === 'function') {
+            if(event.key === "Enter"){
+                onKeyDown(true)
+            } else {
+                onKeyDown(false)
+            }
+        }
+
         if (allowNavigation) {
             navigateOnKeyDown(event, navigation);
         }
@@ -174,22 +245,30 @@ export function CardNumber(
     };
 
     return (
-        <input
-            name={ name }
-            autocomplete={ autocomplete }
-            inputmode='numeric'
-            ref={ ref }
-            type={ type }
-            className={ className }
-            placeholder={ placeholder }
-            value={ maskedInputValue }
-            style={ style }
-            maxLength={ maxLength }
-            onInput={ setValueAndCursor }
-            onFocus={ onFocusEvent }
-            onBlur={ onBlurEvent }
-            onKeyDown={ onKeyDownEvent }
-            onPaste={ onPasteEvent }
-        />
+        <Fragment>
+            <input
+                aria-describedby={'card-number-field-description'}
+                name={ name }
+                autocomplete={ autocomplete }
+                inputmode='numeric'
+                ref={ numberRef }
+                type={ type }
+                className='card-field-number'
+                value={ maskedInputValue }
+                style={ style }
+                maxLength={ maxLength }
+                onInput={ setValueAndCursor }
+                onFocus={ onFocusEvent }
+                onBlur={ onBlurEvent }
+                onKeyDown={ onKeyDownEvent }
+                onPaste={ onPasteEvent }
+                { ...attributes }
+            />
+            <Icon iconId={ getIconId(cardType.type) } iconClass="card-icon" />
+            <AriaMessage
+                ariaMessageId={'card-number-field-description'}
+                ariaMessageRef={ariaMessageRef}
+            />
+        </Fragment>
     );
 }
