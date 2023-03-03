@@ -34,7 +34,7 @@ jobs:
       - name: ▶️ Typecheck
         run: npm run typecheck
 
-      - name: ▶️ Karma & Jest
+      - name: ▶️ Test
         run: npm run test
 
       - name: ▶️ Build

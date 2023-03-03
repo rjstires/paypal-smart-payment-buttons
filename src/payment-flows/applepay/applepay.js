@@ -321,7 +321,7 @@ function initApplePay({ props, payment, serviceData } : InitOptions) : PaymentFl
                         completePayment
                     } = response;
 
-                    function validateMerchant({ validationURL } : {| validationURL : string |}) {
+                    function validateMerchant({ validationURL } : {| validationURL : string |}): ZalgoPromise<void> {
                         logApplePayEvent('validatemerchant', { validationURL });
 
                         const validatePromise = ZalgoPromise.try(() => {
@@ -351,8 +351,8 @@ function initApplePay({ props, payment, serviceData } : InitOptions) : PaymentFl
                             return unresolvedPromise();
                         });
 
-                        orderPromise.then(orderID => {                
-                            getDetailedOrderInfo(orderID, locale.country).then(order => {
+                        return orderPromise.then(orderID => {                
+                            return getDetailedOrderInfo(orderID, locale.country).then(order => {
                                 const {
                                     merchant,
                                     cart: {
@@ -386,7 +386,7 @@ function initApplePay({ props, payment, serviceData } : InitOptions) : PaymentFl
                                 currentTotalAmount = totalValue;
                                 merchantName = merchant?.name || 'Total';
 
-                                getApplePayMerchantSession({ url: validationURL, clientID, orderID, merchantDomain })
+                                return getApplePayMerchantSession({ url: validationURL, clientID, orderID, merchantDomain })
                                     .then(merchantSession => {
                                         try {
                                             const session = atob(merchantSession.session);
@@ -435,12 +435,12 @@ function initApplePay({ props, payment, serviceData } : InitOptions) : PaymentFl
                         completePaymentMethodSelection(update);
                     }
                     
-                    function shippingMethodSelected({ shippingMethod } : {| shippingMethod : ApplePayShippingMethod |}) {
+                    function shippingMethodSelected({ shippingMethod } : {| shippingMethod : ApplePayShippingMethod |}): ZalgoPromise<void> {
                         logApplePayEvent('shippingmethodselected');
 
-                        createOrder().then(orderID => {
+                        return createOrder().then(orderID => {
                             // patch updated amount
-                            onShippingChangeCallback<ApplePayShippingMethodUpdate>({ orderID, shippingContact: currentShippingContact, shippingMethod, callbackTrigger: SHIPPING_OPTION })
+                            return onShippingChangeCallback<ApplePayShippingMethodUpdate>({ orderID, shippingContact: currentShippingContact, shippingMethod, callbackTrigger: SHIPPING_OPTION })
                                 .then(update => {
                                     currentShippingMethod = shippingMethod;
                                     completeShippingMethodSelection(update);
@@ -469,12 +469,12 @@ function initApplePay({ props, payment, serviceData } : InitOptions) : PaymentFl
 
                     }
 
-                    function shippingContactSelected({ shippingContact } : {| shippingContact : ApplePayPaymentContact |}) {
+                    function shippingContactSelected({ shippingContact } : {| shippingContact : ApplePayPaymentContact |}): ZalgoPromise<void> {
                         logApplePayEvent('shippingcontactselected', shippingContact);
 
-                        createOrder().then(orderID => {
+                        return createOrder().then(orderID => {
                             // patch updated shipping contact information
-                            onShippingChangeCallback<ApplePayShippingContactUpdate>({ orderID, shippingContact, shippingMethod: currentShippingMethod, callbackTrigger: SHIPPING_ADDRESS })
+                            return onShippingChangeCallback<ApplePayShippingContactUpdate>({ orderID, shippingContact, shippingMethod: currentShippingMethod, callbackTrigger: SHIPPING_ADDRESS })
                                 .then(update => {
                                     completeShippingContactSelection(update);
                                 })
@@ -484,7 +484,7 @@ function initApplePay({ props, payment, serviceData } : InitOptions) : PaymentFl
                         })
                     }
 
-                    function paymentAuthorized({ payment: applePayPayment }) {
+                    function paymentAuthorized({ payment: applePayPayment }): ZalgoPromise<void> {
                         logApplePayEvent('paymentauthorized');
 
                         if (!applePayPayment) {
@@ -500,9 +500,9 @@ function initApplePay({ props, payment, serviceData } : InitOptions) : PaymentFl
                             applePayPayment.billingContact.countryCode = applePayPayment.billingContact.countryCode.toUpperCase();
                         }
 
-                        createOrder().then(orderID => {
+                        return createOrder().then(orderID => {
                             // call graphQL mutation passing in token, billingContact and shippingContact
-                            approveApplePayPayment(orderID, clientID, applePayPayment)
+                            return approveApplePayPayment(orderID, clientID, applePayPayment)
                                 .then(validatedPayment => {
                                     if (validatedPayment) {
                                         completePayment({

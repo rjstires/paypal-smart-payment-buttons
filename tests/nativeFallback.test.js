@@ -1,5 +1,4 @@
 /* @flow */
-/* eslint max-nested-callbacks: off, max-lines: off */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
@@ -31,7 +30,6 @@ describe("Native fallback cases", () => {
   afterEach(() => {
     delete window.opener;
     nativeFallback?.destroy();
-    vi.resetAllMocks();
   });
 
   it("should open the native fallback and send a detect web switch message", async () => {

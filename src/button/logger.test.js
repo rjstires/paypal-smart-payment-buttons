@@ -59,7 +59,6 @@ describe("setupButtonLogger", () => {
 
   afterEach(() => {
     vi.useRealTimers();
-    vi.resetAllMocks();
   });
 
   it("should send logs for CPL", async () => {

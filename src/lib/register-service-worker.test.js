@@ -1,6 +1,7 @@
 // eslint-disable-next-line eslint-comments/disable-enable-pair
 /* eslint-disable promise/no-native, no-restricted-globals, compat/compat */
 /* @flow */
+import {describe, beforeEach, it, expect, vi} from 'vitest'
 
 import { SERVICE_WORKER } from '../constants';
 
@@ -51,20 +52,20 @@ describe('Test service worker registration script', () => {
     beforeEach(() => {
         Object.defineProperty(global.navigator, 'serviceWorker', {
             value: {
-                register: jest.fn().mockResolvedValue(({
+                register: vi.fn().mockResolvedValue(({
                     addEventListener: () => true
                 }))
             }
         });
         Object.defineProperty(global, 'BroadcastChannel', {
-            value: jest.fn().mockImplementation(() => ({
-                addEventListener: jest.fn()
+            value: vi.fn().mockImplementation(() => ({
+                addEventListener: vi.fn()
             }))
         });
     });
 
     it('Should install a service worker', async() => {
-        const registerSpy = jest.spyOn(global.navigator.serviceWorker, 'register');
+        const registerSpy = vi.spyOn(global.navigator.serviceWorker, 'register');
         const dumbledoreCurrentReleaseHash = 'b6cc430fb82802fb9363767b8a7c38187fa4a9d7';
         const dumbledoreServiceWorker = 'service-worker.d13e6de5a39aafd6b06bd1d18d165c8d.js';
         

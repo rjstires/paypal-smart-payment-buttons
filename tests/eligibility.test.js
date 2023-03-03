@@ -1,6 +1,6 @@
 /* @flow */
 
-import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { FUNDING, INTENT } from "@paypal/sdk-constants/src";
 
 import {
@@ -22,10 +22,6 @@ describe("eligibility cases", () => {
         // eslint-disable-next-line compat/compat, promise/no-native, no-restricted-globals
         Promise.resolve("https://www.merchant.com/foo/bar?baz=1"),
     });
-  });
-
-  afterEach(() => {
-    vi.resetAllMocks();
   });
 
   it("should call xprops.remember with venmo if venmo is eligible", async () => {

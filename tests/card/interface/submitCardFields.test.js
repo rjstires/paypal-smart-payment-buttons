@@ -2,10 +2,7 @@
 import { describe, test, expect, beforeEach, vi } from "vitest";
 import { INTENT } from "@paypal/sdk-constants";
 
-import {
-  hasCardFields,
-  submitCardFields,
-} from "../../../src/card/interface";
+import { hasCardFields, submitCardFields } from "../../../src/card/interface";
 import { getCardProps } from "../../../src/card/props";
 import { resetGQLErrors } from "../../../src/card/interface/gql";
 import { savePaymentSource } from "../../../src/card/interface/vault-without-purchase";
@@ -45,9 +42,9 @@ vi.mock("../../../src/card/interface/vault-without-purchase", () => ({
   savePaymentSource: vi.fn(),
 }));
 
-vi.mock("../../../src/lib")
+vi.mock("../../../src/lib");
 vi.mock("../../../src/api", () => ({
-    // eslint-disable-next-line compat/compat, promise/no-native, no-restricted-globals
+  // eslint-disable-next-line compat/compat, promise/no-native, no-restricted-globals
   confirmOrderAPI: vi.fn(() => Promise.resolve({ id: "test-order-id" })),
 }));
 
@@ -73,12 +70,12 @@ describe("submitCardFields", () => {
   });
 
   test("should use the provided save action", async () => {
-    const createVaultSetupToken = vi.fn().mockResolvedValue('setup-token');
+    const createVaultSetupToken = vi.fn().mockResolvedValue("setup-token");
     const onApprove = vi.fn();
 
     const mockGetCardPropsReturn = {
-      userIDToken: 'token',
-      clientID: 'client-id',
+      userIDToken: "token",
+      clientID: "client-id",
       save: {
         onApprove,
         createVaultSetupToken,

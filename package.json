@@ -10,23 +10,6 @@
     "type": "git",
     "url": "https://github.com/paypal/paypal-smart-payment-buttons"
   },
-  "jest": {
-    "restoreMocks": true,
-    "transformIgnorePatterns": [
-      "node_modules/(?!(@paypal|@krakenjs|get-browser-fingerprint))"
-    ],
-    "globals": {
-      "__DEBUG__": true
-    },
-    "testPathIgnorePatterns": [
-      "/node_modules/",
-      "/fixtures/",
-      "<rootDir>/src/button/logger.test.js",
-      "<rootDir>/src/props/",
-      "<rootDir>/src/card/props.test.js",
-      "<rootDir>/src/card/interface/"
-    ]
-  },
   "files": [
     "dist",
     "src",
@@ -52,8 +35,6 @@
     "deploy": "npm run cdnify",
     "flow": "flow",
     "flow-typed": "rm -rf ./flow-typed && flow-typed install --ignoreDeps peer && flow-typed install jest@24 mocha@4 && flow-typed install express@4.16 && sed -i -e 's/http$IncomingMessage,/http$IncomingMessage<>,/g' ./flow-typed/npm/express_v4.16.x.js",
-    "jest:client": "jest src/ --collectCoverage --collectCoverageFrom='src/' --no-cache --runInBand --env=jsdom",
-    "jest:watch": "jest src/--env=jsdom --watch",
     "karma": "cross-env NODE_ENV=test babel-node --plugins=transform-es2015-modules-commonjs ./node_modules/.bin/karma start",
     "lint": "eslint --ext .js --ext .jsx src/ test/ *.js",
     "postactivate": "npm run cdnify -- --commitonly",
@@ -66,7 +47,7 @@
     "release:dry-run": "DRY_RUN=true grabthar-release",
     "setup": "npm install && npm run flow-typed",
     "start": "npm run webpack -- --progress --watch",
-    "test": "npm run karma && npm run jest:client && npm run vitest",
+    "test": "npm run vitest -- run && npm run karma",
     "typecheck": "npm run flow-typed && npm run flow -- check",
     "vitest": "vitest",
     "webpack": "babel-node --plugins=transform-es2015-modules-commonjs $(npm bin)/webpack",
@@ -112,7 +93,7 @@
     "flow-typed": "^3.8.0",
     "happy-dom": "^7.7.0",
     "husky": "^8.0.2",
-    "jest": "^27.5.1",
+    "jsdom": "^21.1.0",
     "lint-staged": "^13.0.4",
     "prettier": "^2.8.0",
     "vite": "^3.2.4",
@@ -120,11 +101,7 @@
   },
   "lint-staged": {
     "vite.config.js": "prettier --write",
-    "**/button/logger.test.js": "prettier --write",
-    "**/src/props/*.test.js": "prettier --write",
-    "**/src/card/props.test.js": "prettier --write",
-    "**/src/card/interface/*.test.js": "prettier --write",
-    "**/tests/*.{js}": "prettier --write"
+    "**/{src,tests}/**/*.test.{js,jsx,json}": "prettier --write"
   },
   "license": "Apache-2.0"
 }

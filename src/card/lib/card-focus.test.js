@@ -1,4 +1,5 @@
 /* @flow */
+import { describe, beforeEach, it, expect, vi } from "vitest";
 
 import { autoFocusOnFirstInput, goToNextField, goToPreviousField } from "./card-focus";
 
@@ -19,7 +20,7 @@ function triggerFocusListener(input) {
         focusinListener({ target: input });
     }
 
-    jest.runAllTimers();
+    vi.runAllTimers();
 
 }
 
@@ -27,8 +28,8 @@ describe("autoFocusOnFirstInput", () => {
   let input: HTMLInputElement;
 
   beforeEach(() => {
-    jest.useFakeTimers();
-    jest.spyOn(window, "addEventListener").mockImplementation(jest.fn());
+    vi.useFakeTimers();
+    vi.spyOn(window, "addEventListener").mockImplementation(vi.fn());
     input = document.createElement("input");
   });
 
@@ -53,7 +54,7 @@ describe("autoFocusOnFirstInput", () => {
   });
 
   it("noops when the an HTMLInputElement gets focus", () => {
-    const spy = jest.spyOn(input, "focus");
+    const spy = vi.spyOn(input, "focus");
 
     autoFocusOnFirstInput(input);
 
@@ -63,7 +64,7 @@ describe("autoFocusOnFirstInput", () => {
   });
 
   it("focuses on input when the window gets focus", () => {
-    const spy = jest.spyOn(input, "focus");
+    const spy = vi.spyOn(input, "focus");
 
     autoFocusOnFirstInput(input);
 
@@ -77,7 +78,7 @@ describe("autoFocusOnFirstInput", () => {
 
     input.setSelectionRange(1, 2);
 
-    const spy = jest.spyOn(input, "setSelectionRange");
+    const spy = vi.spyOn(input, "setSelectionRange");
     autoFocusOnFirstInput(input);
 
     triggerFocusListener();
@@ -90,7 +91,7 @@ describe("autoFocusOnFirstInput", () => {
   it("adjusts and resets the inputs value when it is empty to accomodate Safari quirk", () => {
     input.value = "";
 
-    const spy = jest.spyOn(input, "value", "set");
+    const spy = vi.spyOn(input, "value", "set");
     autoFocusOnFirstInput(input);
 
     triggerFocusListener();
@@ -103,7 +104,7 @@ describe("autoFocusOnFirstInput", () => {
 
 describe("goToNextField", () => {
   it('puts the cursor at the start of the next field', () => {
-    jest.useFakeTimers();
+    vi.useFakeTimers();
     const element = document.createElement('input');
     const ref = {
       current: {
@@ -112,8 +113,8 @@ describe("goToNextField", () => {
     };
 
     goToNextField(ref)();
-    const spy = jest.spyOn(element, 'focus')
-    jest.runAllTimers()
+    const spy = vi.spyOn(element, 'focus')
+    vi.runAllTimers()
 
     expect(element.selectionStart).toBe(0);
     expect(spy).toHaveBeenCalled()
@@ -122,7 +123,7 @@ describe("goToNextField", () => {
 
 describe("goToPreviousField", () => {
   it('puts the cursor at the end of the previous field', () => {
-    jest.useFakeTimers();
+    vi.useFakeTimers();
 
     const element = document.createElement('input');
     element.value = 'foo'
@@ -133,8 +134,8 @@ describe("goToPreviousField", () => {
     };
 
     goToPreviousField(ref)();
-    const spy = jest.spyOn(element, 'focus')
-    jest.runAllTimers()
+    const spy = vi.spyOn(element, 'focus')
+    vi.runAllTimers()
 
     expect(element.selectionStart).toBe(3);
     expect(spy).toHaveBeenCalled()

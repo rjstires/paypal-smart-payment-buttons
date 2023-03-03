@@ -1,4 +1,6 @@
 /* @flow */
+import { describe, test, expect } from "vitest";
+
 import { convertCardToPaymentSource, cardExpiryToPaymentSourceExpiry } from "./index";
 
 const testCard = "4111111111111111";
@@ -64,12 +66,12 @@ describe("convertCardToPaymentSource", () => {
 });
 
 describe("cardExpiryToPaymentSourceExpiry", () => {
-  it("returns the same input string when the input string is already in YYYY-mm format", () => {
+  test("returns the same input string when the input string is already in YYYY-mm format", () => {
     const input = "2023-02";
     expect(cardExpiryToPaymentSourceExpiry(input)).toEqual(input);
   });
 
-  it("converts mm/YYYY input to YYYY-mm format for first month", () => {
+  test("converts mm/YYYY input to YYYY-mm format for first month", () => {
     const input1 = "01/2024";
     const input2 = "1/24";
     const expectedOutput = "2024-01";
@@ -77,7 +79,7 @@ describe("cardExpiryToPaymentSourceExpiry", () => {
     expect(cardExpiryToPaymentSourceExpiry(input2)).toEqual(expectedOutput);
   });
 
-  it("converts mm/YYYY input to YYYY-mm format for a middle month", () => {
+  test("converts mm/YYYY input to YYYY-mm format for a middle month", () => {
     const input1 = "04/2024";
     const input2 = "4/24";
     const expectedOutput = "2024-04";
@@ -85,7 +87,7 @@ describe("cardExpiryToPaymentSourceExpiry", () => {
     expect(cardExpiryToPaymentSourceExpiry(input2)).toEqual(expectedOutput);
   });
 
-  it("converts mm/YYYY input to YYYY-mm format for last month", () => {
+  test("converts mm/YYYY input to YYYY-mm format for last month", () => {
     const input1 = "12/2024";
     const input2 = "12/24";
     const expectedOutput = "2024-12";
@@ -93,14 +95,14 @@ describe("cardExpiryToPaymentSourceExpiry", () => {
     expect(cardExpiryToPaymentSourceExpiry(input2)).toEqual(expectedOutput);
   });
 
-  it("throws an error when the input string is not in the expected format", () => {
+  test("throws an error when the input string is not in the expected format", () => {
     const input = "2023/02";
     expect(() => {
       cardExpiryToPaymentSourceExpiry(input);
     }).toThrowError(`can not convert invalid expiry date: ${input}`);
   });
 
-  it("throws an error when the input is empty", () => {
+  test("throws an error when the input is empty", () => {
     const input = "";
     expect(() => {
       cardExpiryToPaymentSourceExpiry(input);

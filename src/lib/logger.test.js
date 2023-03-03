@@ -1,15 +1,19 @@
 /* @flow */
+import { describe, it, expect, vi } from "vitest";
+import { isAndroid, isIos } from "@krakenjs/belter";
+import { ZalgoPromise } from "@krakenjs/zalgo-promise/src";
 
-import { isAndroid, isIos } from '@krakenjs/belter/src';
-import { ZalgoPromise } from '@krakenjs/zalgo-promise/src';
+import { getLogger, setupLogger, enableAmplitude } from "./logger";
 
-import { getLogger, setupLogger, enableAmplitude  } from './logger';
+vi.mock("@krakenjs/belter", async () => {
+  const actual = await vi.importActual("@krakenjs/belter");
 
-jest.mock('@krakenjs/belter/src', () => ({
-    ...jest.requireActual('@krakenjs/belter/src'),
-    isIos: jest.fn(),
-    isAndroid: jest.fn()
-}));
+  return {
+    ...actual,
+    isIos: vi.fn(),
+    isAndroid: vi.fn(),
+  };
+});
 
 const loggerProps = {
     env: 'test',
@@ -24,25 +28,33 @@ const loggerProps = {
     sdkCorrelationID: ''
 };
 
-describe('setupLogger()', () => {
-    it('can enable amplitude', () => {
-        expect(() => enableAmplitude({env: 'test'})).not.toThrowError();
-    });
-    it('supports sdk mobile environments', () => {
-        // $FlowFixMe
-        isIos.mockImplementationOnce(() => true);
-        getLogger().track({tracking: true});
-        setupLogger(loggerProps);
-        // $FlowFixMe
-        isAndroid.mockImplementationOnce(() => true);
-        getLogger().info('info about android os');
-        setupLogger(loggerProps);
-    });
-    it('logs unhandled errors', () => {
-        jest.spyOn(ZalgoPromise, 'onPossiblyUnhandledException').mockImplementationOnce((d) => d());
-        const mockError = jest.fn();
-        jest.spyOn(getLogger(), 'error').mockImplementationOnce(mockError);
-        setupLogger(loggerProps);
-        expect(mockError).toHaveBeenCalledWith('unhandled_error', expect.any(Object));
-    });
+describe("setupLogger", () => {
+  it("can enable amplitude", () => {
+    expect(() => enableAmplitude({ env: "test" })).not.toThrowError();
+  });
+
+  it("supports sdk mobile environments", () => {
+    // $FlowFixMe
+    isIos.mockImplementation(() => true);
+    getLogger().track({ tracking: true });
+    setupLogger(loggerProps);
+    // $FlowFixMe
+    isAndroid.mockImplementationOnce(() => true);
+    getLogger().info("info about android os");
+    setupLogger(loggerProps);
+  });
+
+  it("logs unhandled errors", () => {
+    vi.spyOn(
+      ZalgoPromise,
+      "onPossiblyUnhandledException"
+    ).mockImplementationOnce((d) => d());
+    const mockError = vi.fn();
+    vi.spyOn(getLogger(), "error").mockImplementationOnce(mockError);
+    setupLogger(loggerProps);
+    expect(mockError).toHaveBeenCalledWith(
+      "unhandled_error",
+      expect.any(Object)
+    );
+  });
 });

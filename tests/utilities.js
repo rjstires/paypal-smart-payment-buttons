@@ -1,7 +1,8 @@
 /* eslint-disable eslint-comments/disable-enable-pair */
-/* eslint-disable promise/no-native, no-restricted-globals, compat/compat */
+/* eslint-disable promise/no-native, no-restricted-globals */
 /* @flow */
 import { FUNDING, COUNTRY } from "@paypal/sdk-constants";
+import { vi } from "vitest";
 
 import { setupButton } from "../src";
 import { type SetupButtonOptions } from "../src/button/button";
@@ -71,7 +72,8 @@ export const setupWindowXprops = (options: WindowXpropsOptions = {}) => {
       country: "US",
       lang: "en",
     },
-    getPrerenderDetails: () => Promise.resolve({}),
+    style: {},
+    getPrerenderDetails: vi.fn().mockResolvedValue({}),
     ...options,
   };
 };
