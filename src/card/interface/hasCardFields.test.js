@@ -18,6 +18,7 @@ describe("card/interface/hasCardFields", () => {
   });
 
   it("returns true if we have number, cvv and expiry", () => {
+    // $FlowIssue
     getCardFrames.mockReturnValueOnce({
       cardNumberFrame: {},
       cardCVVFrame: {},
@@ -28,6 +29,7 @@ describe("card/interface/hasCardFields", () => {
   });
 
   it("returns false when there is no card frame", () => {
+    // $FlowIssue
     getCardFrames.mockReturnValueOnce({});
 
     expect(hasCardFields()).toBe(false);
