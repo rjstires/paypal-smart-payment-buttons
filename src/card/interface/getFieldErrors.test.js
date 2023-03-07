@@ -1,9 +1,11 @@
+/* @flow */
 import { describe, it, expect, beforeEach } from "vitest";
 
-import { getFieldErrors } from "../../../src/card/interface";
+import { getFieldErrors } from ".";
 
 describe("getFieldErrors", () => {
   let fields;
+
   beforeEach(() => {
     fields = {
       cardCvvField: {
@@ -38,6 +40,7 @@ describe("getFieldErrors", () => {
       },
     };
   });
+
   it("returns an array with invalid error for each field name", () => {
     // $FlowFixMe
     expect(getFieldErrors(fields).sort()).toEqual(
@@ -50,6 +53,7 @@ describe("getFieldErrors", () => {
       ].sort()
     );
   });
+
   it("returns an empty array when no fields are passed", () => {
     Object.keys(fields).forEach((field) => {
       // $FlowFixMe
@@ -57,6 +61,7 @@ describe("getFieldErrors", () => {
     });
     expect(getFieldErrors(fields)).toStrictEqual([]);
   });
+
   it("returns an array with invalid error only for invalid fields", () => {
     fields.cardExpiryField.isValid = true;
     fields.cardCvvField.isValid = true;

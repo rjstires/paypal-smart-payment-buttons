@@ -2,11 +2,13 @@
 import { describe, test, expect, beforeEach, vi } from "vitest";
 import { INTENT } from "@paypal/sdk-constants";
 
-import { hasCardFields, submitCardFields } from "../../../src/card/interface";
-import { getCardProps } from "../../../src/card/props";
-import { resetGQLErrors } from "../../../src/card/interface/gql";
-import { savePaymentSource } from "../../../src/card/interface/vault-without-purchase";
-import { confirmOrderAPI } from "../../../src/api";
+import { getCardProps } from "../props";
+import { confirmOrderAPI } from "../../api";
+
+import { savePaymentSource } from "./vault-without-purchase";
+import { resetGQLErrors } from "./gql";
+
+import { hasCardFields, submitCardFields } from ".";
 
 vi.mock("../../../src/card/props", () => {
   return {
