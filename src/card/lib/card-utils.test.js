@@ -891,6 +891,54 @@ describe("filterExtraFields", () => {
       expect(element.classList.contains("invalid")).toBe(false);
       expect(element.classList.contains("valid")).toBe(true);
     });
+
+    it("removes valid and invalid class from element when field is optional and blank", () => {
+      const element = document.createElement("input");
+      element.name = "name";
+      element.value = "";
+
+      const ref = {
+        current: {
+          base: element,
+        },
+      };
+
+      const validity = {
+        isValid: false,
+        isPotentiallyValid: true,
+      };
+
+      const hasFocus = false;
+      const touched = true;
+      markValidity(ref, validity, hasFocus, touched);
+
+      expect(element.classList.contains("invalid")).toBe(false);
+      expect(element.classList.contains("valid")).toBe(false);
+    });
+
+    it("marks HTMLElement as invalid when field is required and blank", () => {
+      const element = document.createElement("input");
+      element.name = "requiredField";
+      element.value = "";
+
+      const ref = {
+        current: {
+          base: element,
+        },
+      };
+
+      const validity = {
+        isValid: false,
+        isPotentiallyValid: true,
+      };
+
+      const hasFocus = false;
+      const touched = true;
+      markValidity(ref, validity, hasFocus, touched);
+
+      expect(element.classList.contains("invalid")).toBe(true);
+      expect(element.classList.contains("valid")).toBe(false);
+    });
   });
 
   describe("shouldUseZeroPaddedExpiryPattern", () => {
