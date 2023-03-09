@@ -268,20 +268,6 @@ const cvvField = cardField.CVVField();
 cvvField.render(cardCvvContainer);
 ```
 
-#### Card Postal Code Field (optional)
-
-Render an optional postal code field. You can also specify the maximum and minimum length of the postal code field for validation. If no values are entered then the default `maxLength` will be 10 characters.
-
-```js
-const cardPostalCodeContainer = document.getElementById("card-postal-code-field-container");
-
-const postalCodeField = cardField.PostalCodeField({
-    minLength: 4,
-    maxLength: 9,
-});
-postalCodeField.render(cardPostalCodeContainer);
-```
-
 #### Placeholders
 
 Each card field has a default placeholder text. You can override this text by passing a placeholder object when creating the field.
@@ -482,12 +468,6 @@ data: {
             isPotentiallyValid: 'boolean showing if field can be valid or not'
         },
         expiryField: {
-            isFocused: 'boolean showing if field is currently focused or not',
-            isEmpty: 'boolean showing if field is currently empty or not',
-            isValid: 'boolean showing if field is currently valid or not'
-            isPotentiallyValid: 'boolean showing if field can be valid or not'
-        },
-        postalCodeField: {
             isFocused: 'boolean showing if field is currently focused or not',
             isEmpty: 'boolean showing if field is currently empty or not',
             isValid: 'boolean showing if field is currently valid or not'

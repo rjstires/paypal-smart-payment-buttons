@@ -13,7 +13,6 @@
          <div id="card-number-field-container"></div>
          <div id="card-expiry-field-container"></div>
          <div id="card-cvv-field-container"></div>
-         <div id="card-postal-code-field-container"></div>
          <button id="multi-card-field-button" type="button">Pay now with Multi Card Fields</button>
         </div>
     </body>
@@ -85,7 +84,6 @@
         const cardNumberContainer = document.getElementById("card-number-field-container");
         const cardCvvContainer = document.getElementById("card-cvv-field-container");
         const cardExpiryContainer = document.getElementById("card-expiry-field-container");
-        const cardPostalCodeContainer = document.getElementById("card-postal-code-field-container"); // Optional field
 
         const multiCardFieldButton = document.getElementById("multi-card-field-button");
 
@@ -104,13 +102,7 @@
             const expiryField = cardField.ExpiryField();
             expiryField.render(cardExpiryContainer);
 
-            const postalCodeField = cardField.PostalCodeField({
-                minLength: 4,
-                maxLength: 9,
-            });
-            postalCodeField.render(cardPostalCodeContainer);
-
-              // Add click listener to submit button and call the submit function on the CardField component
+            // Add click listener to submit button and call the submit function on the CardField component
             multiCardFieldButton.addEventListener("click", () => {
                 cardField
                 .submit()
