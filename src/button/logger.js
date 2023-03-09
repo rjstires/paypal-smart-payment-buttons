@@ -190,7 +190,7 @@ export function setupButtonLogger({ env, sessionID, buttonSessionID, clientID, p
             [FPTI_KEY.SELECTED_FI]:                     fundingSource,
             [FPTI_KEY.FUNDING_COUNT]:                   fundingSources.length.toString(),
             [FPTI_KEY.PAGE_LOAD_TIME]:                  pageRenderTime ? pageRenderTime.toString() : '',
-            [FPTI_KEY.POTENTIAL_PAYMENT_METHODS]:       queriedEligibleFunding.join(':'),
+            [FPTI_KEY.POTENTIAL_PAYMENT_METHODS]:       Array.isArray(queriedEligibleFunding) ? queriedEligibleFunding.join(':') : '',
             [FPTI_KEY.PAY_NOW]:                         payNow.toString(),
             [FPTI_BUTTON_KEY.BUTTON_LAYOUT]:            layout,
             [FPTI_BUTTON_KEY.BUTTON_COLOR]:             color,
