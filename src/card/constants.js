@@ -289,7 +289,7 @@ export const DEFAULT_PLACEHOLDERS : CardPlaceholder = {
     number: 'Card number',
     expiry: 'MM / YY',
     cvv:    'CVV',
-    name:   'Cardholder name',
+    name:   'Cardholder Name (optional)',
     postal: 'Postal code'
 };
 
