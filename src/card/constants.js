@@ -53,6 +53,8 @@ export const CARD_FIELD_TYPE_TO_FRAME_NAME : {| [$Values<typeof CARD_FIELD_TYPE>
     [ CARD_FIELD_TYPE.POSTAL ]: FRAME_NAME.CARD_POSTAL_FIELD
 };
 
+export const OPTIONAL_CARD_FIELDS: $ReadOnlyArray<string> = ['name'];
+
 export const FIELD_STYLE : FieldStyle = {
     appearance:              'appearance',
     color:                   'color',

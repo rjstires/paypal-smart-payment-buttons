@@ -13,7 +13,8 @@ import {
     FILTER_CSS_VALUES,
     GQL_ERRORS,
     VALID_EXTRA_FIELDS,
-    ALLOWED_ATTRIBUTES
+    ALLOWED_ATTRIBUTES,
+    OPTIONAL_CARD_FIELDS
 } from '../constants';
 import { getLogger } from '../../lib';
 
@@ -154,11 +155,18 @@ export function getCSSText(cardFieldStyle : Object, customStyle : Object) : stri
     return s.join('\n');
 }
 
+export function isFieldOptional(element: HTMLInputElement): boolean {
+    return OPTIONAL_CARD_FIELDS.includes(element.name);
+}
+
 // mark the ref's HTMLElement as valid or invalid
-export function markValidity(ref : Object, validity : FieldValidity, hasFocus?: boolean, touched?: boolean ) {
-    const element = ref?.current?.base;
+export function markValidity(ref : Object, validity : FieldValidity, hasFocus?: boolean, touched?: boolean) {
+    const element: HTMLInputElement = ref?.current?.base;
     if (element) {
-        if (validity.isValid || (validity.isPotentiallyValid && hasFocus)) {
+        if (isFieldOptional(element) && element.value.length === 0) {
+            element.classList.remove('valid');
+            element.classList.remove('invalid');
+        } else if (validity.isValid || (validity.isPotentiallyValid && hasFocus)) {
             element.classList.add('valid');
             element.classList.remove('invalid');
         } else if(touched){
