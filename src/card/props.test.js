@@ -12,7 +12,6 @@ import { getCardProps } from "./props";
 const saveMock = {
   createVaultSetupToken: vi.fn(),
   onApprove: vi.fn(),
-  userIDToken: "token",
 };
 
 describe("getCardProps", () => {
@@ -41,20 +40,8 @@ describe("getCardProps", () => {
   });
 
   describe("standalone vault: save", () => {
-    test("should throw error without user id token", () => {
-      window.xprops.save = {
-        createVaultSetupToken: vi.fn(),
-        onApprove: vi.fn(),
-      };
-
-      expect(() => getCardProps(inputs)).toThrowError(
-        'data attribute "data-user-id-token" is required on SDK script tag for saving card fields'
-      );
-    });
-
     test("should throw error without create vault setup token", () => {
       window.xprops = {
-        userIDToken: "token",
         save: {
           onApprove: vi.fn(),
         },
@@ -67,7 +54,6 @@ describe("getCardProps", () => {
 
     test("should throw error without on approve", () => {
       window.xprops = {
-        userIDToken: "token",
         save: {
           createVaultSetupToken: vi.fn(),
         },
@@ -95,13 +81,11 @@ describe("getCardProps", () => {
 
     test("should return props with all required methods", () => {
       window.xprops = {
-        userIDToken: "token",
         save: saveMock,
       };
 
       expect(getCardProps(inputs)).toEqual(
         expect.objectContaining({
-          userIDToken: "token",
           save: {
             createVaultSetupToken: expect.any(Function),
             onApprove: expect.any(Function),

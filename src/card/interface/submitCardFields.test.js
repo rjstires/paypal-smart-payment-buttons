@@ -76,7 +76,6 @@ describe("submitCardFields", () => {
     const onApprove = vi.fn();
 
     const mockGetCardPropsReturn = {
-      userIDToken: "token",
       clientID: "client-id",
       save: {
         onApprove,
@@ -92,7 +91,6 @@ describe("submitCardFields", () => {
     expect(resetGQLErrors).toHaveBeenCalledOnce();
     expect(savePaymentSource).toHaveBeenCalledWith({
       save: mockGetCardPropsReturn.save,
-      userIDToken: mockGetCardPropsReturn.userIDToken,
       clientID: mockGetCardPropsReturn.clientID,
       facilitatorAccessToken: defaultOptions.facilitatorAccessToken,
       paymentSource: {

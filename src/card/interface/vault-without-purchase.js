@@ -27,7 +27,6 @@ type VaultPaymenSourceOptions = {|
   save: SaveCardFieldsProps["save"],
   onError: XOnError,
   clientID: string,
-  userIDToken: string,
   facilitatorAccessToken: string,
   paymentSource: PaymentSourceInput,
 |};
@@ -37,7 +36,6 @@ export const savePaymentSource = ({
   onError,
   facilitatorAccessToken,
   clientID,
-  userIDToken,
   paymentSource,
 }: VaultPaymenSourceOptions): ZalgoPromise<void> => {
   const { createVaultSetupToken, onApprove } = save;
@@ -52,7 +50,6 @@ export const savePaymentSource = ({
           updateVaultSetupToken({
             vaultSetupToken,
             clientID,
-            userIDToken,
             paymentSource,
           })
         )

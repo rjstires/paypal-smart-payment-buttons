@@ -37,7 +37,6 @@ describe("savePaymentSource", () => {
 
   const defaultOptions = {
     save: defaultSave(),
-    userIDToken: "user-id-token",
     clientID: "client-id",
     facilitatorAccessToken: "low-scoped-access-token",
     paymentSource: {
@@ -135,7 +134,6 @@ describe("savePaymentSource", () => {
     expect(defaultOptions.save.createVaultSetupToken).toHaveBeenCalled();
     expect(updateVaultSetupToken).toHaveBeenCalledWith({
       vaultSetupToken: "vault-setup-token",
-      userIDToken: "user-id-token",
       clientID: "client-id",
       paymentSource: {
         card: {

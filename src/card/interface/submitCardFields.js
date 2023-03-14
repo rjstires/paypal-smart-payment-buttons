@@ -48,7 +48,6 @@ export function submitCardFields({
         onError: cardProps.onError,
         facilitatorAccessToken,
         clientID: cardProps.clientID,
-        userIDToken: cardProps.userIDToken,
         paymentSource: convertCardToPaymentSource(card, extraFields),
       });
     }

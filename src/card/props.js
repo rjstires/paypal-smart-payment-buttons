@@ -132,7 +132,6 @@ export type LegacyCardProps = {|
 
 export type SaveCardFieldsProps = {|
   ...BaseCardProps,
-  userIDToken: string,
   save: {|
     createVaultSetupToken: XCreateVaultSetupToken,
     onApprove: SaveActionOnApprove
@@ -159,7 +158,7 @@ const disallowedPropsWithSave = [
 /**
  * When CardFields is used with save, the required properties change. This is for validating the arguments in that use-case.
  */
-function validateSaveMethod(xprops, baseProps): {| save: SaveCardFieldsProps['save'], userIDToken: string |} {
+function validateSaveMethod(xprops, baseProps): {| save: SaveCardFieldsProps['save'] |} {
   disallowedPropsWithSave.forEach((prop) => {
     if (xprops[prop]) {
       throw new Error(`Do not pass ${prop} with an action.`);
@@ -176,12 +175,7 @@ function validateSaveMethod(xprops, baseProps): {| save: SaveCardFieldsProps['sa
       throw new Error("onApprove is required when saving card fields");
   }
 
-  if (!xprops.userIDToken) {
-      throw new Error("data attribute \"data-user-id-token\" is required on SDK script tag for saving card fields");
-  }
-
   return {
-    userIDToken: xprops.userIDToken,
     save: {
       createVaultSetupToken: getCreateVaultSetupToken({
         createVaultSetupToken: save.createVaultSetupToken,

@@ -101,12 +101,10 @@ export type PaymentSourceInput = {|
 
 export const updateVaultSetupToken = ({
   clientID,
-  userIDToken,
   vaultSetupToken,
   paymentSource,
 }: {|
   clientID: string,
-  userIDToken: string,
   vaultSetupToken: string,
   paymentSource: PaymentSourceInput,
 |}): ZalgoPromise<{| id: string, status: VaultTokenStatus |}> =>
@@ -115,13 +113,11 @@ export const updateVaultSetupToken = ({
     query: `
       mutation UpdateVaultSetupToken(
         $clientID: String!
-        $userIDToken: String!
         $vaultSetupToken: String!
         $paymentSource: PaymentSource
       ) {
         updateVaultSetupToken(
           clientId: $clientID
-          idToken: $userIDToken
           vaultSetupToken: $vaultSetupToken
           paymentSource: $paymentSource
         ) {
@@ -131,7 +127,6 @@ export const updateVaultSetupToken = ({
       }`,
     variables: {
       clientID,
-      userIDToken,
       vaultSetupToken,
       paymentSource,
     },
