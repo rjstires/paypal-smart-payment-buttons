@@ -205,5 +205,4 @@ describe("card-checks", () => {
       expect(checkCardEligibility(cardNumber, cardType)).toBe(true);
     });
   });
-
 });

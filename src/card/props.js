@@ -236,6 +236,7 @@ export function getCardProps({
       ...returnData,
     };
   } else {
+    // $FlowFixMe
     const props = getLegacyProps({
       paymentSource: null,
       partnerAttributionID: xprops.partnerAttributionID,
@@ -259,6 +260,7 @@ export function getCardProps({
       createBillingAgreement: xprops.createBillingAgreement,
     });
 
+    // $FlowFixMe
     return {
       ...baseProps,
       ...props,
@@ -266,6 +268,11 @@ export function getCardProps({
       branded,
       style,
       placeholder,
+      // $FlowFixMe
+      onApprove: xprops.onApprove,
+      // $FlowFixMe
+      createOrder: xprops.createOrder,
+      onError: xprops.onError,
       minLength,
       maxLength,
       cardSessionID,

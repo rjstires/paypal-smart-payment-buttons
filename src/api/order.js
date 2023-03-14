@@ -360,8 +360,6 @@ export function confirmOrderAPI(orderID : string, data : ConfirmData, { facilita
             [HEADERS.PARTNER_ATTRIBUTION_ID]: partnerAttributionID || '',
             [HEADERS.PREFER]:                 PREFER.REPRESENTATION
         }
-    }).then(({ data: orderData }) => {
-        return orderData;
     });
 }
 

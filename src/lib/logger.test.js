@@ -16,16 +16,16 @@ vi.mock("@krakenjs/belter", async () => {
 });
 
 const loggerProps = {
-    env: 'test',
-    locale: {
-        lang: 'en',
-        country: 'US'
-    },
-    buyerCountry: 'US',
-    clientID: '',
-    sdkVersion: '',
-    sessionID: '',
-    sdkCorrelationID: ''
+  env: "test",
+  locale: {
+    lang: "en",
+    country: "US",
+  },
+  buyerCountry: "US",
+  clientID: "",
+  sdkVersion: "",
+  sessionID: "",
+  sdkCorrelationID: "",
 };
 
 describe("setupLogger", () => {

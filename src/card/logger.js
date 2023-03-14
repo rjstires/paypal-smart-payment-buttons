@@ -11,7 +11,7 @@ import { ZalgoPromise } from "@krakenjs/zalgo-promise/src";
 
 import { getLogger, setupLogger } from "../lib";
 import type { LocaleType } from "../types";
-import { FPTI_CONTEXT_TYPE, FPTI_STATE } from "../constants";
+import { FPTI_STATE } from "../constants";
 
 import { FPTI_HCF_KEYS } from "./constants";
 
@@ -34,7 +34,6 @@ type CardLoggerOptions = {|
 export function setupCardLogger({
   env,
   sessionID,
-  cardSessionID,
   clientID,
   partnerAttributionID,
   sdkCorrelationID,
@@ -58,8 +57,8 @@ export function setupCardLogger({
   });
 
   logger.addTrackingBuilder(() => ({
-    [FPTI_KEY.CONTEXT_TYPE]: FPTI_CONTEXT_TYPE.BUTTON_SESSION_ID,
-    [FPTI_KEY.CONTEXT_ID]: cardSessionID,
+    [FPTI_KEY.CONTEXT_TYPE]: FPTI_HCF_KEYS.HCF_SESSION_ID,
+    [FPTI_KEY.CONTEXT_ID]: hcfSessionID,
     [FPTI_KEY.BUTTON_VERSION]: __SMART_BUTTONS__.__MINOR_VERSION__,
     [FPTI_HCF_KEYS.HCF_SESSION_ID]: hcfSessionID,
     [FPTI_HCF_KEYS.HCF_CORRELATION_ID]: cardCorrelationID,
@@ -91,8 +90,32 @@ export function setupCardLogger({
   });
 }
 
+export const hcfTransactionSuccess = ({
+  orderID
+}: {|orderID: string|}) => {
+  getLogger().track({
+    [FPTI_KEY.TRANSITION]:  "hcf_transaction_success",
+    [FPTI_KEY.EVENT_NAME]:  "hcf_transaction_success",
+    [FPTI_HCF_KEYS.HCF_ORDER_ID]: orderID
+  }).flush();
+}
+
+export const hcfTransactionError = ({
+  orderID, error
+}: {|
+  orderID?: string,
+  // should be Error but other apis are constraining this type
+  error: mixed
+|}) => {
+  getLogger().track({
+    [FPTI_KEY.ERROR_CODE]: "hcf_transaction_error",
+    [FPTI_KEY.ERROR_DESC]: stringifyErrorMessage(error),
+    [FPTI_HCF_KEYS.HCF_ORDER_ID]: orderID
+  }).flush();
+}
+
 export const vaultWithoutPurchaseSuccess = ({
-  vaultToken
+  vaultToken,
 }: {|vaultToken: string|}) => {
   getLogger().track({
     [FPTI_KEY.TRANSITION]:  "hcf_vault_without_purchase_success",
@@ -102,22 +125,16 @@ export const vaultWithoutPurchaseSuccess = ({
 }
 
 export const vaultWithoutPurchaseFailure = ({
-  vaultToken,
-  error
+  vaultToken, error
 }: {|
   vaultToken?: string,
   // should be Error but other apis are constraining this type
   error: mixed
 |}) => {
   const payload = {
-    [FPTI_KEY.ERROR_CODE]: 'hcf_vault_without_purchase_error',
+    [FPTI_KEY.ERROR_CODE]: "hcf_vault_without_purchase_error",
     [FPTI_KEY.ERROR_DESC]: stringifyErrorMessage(error),
+    [FPTI_HCF_KEYS.VAULT_TOKEN]: vaultToken
   }
-
-  if (vaultToken) {
-    // $FlowIssue
-    payload[FPTI_HCF_KEYS.VAULT_TOKEN] = vaultToken
-  }
-
   getLogger().track(payload)
 }

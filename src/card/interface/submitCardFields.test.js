@@ -4,19 +4,20 @@ import { INTENT } from "@paypal/sdk-constants";
 
 import { getCardProps } from "../props";
 import { confirmOrderAPI } from "../../api";
+import { hcfTransactionSuccess, hcfTransactionError } from "../logger";
 
 import { savePaymentSource } from "./vault-without-purchase";
 import { resetGQLErrors } from "./gql";
 
 import { hasCardFields, submitCardFields } from ".";
 
-vi.mock("../../../src/card/props", () => {
+vi.mock("../props", () => {
   return {
     getCardProps: vi.fn(() => ({})),
   };
 });
 
-vi.mock("../../../src/card/interface/hasCardFields", () => {
+vi.mock("./hasCardFields", () => {
   return {
     hasCardFields: vi.fn(() => true),
   };
@@ -30,22 +31,23 @@ const mockGetCardFieldsReturn = {
   postalCode: "91210",
 };
 
-vi.mock("../../../src/card/interface/getCardFields", () => {
+vi.mock("../logger");
+vi.mock("./getCardFields", () => {
   return {
     getCardFields: vi.fn(() => mockGetCardFieldsReturn),
   };
 });
 
-vi.mock("../../../src/card/interface/gql", () => ({
+vi.mock("./gql", () => ({
   resetGQLErrors: vi.fn(),
 }));
 
-vi.mock("../../../src/card/interface/vault-without-purchase", () => ({
+vi.mock("./vault-without-purchase", () => ({
   savePaymentSource: vi.fn(),
 }));
 
-vi.mock("../../../src/lib");
-vi.mock("../../../src/api", () => ({
+vi.mock("../../lib");
+vi.mock("../../api", () => ({
   // eslint-disable-next-line compat/compat, promise/no-native, no-restricted-globals
   confirmOrderAPI: vi.fn(() => Promise.resolve({ id: "test-order-id" })),
 }));
@@ -57,6 +59,7 @@ describe("submitCardFields", () => {
 
   const defaultOptions = {
     facilitatorAccessToken: "test-access-token",
+    extraFields: {},
     featureFlags: {},
   };
 
@@ -116,7 +119,7 @@ describe("submitCardFields", () => {
     // $FlowIssue
     getCardProps.mockReturnValueOnce(mockGetCardPropsReturn);
 
-    expect.assertions(3);
+    expect.assertions(4);
     await submitCardFields(defaultOptions);
     expect(mockGetCardPropsReturn.createOrder).toHaveBeenCalled();
     expect(confirmOrderAPI).toHaveBeenCalledWith(
@@ -141,33 +144,85 @@ describe("submitCardFields", () => {
     );
     expect(mockGetCardPropsReturn.onApprove).toHaveBeenCalledWith(
       {
-        payerID: expect.any(String),
-        buyerAccessToken: expect.any(String),
-        id: "test-order-id",
+        orderID: "test-order-id",
       },
-      {
-        restart: expect.any(Function),
-      }
+      {}
     );
+    expect(hcfTransactionSuccess).toHaveBeenCalledWith({
+      orderID: "test-order-id",
+    });
   });
 
-  test("should catch any errors from confirmOrderAPI", () => {
+  test("should catch error from merchant-supplied onApprove", async () => {
+    const onApproveError = new Error("error with on approve");
+    const mockGetCardPropsReturn = {
+      createOrder: vi.fn().mockResolvedValue("test-order-id"),
+      onApprove: vi.fn().mockRejectedValue(onApproveError),
+      onError: vi.fn(),
+    };
+
+    // $FlowIssue
+    getCardProps.mockReturnValueOnce(mockGetCardPropsReturn);
+    await expect(submitCardFields(defaultOptions)).rejects.toThrow(
+      "error with on approve"
+    );
+    expect(mockGetCardPropsReturn.createOrder).toHaveBeenCalled();
+    expect(mockGetCardPropsReturn.onApprove).toHaveBeenCalled();
+    expect.assertions(6);
+    expect(hcfTransactionSuccess).not.toHaveBeenCalled();
+    expect(hcfTransactionError).toHaveBeenCalledWith({
+      error: onApproveError,
+      orderID: "test-order-id",
+    });
+    expect(mockGetCardPropsReturn.onError).toHaveBeenCalledWith(onApproveError);
+  });
+
+  test("should catch any errors from confirmOrderAPI", async () => {
+    const error = new Error("confirm order api failure test");
     // $FlowIssue
     confirmOrderAPI.mockImplementationOnce(() => {
-      throw new Error("confirm order api failure test");
+      throw error;
     });
     const mockGetCardPropsReturn = {
       intent: INTENT.CAPTURE,
       createOrder: vi.fn().mockResolvedValue("test-order-id"),
       onApprove: vi.fn(),
     };
+    // $FlowIssue
+    getCardProps.mockReturnValueOnce(mockGetCardPropsReturn);
+    await expect(submitCardFields(defaultOptions)).rejects.toThrow(
+      "confirm order api failure test"
+    );
+    expect(mockGetCardPropsReturn.createOrder).toHaveBeenCalled();
+    // $FlowIssue
+    expect(hcfTransactionError).toHaveBeenCalledWith({
+      error,
+      orderID: "test-order-id",
+    });
+    expect(hcfTransactionSuccess).not.toHaveBeenCalled();
+    expect.assertions(4);
+  });
+
+  test("should catch any errors from createOrder", async () => {
+    const error = new Error("create order failure test");
+
+    const mockGetCardPropsReturn = {
+      createOrder: vi.fn().mockRejectedValue(error),
+      onError: vi.fn(),
+    };
 
     // $FlowIssue
     getCardProps.mockReturnValueOnce(mockGetCardPropsReturn);
-
-    expect.assertions(1);
-    expect(submitCardFields(defaultOptions)).rejects.toThrow(
-      "confirm order api failure test"
+    await expect(submitCardFields(defaultOptions)).rejects.toThrow(
+      "create order failure test"
     );
+    expect(mockGetCardPropsReturn.createOrder).toHaveBeenCalled();
+    // $FlowIssue
+    expect(hcfTransactionError).toHaveBeenCalledWith({
+      error,
+    });
+    expect(hcfTransactionSuccess).not.toHaveBeenCalled();
+    expect(mockGetCardPropsReturn.onError).toHaveBeenCalledWith(error);
+    expect.assertions(5);
   });
 });

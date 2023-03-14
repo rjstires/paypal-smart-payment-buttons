@@ -1,27 +1,28 @@
 /* @flow */
 import { describe, beforeEach, it, expect, vi } from "vitest";
 
-import { autoFocusOnFirstInput, goToNextField, goToPreviousField } from "./card-focus";
+import {
+  autoFocusOnFirstInput,
+  goToNextField,
+  goToPreviousField,
+} from "./card-focus";
 
 function triggerFocusListener(input) {
+  const focusListener = window.addEventListener.mock.calls.find((args) => {
+    return args[0] === "focus";
+  })[1];
 
-    const focusListener = window.addEventListener.mock.calls.find((args) => {
-        return args[0] === 'focus';
+  focusListener();
+
+  if (input) {
+    const focusinListener = window.addEventListener.mock.calls.find((args) => {
+      return args[0] === "focusin";
     })[1];
 
-    focusListener();
+    focusinListener({ target: input });
+  }
 
-    if (input) {
-
-        const focusinListener = window.addEventListener.mock.calls.find((args) => {
-            return args[0] === 'focusin';
-        })[1];
-
-        focusinListener({ target: input });
-    }
-
-    vi.runAllTimers();
-
+  vi.runAllTimers();
 }
 
 describe("autoFocusOnFirstInput", () => {
@@ -103,41 +104,41 @@ describe("autoFocusOnFirstInput", () => {
 });
 
 describe("goToNextField", () => {
-  it('puts the cursor at the start of the next field', () => {
+  it("puts the cursor at the start of the next field", () => {
     vi.useFakeTimers();
-    const element = document.createElement('input');
+    const element = document.createElement("input");
     const ref = {
       current: {
-        base: element
-      }
+        base: element,
+      },
     };
 
     goToNextField(ref)();
-    const spy = vi.spyOn(element, 'focus')
-    vi.runAllTimers()
+    const spy = vi.spyOn(element, "focus");
+    vi.runAllTimers();
 
     expect(element.selectionStart).toBe(0);
-    expect(spy).toHaveBeenCalled()
-  })
-})
+    expect(spy).toHaveBeenCalled();
+  });
+});
 
 describe("goToPreviousField", () => {
-  it('puts the cursor at the end of the previous field', () => {
+  it("puts the cursor at the end of the previous field", () => {
     vi.useFakeTimers();
 
-    const element = document.createElement('input');
-    element.value = 'foo'
+    const element = document.createElement("input");
+    element.value = "foo";
     const ref = {
       current: {
-        base: element
-      }
+        base: element,
+      },
     };
 
     goToPreviousField(ref)();
-    const spy = vi.spyOn(element, 'focus')
-    vi.runAllTimers()
+    const spy = vi.spyOn(element, "focus");
+    vi.runAllTimers();
 
     expect(element.selectionStart).toBe(3);
-    expect(spy).toHaveBeenCalled()
-  })
-})
+    expect(spy).toHaveBeenCalled();
+  });
+});

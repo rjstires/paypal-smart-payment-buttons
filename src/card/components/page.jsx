@@ -354,7 +354,7 @@ export function setupCard({ cspNonce, facilitatorAccessToken, featureFlags, buye
         clientID,
         partnerAttributionID,
         sdkCorrelationID,
-        cardCorrelationID: metadata.correlationID,
+        cardCorrelationID: metadata?.correlationID,
         locale,
         merchantID,
         merchantDomain,

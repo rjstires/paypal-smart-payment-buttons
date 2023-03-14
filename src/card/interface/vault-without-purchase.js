@@ -16,8 +16,7 @@ import type { XOnError } from "../../props";
 
 const onVaultWithoutPurchaseError = ({vaultToken, onError}: {|vaultToken?: string, onError: XOnError|}) => (error: mixed) => {
   vaultWithoutPurchaseFailure({
-    vaultToken,
-    error
+    vaultToken, error
   })
 
   onError(error)

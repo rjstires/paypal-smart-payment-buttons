@@ -1,11 +1,10 @@
 /* @flow */
 
 import { ZalgoPromise } from "@krakenjs/zalgo-promise/src"
-import { uniqueID } from "@krakenjs/belter"
 
 import { getCardProps } from "../props"
 import { confirmOrderAPI } from "../../api"
-import { getLogger } from "../../lib"
+import { hcfTransactionError, hcfTransactionSuccess } from "../logger"
 import type { FeatureFlags } from "../../types"
 import type { BillingAddress } from '../types'
 import {convertCardToPaymentSource, reformatPaymentSource} from '../lib'
@@ -51,42 +50,46 @@ export function submitCardFields({
         paymentSource: convertCardToPaymentSource(card, extraFields),
       });
     }
+    let orderID;
 
       // $FlowFixMe
-      return cardProps
-        .createOrder()
-        .then((orderID) => {
-          
-          const payment_source = convertCardToPaymentSource(card, extraFields)
-          // eslint-disable-next-line flowtype/no-weak-types
-          const data: any = {
-            payment_source: {
-              // $FlowIssue
-              card: reformatPaymentSource(payment_source.card)
-            }
+    return cardProps
+      .createOrder()
+      .then((id) => {
+        if (typeof id?.valueOf() !== "string") {
+          throw new TypeError("Expected createOrder to return a promise that resolves with the order ID as a string.");
+        }
+        const payment_source = convertCardToPaymentSource(card, extraFields)
+        // eslint-disable-next-line flowtype/no-weak-types
+        const data: any = {
+          payment_source: {
+            // $FlowIssue
+            card: reformatPaymentSource(payment_source.card)
           }
-
-          return confirmOrderAPI(orderID, data, {
-            facilitatorAccessToken,
-            partnerAttributionID: "",
-          }).catch((error) => {
-            getLogger().info("card_fields_payment_failed");
-            if (cardProps.onError) {
-              cardProps.onError(error);
-            }
-            throw error;
-          });
+        }
+        orderID = id;
+        return confirmOrderAPI(orderID, data, {
+          facilitatorAccessToken,
+          partnerAttributionID: ""
         })
-        .then((orderData) => {
-          // $FlowFixMe
-          return cardProps.onApprove(
-            { payerID: uniqueID(), buyerAccessToken: uniqueID(), ...orderData },
-            {
-              restart: () => {
-                throw new Error(`Restart not implemented for card fields flow`);
-              },
-            }
-          );
-        });
+      })
+      .then(() => {
+        // $FlowFixMe
+        return cardProps.onApprove({ orderID }, {})
+      })
+      .then(() => {
+        hcfTransactionSuccess({ orderID });
+      })
+      .catch((error) => {
+        if (typeof error === "string") {  
+          error = new Error(error);
+        }
+        hcfTransactionError({error, orderID});
+        if (cardProps.onError) {
+          cardProps.onError(error);
+        }
+
+        throw error;
+      });
   });
 }
