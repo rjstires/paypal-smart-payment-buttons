@@ -1,6 +1,6 @@
 /* @flow */
 
-import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { COUNTRY } from "@paypal/sdk-constants/src";
 import { uniqueID } from "@krakenjs/belter/src";
 
@@ -38,28 +38,23 @@ const cardLoggerProps = {
 };
 
 describe("card logger", () => {
-  const infoMock = vi.fn();
-  const trackMock = vi.fn().mockImplementation(() => ({
-    flush: vi.fn(),
-  }));
+  const trackMock = vi.fn();
+  const trackBuilder = vi.fn();
 
   beforeEach(() => {
-    vi.useFakeTimers();
+    vi.resetAllMocks();
 
+    trackMock.mockImplementation(() => ({
+      flush: vi.fn(),
+    }));
     // $FlowIssue .mockImplementation
     getLogger.mockImplementation(() => ({
-      addTrackingBuilder: vi.fn(),
-      addPayloadBuilder: vi.fn(),
-      info: infoMock,
+      addTrackingBuilder: trackBuilder,
       track: trackMock,
       warn: vi.fn(),
       error: vi.fn(),
       flush: vi.fn(),
     }));
-  });
-
-  afterEach(() => {
-    vi.useRealTimers();
   });
 
   it("should call logger.track with setupCardLogger ", async () => {
@@ -68,6 +63,18 @@ describe("card logger", () => {
       expect.objectContaining({
         event_name: "hcf_name_field_rendered",
         transition_name: "hcf_name_field_rendered",
+      })
+    );
+  });
+
+  it("should call logger.addTrackingBuilder with card field options", async () => {
+    await setupCardLogger(cardLoggerProps);
+    expect(trackBuilder).toHaveBeenCalledWith(expect.any(Function));
+    expect(trackBuilder.mock.calls[0][0]()).toMatchObject(
+      expect.objectContaining({
+        context_type: "hcf_session_id",
+        seller_id: "XYZ12345",
+        merchant_domain: "mock://www.paypal.com",
       })
     );
   });
