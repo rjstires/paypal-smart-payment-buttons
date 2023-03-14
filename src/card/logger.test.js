@@ -35,6 +35,7 @@ const cardLoggerProps = {
   merchantID: ["XYZ12345"],
   type: "name",
   hcfSessionID: uniqueID(),
+  cardCorrelationID: uniqueID(),
 };
 
 describe("card logger", () => {
