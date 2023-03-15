@@ -92,7 +92,6 @@ describe("submitCardFields", () => {
     expect(resetGQLErrors).toHaveBeenCalledOnce();
     expect(savePaymentSource).toHaveBeenCalledWith({
       ...mockGetCardPropsReturn,
-      facilitatorAccessToken: defaultOptions.facilitatorAccessToken,
       paymentSource: {
         card: {
           billingAddress: {
