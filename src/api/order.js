@@ -71,6 +71,13 @@ export function createOrderID(order : OrderCreateRequest, { facilitatorAccessTok
     });
 }
 
+export function isInvalidResourceIDError(err: mixed) : boolean {
+    // $FlowFixMe
+    return Boolean(err?.response?.body?.details?.some(detail => {
+        return detail.issue === ORDER_API_ERROR.INVALID_RESOURCE_ID;
+    }))
+}
+
 export function getOrder(orderID : string, { facilitatorAccessToken, buyerAccessToken, partnerAttributionID, forceRestAPI = false } : OrderAPIOptions) : ZalgoPromise<OrderResponse> {
     getLogger().info(`get_order_lsat_upgrade_${ getLsatUpgradeCalled() ? 'called' : 'not_called' }`);
     getLogger().info(`get_order_lsat_upgrade_${ getLsatUpgradeError() ? 'errored' : 'did_not_error' }`, { err: stringifyError(getLsatUpgradeError()) });
@@ -87,6 +94,10 @@ export function getOrder(orderID : string, { facilitatorAccessToken, buyerAccess
         }).catch(err => {
             const restCorrID = getErrorResponseCorrelationID(err);
             getLogger().warn(`get_order_call_rest_api_error`, { restCorrID, orderID, err: stringifyError(err) });
+
+            if (isInvalidResourceIDError(err)) {
+                getLogger().warn(`get_order_invalid_resource_id_error`, { restCorrID, orderID, err: stringifyError(err) })
+            }
 
             return callSmartAPI({
                 accessToken: buyerAccessToken,
@@ -153,6 +164,10 @@ export function captureOrder(orderID : string, { facilitatorAccessToken, buyerAc
             const restCorrID = getErrorResponseCorrelationID(err);
             getLogger().warn(`capture_order_call_rest_api_error`, { restCorrID, orderID, err: stringifyError(err) });
 
+            if (isInvalidResourceIDError(err)) {
+                getLogger().warn(`capture_order_invalid_resource_id_error`, { restCorrID, orderID, err: stringifyError(err) })
+            }
+
             if (isProcessorDeclineError(err) || isUnprocessableEntityError(err)) {
                 throw err;
             }
@@ -207,6 +222,10 @@ export function authorizeOrder(orderID : string, { facilitatorAccessToken, buyer
         }).catch(err => {
             const restCorrID = getErrorResponseCorrelationID(err);
             getLogger().warn(`authorize_order_call_rest_api_error`, { restCorrID, orderID, err: stringifyError(err) });
+
+            if (isInvalidResourceIDError(err)) {
+                getLogger().warn(`authorize_order_invalid_resource_id_error`, { restCorrID, orderID, err: stringifyError(err) })
+            }
 
             if (isProcessorDeclineError(err)) {
                 throw err;
@@ -266,6 +285,10 @@ export function patchOrder(orderID : string, data : PatchData, { facilitatorAcce
         }).catch(err => {
             const restCorrID = getErrorResponseCorrelationID(err);
             getLogger().warn(`patch_order_call_rest_api_error`, { restCorrID, orderID, err: stringifyError(err) });
+
+            if (isInvalidResourceIDError(err)) {
+                getLogger().warn(`patch_order_invalid_resource_id_error`, { restCorrID, orderID, err: stringifyError(err) })
+            }
 
             return callSmartAPI({
                 accessToken: buyerAccessToken,
