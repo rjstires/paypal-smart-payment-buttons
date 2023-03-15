@@ -101,10 +101,7 @@ export type CardXProps = {|
   createOrder: ?XCreateOrder,
   createBillingAgreement: ?XCreateBillingAgreement,
   createSubscription: ?XCreateSubscription,
-  save?: {|
-    createVaultSetupToken?: XCreateVaultSetupToken,
-    onApprove?: SaveActionOnApprove
-  |},
+  createVaultSetupToken: ?XCreateVaultSetupToken,
   hcfSessionID: string
 |};
 
@@ -132,10 +129,8 @@ export type LegacyCardProps = {|
 
 export type SaveCardFieldsProps = {|
   ...BaseCardProps,
-  save: {|
-    createVaultSetupToken: XCreateVaultSetupToken,
-    onApprove: SaveActionOnApprove
-  |},
+  createVaultSetupToken: XCreateVaultSetupToken,
+  onApprove: SaveActionOnApprove
 |}
 
 export type CardProps = LegacyCardProps | SaveCardFieldsProps
@@ -146,46 +141,41 @@ type GetCardPropsOptions = {|
 |};
 
 /**
- * These CardFields props are disallowed when save is also provided.
+ * These CardFields props are disallowed when createVaultSetupToken is also provided.
  * This is to prevent confusion between which flow is being used at runtime.
  */
 const disallowedPropsWithSave = [
-  "onApprove",
-  "onCancel",
-  "onComplete",
   "createOrder",
 ];
 /**
- * When CardFields is used with save, the required properties change. This is for validating the arguments in that use-case.
+ * When CardFields is used with createVaultSetupToken, the required properties change. This is for validating the arguments in that use-case.
  */
-function validateSaveMethod(xprops, baseProps): {| save: SaveCardFieldsProps['save'] |} {
+function validateVaultWithoutPurchaseSetup(xprops, baseProps): {| createVaultSetupToken: XCreateVaultSetupToken, onApprove: SaveActionOnApprove |} {
   disallowedPropsWithSave.forEach((prop) => {
     if (xprops[prop]) {
       throw new Error(`Do not pass ${prop} with an action.`);
     }
   });
 
-  const save = xprops.save
-
-  if (!save?.createVaultSetupToken) {
+  // this if check is really for Flow so that later it knows this function is defined
+  if (!xprops?.createVaultSetupToken) {
       throw new Error("createVaultSetupToken is required when saving card fields");
   }
 
-  if (!save?.onApprove) {
+  if (!xprops?.onApprove) {
       throw new Error("onApprove is required when saving card fields");
   }
 
   return {
-    save: {
-      createVaultSetupToken: getCreateVaultSetupToken({
-        createVaultSetupToken: save.createVaultSetupToken,
-      }),
-      onApprove: getSaveActionOnApprove({
-        // $FlowIssue
-        onApprove: save.onApprove,
-        onError: baseProps.onError,
-      }),
-    },
+    createVaultSetupToken: getCreateVaultSetupToken({
+      createVaultSetupToken: xprops.createVaultSetupToken,
+    }),
+      // $FlowIssue we have an issue with xprops.onApprove but we need a larger refactor to fix this
+    onApprove: getSaveActionOnApprove({
+      // $FlowIssue
+      onApprove: xprops.onApprove,
+      onError: baseProps.onError,
+    }),
   };
 }
 
@@ -207,7 +197,8 @@ export function getCardProps({
     branded = fundingEligibility?.card?.branded ?? true,
     parent,
     export: xport,
-    save,
+    createVaultSetupToken,
+    createOrder,
     sdkCorrelationID,
     partnerAttributionID,
     hcfSessionID
@@ -229,13 +220,13 @@ export function getCardProps({
 
   const baseProps = getProps({ branded });
 
-  if (save) {
+  if (createVaultSetupToken) {
     return {
       ...baseProps,
-      ...validateSaveMethod(xprops, baseProps),
+      ...validateVaultWithoutPurchaseSetup(xprops, baseProps),
       ...returnData,
     };
-  } else {
+  } else if (createOrder) {
     // $FlowFixMe
     const props = getLegacyProps({
       paymentSource: null,
@@ -284,6 +275,8 @@ export function getCardProps({
       partnerAttributionID,
       hcfSessionID
     }
+  } else {
+    throw new Error('Must pass either createVaultSetupToken or createOrder');
   }
 }
 

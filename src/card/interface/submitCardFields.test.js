@@ -80,10 +80,8 @@ describe("submitCardFields", () => {
 
     const mockGetCardPropsReturn = {
       clientID: "client-id",
-      save: {
-        onApprove,
-        createVaultSetupToken,
-      },
+      onApprove,
+      createVaultSetupToken,
     };
     // $FlowIssue
     getCardProps.mockReturnValueOnce(mockGetCardPropsReturn);
@@ -93,8 +91,7 @@ describe("submitCardFields", () => {
     expect.assertions(2);
     expect(resetGQLErrors).toHaveBeenCalledOnce();
     expect(savePaymentSource).toHaveBeenCalledWith({
-      save: mockGetCardPropsReturn.save,
-      clientID: mockGetCardPropsReturn.clientID,
+      ...mockGetCardPropsReturn,
       facilitatorAccessToken: defaultOptions.facilitatorAccessToken,
       paymentSource: {
         card: {

@@ -9,7 +9,7 @@ import * as getLegacyPropsStuff from "../props/legacyProps";
 
 import { getCardProps } from "./props";
 
-const saveMock = {
+const vaultMock = {
   createVaultSetupToken: vi.fn(),
   onApprove: vi.fn(),
 };
@@ -32,31 +32,29 @@ describe("getCardProps", () => {
     vi.clearAllMocks();
   });
 
-  test("uses getProps and legacy props when save is not present", () => {
+  test("uses getProps and legacy props when createVaultSetupToken is not present, but createOrder is", () => {
     window.xprops = { intent: DEFAULT_INTENT };
+    window.xprops.createOrder = vi.fn();
     getCardProps(inputs);
     expect(getPropsSpy).toBeCalled();
     expect(getLegacyPropsSpy).toBeCalled();
   });
 
-  describe("standalone vault: save", () => {
-    test("should throw error without create vault setup token", () => {
-      window.xprops = {
-        save: {
-          onApprove: vi.fn(),
-        },
-      };
+  test("throws an error when neither createOrder or createVaultSetupToken is present", () => {
+    window.xprops = { intent: DEFAULT_INTENT };
+    // $FlowIssue
+    window.xprops.createOrder = undefined;
+    // $FlowIssue
+    window.xprops.createVaultSetupToken = undefined;
+    expect(() => getCardProps(inputs)).toThrowError(
+      "Must pass either createVaultSetupToken or createOrder"
+    );
+  });
 
-      expect(() => getCardProps(inputs)).toThrowError(
-        "createVaultSetupToken is required when saving card fields"
-      );
-    });
-
+  describe("standalone vault: createVaultToken", () => {
     test("should throw error without on approve", () => {
       window.xprops = {
-        save: {
-          createVaultSetupToken: vi.fn(),
-        },
+        createVaultSetupToken: vi.fn(),
       };
 
       expect(() => getCardProps(inputs)).toThrowError(
@@ -65,12 +63,10 @@ describe("getCardProps", () => {
     });
 
     test.each([
-      ["onApprove", () => {}, "Do not pass onApprove with an action."],
-      ["onCancel", () => {}, "Do not pass onCancel with an action."],
       ["createOrder", () => {}, "Do not pass createOrder with an action."],
     ])("errors when %s and an action are provided", (prop, propValue) => {
       window.xprops = {
-        save: saveMock,
+        ...vaultMock,
         [prop]: propValue,
       };
 
@@ -81,15 +77,13 @@ describe("getCardProps", () => {
 
     test("should return props with all required methods", () => {
       window.xprops = {
-        save: saveMock,
+        ...vaultMock,
       };
 
       expect(getCardProps(inputs)).toEqual(
         expect.objectContaining({
-          save: {
-            createVaultSetupToken: expect.any(Function),
-            onApprove: expect.any(Function),
-          },
+          createVaultSetupToken: expect.any(Function),
+          onApprove: expect.any(Function),
         })
       );
     });

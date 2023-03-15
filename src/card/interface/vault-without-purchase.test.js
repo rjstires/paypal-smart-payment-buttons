@@ -6,7 +6,6 @@ import {
   vaultWithoutPurchaseSuccess,
   vaultWithoutPurchaseFailure,
 } from "../logger";
-import type { SaveCardFieldsProps } from "../props";
 
 import { savePaymentSource } from "./vault-without-purchase";
 
@@ -29,14 +28,14 @@ describe("savePaymentSource", () => {
   const defaultVaultSetupToken = "vault-setup-token";
 
   // $FlowIssue
-  const defaultSave = (options = {}): SaveCardFieldsProps["save"] => ({
+  const defaultSave = (options = {}): Object => ({
     createVaultSetupToken: vi.fn().mockResolvedValue(defaultVaultSetupToken),
     onApprove: vi.fn(),
     ...options,
   });
 
   const defaultOptions = {
-    save: defaultSave(),
+    ...defaultSave(),
     clientID: "client-id",
     facilitatorAccessToken: "low-scoped-access-token",
     paymentSource: {
@@ -60,7 +59,7 @@ describe("savePaymentSource", () => {
 
     await savePaymentSource({
       ...defaultOptions,
-      save: defaultSave({ createVaultSetupToken: rejectCreateVaultSetupToken }),
+      ...defaultSave({ createVaultSetupToken: rejectCreateVaultSetupToken }),
     });
 
     expect.assertions(3);
@@ -115,7 +114,7 @@ describe("savePaymentSource", () => {
 
     await savePaymentSource({
       ...defaultOptions,
-      save: defaultSave({ onApprove: rejectOnApprove }),
+      ...defaultSave({ onApprove: rejectOnApprove }),
     });
 
     expect.assertions(3);
@@ -131,7 +130,7 @@ describe("savePaymentSource", () => {
     await savePaymentSource(defaultOptions);
 
     expect.assertions(4);
-    expect(defaultOptions.save.createVaultSetupToken).toHaveBeenCalled();
+    expect(defaultOptions.createVaultSetupToken).toHaveBeenCalled();
     expect(updateVaultSetupToken).toHaveBeenCalledWith({
       vaultSetupToken: "vault-setup-token",
       clientID: "client-id",
@@ -144,7 +143,7 @@ describe("savePaymentSource", () => {
         },
       },
     });
-    expect(defaultOptions.save.onApprove).toHaveBeenCalledWith({
+    expect(defaultOptions.onApprove).toHaveBeenCalledWith({
       vaultSetupToken: "vault-setup-token",
     });
     expect(vaultWithoutPurchaseSuccess).toHaveBeenCalledWith({

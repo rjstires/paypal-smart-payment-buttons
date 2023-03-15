@@ -7,12 +7,11 @@ import {
   updateVaultSetupToken,
   type PaymentSourceInput,
 } from "../../api/vault";
-import type { SaveCardFieldsProps } from "../props";
 import {
   vaultWithoutPurchaseSuccess,
   vaultWithoutPurchaseFailure,
 } from "../logger";
-import type { XOnError } from "../../props";
+import type { XOnError, XCreateVaultSetupToken, SaveActionOnApprove } from "../../props";
 
 const onVaultWithoutPurchaseError = ({vaultToken, onError}: {|vaultToken?: string, onError: XOnError|}) => (error: mixed) => {
   vaultWithoutPurchaseFailure({
@@ -23,7 +22,8 @@ const onVaultWithoutPurchaseError = ({vaultToken, onError}: {|vaultToken?: strin
 }
 
 type VaultPaymenSourceOptions = {|
-  save: SaveCardFieldsProps["save"],
+  createVaultSetupToken: XCreateVaultSetupToken,
+  onApprove: SaveActionOnApprove,
   onError: XOnError,
   clientID: string,
   facilitatorAccessToken: string,
@@ -31,13 +31,13 @@ type VaultPaymenSourceOptions = {|
 |};
 
 export const savePaymentSource = ({
-  save,
+  createVaultSetupToken,
+  onApprove,
   onError,
   facilitatorAccessToken,
   clientID,
   paymentSource,
 }: VaultPaymenSourceOptions): ZalgoPromise<void> => {
-  const { createVaultSetupToken, onApprove } = save;
 
   return createVaultSetupToken()
     .then((vaultSetupToken) =>

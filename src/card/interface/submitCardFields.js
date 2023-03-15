@@ -41,9 +41,10 @@ export function submitCardFields({
 
     const card = getCardFields();
 
-    if (cardProps.save) {
+    if (cardProps.createVaultSetupToken) {
       return savePaymentSource({
-        save: cardProps.save,
+        onApprove: cardProps.onApprove,
+        createVaultSetupToken: cardProps.createVaultSetupToken,
         onError: cardProps.onError,
         facilitatorAccessToken,
         clientID: cardProps.clientID,
