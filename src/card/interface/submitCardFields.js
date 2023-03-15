@@ -48,6 +48,7 @@ export function submitCardFields({
         onError: cardProps.onError,
         clientID: cardProps.clientID,
         paymentSource: convertCardToPaymentSource(card, extraFields),
+        idToken: cardProps.userIDToken || "",
       });
     }
     let orderID;
