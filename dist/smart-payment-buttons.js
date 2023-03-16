@@ -323,7 +323,7 @@ window.spb = function(modules) {
                 },
                 metric: function(metricPayload) {
                     if (!Object(belter_src.isBrowser)()) return logger;
-                    print(LOG_LEVEL.DEBUG, "metric." + metricPayload.name, metricPayload.dimensions);
+                    print(LOG_LEVEL.DEBUG, "metric." + metricPayload.name, metricPayload.dimensions || {});
                     metrics.push(metricPayload);
                     return logger;
                 },
@@ -354,8 +354,22 @@ window.spb = function(modules) {
                     opts.flushInterval && (flushInterval = opts.flushInterval);
                     opts.enableSendBeacon && (enableSendBeacon = opts.enableSendBeacon);
                     return logger;
+                },
+                __buffer__: {
+                    get events() {
+                        return events;
+                    },
+                    get tracking() {
+                        return tracking;
+                    },
+                    get metrics() {
+                        return metrics;
+                    }
                 }
             };
+            Object.defineProperty(logger, "__buffer__", {
+                writable: !1
+            });
             return logger;
         }
     },
@@ -7641,7 +7655,8 @@ window.spb = function(modules) {
         var BUTTON_FLOW = {
             PURCHASE: "purchase",
             BILLING_SETUP: "billing_setup",
-            SUBSCRIPTION_SETUP: "subscription_setup"
+            SUBSCRIPTION_SETUP: "subscription_setup",
+            VAULT_WITHOUT_PURCHASE: "vault_without_purchase"
         };
         var MENU_PLACEMENT = {
             ABOVE: "above",
@@ -9380,6 +9395,9 @@ window.spb = function(modules) {
         __webpack_require__.d(__webpack_exports__, "createOrderID", (function() {
             return createOrderID;
         }));
+        __webpack_require__.d(__webpack_exports__, "isInvalidResourceIDError", (function() {
+            return isInvalidResourceIDError;
+        }));
         __webpack_require__.d(__webpack_exports__, "getOrder", (function() {
             return getOrder;
         }));
@@ -9672,6 +9690,12 @@ window.spb = function(modules) {
                 return orderID;
             }));
         }
+        function isInvalidResourceIDError(err) {
+            var _err$response, _err$response$body, _err$response$body$de;
+            return Boolean(null == err || null == (_err$response = err.response) || null == (_err$response$body = _err$response.body) || null == (_err$response$body$de = _err$response$body.details) ? void 0 : _err$response$body$de.some((function(detail) {
+                return detail.issue === constants.ORDER_API_ERROR.INVALID_RESOURCE_ID;
+            })));
+        }
         function getOrder(orderID, _ref2) {
             var _headers4;
             var facilitatorAccessToken = _ref2.facilitatorAccessToken, buyerAccessToken = _ref2.buyerAccessToken, partnerAttributionID = _ref2.partnerAttributionID, _ref2$forceRestAPI = _ref2.forceRestAPI, forceRestAPI = void 0 !== _ref2$forceRestAPI && _ref2$forceRestAPI;
@@ -9691,6 +9715,11 @@ window.spb = function(modules) {
                     var _headers3;
                     var restCorrID = Object(api.getErrorResponseCorrelationID)(err);
                     Object(lib.getLogger)().warn("get_order_call_rest_api_error", {
+                        restCorrID: restCorrID,
+                        orderID: orderID,
+                        err: Object(belter_src.stringifyError)(err)
+                    });
+                    isInvalidResourceIDError(err) && Object(lib.getLogger)().warn("get_order_invalid_resource_id_error", {
                         restCorrID: restCorrID,
                         orderID: orderID,
                         err: Object(belter_src.stringifyError)(err)
@@ -9732,15 +9761,15 @@ window.spb = function(modules) {
             }));
         }
         function isProcessorDeclineError(err) {
-            var _err$response, _err$response$body, _err$response$body$da, _err$response2, _err$response2$body, _err$response2$body$d, _err$response3, _err$response3$body;
-            var details = null != err && null != (_err$response = err.response) && null != (_err$response$body = _err$response.body) && null != (_err$response$body$da = _err$response$body.data) && _err$response$body$da.details ? null == err || null == (_err$response2 = err.response) || null == (_err$response2$body = _err$response2.body) || null == (_err$response2$body$d = _err$response2$body.data) ? void 0 : _err$response2$body$d.details : null == err || null == (_err$response3 = err.response) || null == (_err$response3$body = _err$response3.body) ? void 0 : _err$response3$body.details;
+            var _err$response2, _err$response2$body, _err$response2$body$d, _err$response3, _err$response3$body, _err$response3$body$d, _err$response4, _err$response4$body;
+            var details = null != err && null != (_err$response2 = err.response) && null != (_err$response2$body = _err$response2.body) && null != (_err$response2$body$d = _err$response2$body.data) && _err$response2$body$d.details ? null == err || null == (_err$response3 = err.response) || null == (_err$response3$body = _err$response3.body) || null == (_err$response3$body$d = _err$response3$body.data) ? void 0 : _err$response3$body$d.details : null == err || null == (_err$response4 = err.response) || null == (_err$response4$body = _err$response4.body) ? void 0 : _err$response4$body.details;
             return Boolean(null == details ? void 0 : details.some((function(detail) {
                 return detail.issue === constants.ORDER_API_ERROR.INSTRUMENT_DECLINED || detail.issue === constants.ORDER_API_ERROR.PAYER_ACTION_REQUIRED;
             })));
         }
         function isUnprocessableEntityError(err) {
-            var _err$response4, _err$response4$body, _err$response4$body$d;
-            return Boolean(null == err || null == (_err$response4 = err.response) || null == (_err$response4$body = _err$response4.body) || null == (_err$response4$body$d = _err$response4$body.details) ? void 0 : _err$response4$body$d.some((function(detail) {
+            var _err$response5, _err$response5$body, _err$response5$body$d;
+            return Boolean(null == err || null == (_err$response5 = err.response) || null == (_err$response5$body = _err$response5.body) || null == (_err$response5$body$d = _err$response5$body.details) ? void 0 : _err$response5$body$d.some((function(detail) {
                 return detail.issue === constants.ORDER_API_ERROR.DUPLICATE_INVOICE_ID;
             })));
         }
@@ -9765,6 +9794,11 @@ window.spb = function(modules) {
                     var _headers6;
                     var restCorrID = Object(api.getErrorResponseCorrelationID)(err);
                     Object(lib.getLogger)().warn("capture_order_call_rest_api_error", {
+                        restCorrID: restCorrID,
+                        orderID: orderID,
+                        err: Object(belter_src.stringifyError)(err)
+                    });
+                    isInvalidResourceIDError(err) && Object(lib.getLogger)().warn("capture_order_invalid_resource_id_error", {
                         restCorrID: restCorrID,
                         orderID: orderID,
                         err: Object(belter_src.stringifyError)(err)
@@ -9832,6 +9866,11 @@ window.spb = function(modules) {
                         orderID: orderID,
                         err: Object(belter_src.stringifyError)(err)
                     });
+                    isInvalidResourceIDError(err) && Object(lib.getLogger)().warn("authorize_order_invalid_resource_id_error", {
+                        restCorrID: restCorrID,
+                        orderID: orderID,
+                        err: Object(belter_src.stringifyError)(err)
+                    });
                     if (isProcessorDeclineError(err)) throw err;
                     return Object(api.callSmartAPI)({
                         accessToken: buyerAccessToken,
@@ -9893,6 +9932,11 @@ window.spb = function(modules) {
                     var _headers12;
                     var restCorrID = Object(api.getErrorResponseCorrelationID)(err);
                     Object(lib.getLogger)().warn("patch_order_call_rest_api_error", {
+                        restCorrID: restCorrID,
+                        orderID: orderID,
+                        err: Object(belter_src.stringifyError)(err)
+                    });
+                    isInvalidResourceIDError(err) && Object(lib.getLogger)().warn("patch_order_invalid_resource_id_error", {
                         restCorrID: restCorrID,
                         orderID: orderID,
                         err: Object(belter_src.stringifyError)(err)
@@ -9969,9 +10013,7 @@ window.spb = function(modules) {
                 data: data,
                 headers: (_headers14 = {}, _headers14[constants.HEADERS.PARTNER_ATTRIBUTION_ID] = partnerAttributionID || "", 
                 _headers14[constants.HEADERS.PREFER] = constants.PREFER.REPRESENTATION, _headers14)
-            }).then((function(_ref12) {
-                return _ref12.data;
-            }));
+            });
         }
         function buildPaymentSource(tokenID) {
             return {
@@ -9981,13 +10023,13 @@ window.spb = function(modules) {
                 }
             };
         }
-        function validatePaymentMethod(_ref13) {
+        function validatePaymentMethod(_ref12) {
             var _headers15;
-            var accessToken = _ref13.accessToken, orderID = _ref13.orderID, paymentMethodID = _ref13.paymentMethodID, enableThreeDomainSecure = _ref13.enableThreeDomainSecure, partnerAttributionID = _ref13.partnerAttributionID, clientMetadataID = _ref13.clientMetadataID, installmentPlan = _ref13.installmentPlan;
+            var accessToken = _ref12.accessToken, orderID = _ref12.orderID, paymentMethodID = _ref12.paymentMethodID, enableThreeDomainSecure = _ref12.enableThreeDomainSecure, partnerAttributionID = _ref12.partnerAttributionID, clientMetadataID = _ref12.clientMetadataID, installmentPlan = _ref12.installmentPlan;
             Object(lib.getLogger)().info("rest_api_create_order_token");
             var headers = ((_headers15 = {})[constants.HEADERS.AUTHORIZATION] = "Bearer " + accessToken, 
             _headers15[constants.HEADERS.PARTNER_ATTRIBUTION_ID] = partnerAttributionID, _headers15[constants.HEADERS.CLIENT_METADATA_ID] = clientMetadataID, 
-            _headers15[constants.HEADERS.APP_NAME] = constants.SMART_PAYMENT_BUTTONS, _headers15[constants.HEADERS.APP_VERSION] = "5.0.131", 
+            _headers15[constants.HEADERS.APP_NAME] = constants.SMART_PAYMENT_BUTTONS, _headers15[constants.HEADERS.APP_VERSION] = "5.0.132", 
             _headers15);
             var paymentSource = {
                 token: {
@@ -10018,8 +10060,8 @@ window.spb = function(modules) {
                 method: "post",
                 eventName: "payment_ectoken",
                 url: src_config.SMART_API_URI.PAYMENT + "/" + billingToken + "/ectoken"
-            }).then((function(_ref14) {
-                return _ref14.data.token;
+            }).then((function(_ref13) {
+                return _ref13.data.token;
             }));
         }
         function subscriptionIdToCartId(subscriptionID) {
@@ -10028,19 +10070,19 @@ window.spb = function(modules) {
                 method: "post",
                 eventName: "billagmt_subscriptions_cartid",
                 url: src_config.SMART_API_URI.SUBSCRIPTION + "/" + subscriptionID + "/cartid"
-            }).then((function(_ref15) {
-                return _ref15.data.token;
+            }).then((function(_ref14) {
+                return _ref14.data.token;
             }));
         }
-        function enableVault(_ref16) {
+        function enableVault(_ref15) {
             var _headers16;
-            var orderID = _ref16.orderID, clientAccessToken = _ref16.clientAccessToken;
+            var orderID = _ref15.orderID, clientAccessToken = _ref15.clientAccessToken;
             var clientConfig = {
-                fundingSource: _ref16.fundingSource,
-                integrationArtifact: _ref16.integrationArtifact,
-                userExperienceFlow: _ref16.userExperienceFlow,
-                productFlow: _ref16.productFlow,
-                buttonSessionID: _ref16.buttonSessionID
+                fundingSource: _ref15.fundingSource,
+                integrationArtifact: _ref15.integrationArtifact,
+                userExperienceFlow: _ref15.userExperienceFlow,
+                productFlow: _ref15.productFlow,
+                buttonSessionID: _ref15.buttonSessionID
             };
             return Object(api.callGraphQL)({
                 name: "EnableVault",
@@ -10053,9 +10095,9 @@ window.spb = function(modules) {
                 _headers16[constants.HEADERS.CLIENT_CONTEXT] = orderID, _headers16)
             });
         }
-        function deleteVault(_ref17) {
+        function deleteVault(_ref16) {
             var _headers17;
-            var paymentMethodID = _ref17.paymentMethodID, clientAccessToken = _ref17.clientAccessToken;
+            var paymentMethodID = _ref16.paymentMethodID, clientAccessToken = _ref16.clientAccessToken;
             return Object(api.callGraphQL)({
                 name: "DeleteVault",
                 query: "\n            mutation DeleteVault(\n                $paymentMethodID : String!\n            ) {\n                deleteVault(\n                    paymentMethodID: $paymentMethodID\n                )\n            }\n        ",
@@ -10066,9 +10108,9 @@ window.spb = function(modules) {
                 _headers17)
             });
         }
-        function updateClientConfig(_ref18) {
+        function updateClientConfig(_ref17) {
             var _headers18;
-            var orderID = _ref18.orderID, fundingSource = _ref18.fundingSource, integrationArtifact = _ref18.integrationArtifact, userExperienceFlow = _ref18.userExperienceFlow, productFlow = _ref18.productFlow, buttonSessionID = _ref18.buttonSessionID;
+            var orderID = _ref17.orderID, fundingSource = _ref17.fundingSource, integrationArtifact = _ref17.integrationArtifact, userExperienceFlow = _ref17.userExperienceFlow, productFlow = _ref17.productFlow, buttonSessionID = _ref17.buttonSessionID;
             return Object(api.callGraphQL)({
                 name: "UpdateClientConfig",
                 query: "\n            mutation UpdateClientConfig(\n                $orderID : String!,\n                $fundingSource : ButtonFundingSourceType!,\n                $integrationArtifact : IntegrationArtifactType!,\n                $userExperienceFlow : UserExperienceFlowType!,\n                $productFlow : ProductFlowType!,\n                $buttonSessionID : String\n            ) {\n                updateClientConfig(\n                    token: $orderID,\n                    fundingSource: $fundingSource,\n                    integrationArtifact: $integrationArtifact,\n                    userExperienceFlow: $userExperienceFlow,\n                    productFlow: $productFlow,\n                    buttonSessionID: $buttonSessionID\n                )\n            }\n        ",
@@ -10084,9 +10126,9 @@ window.spb = function(modules) {
                 _headers18)
             }).then(belter_src.noop);
         }
-        function approveOrder(_ref19) {
+        function approveOrder(_ref18) {
             var _headers19;
-            var orderID = _ref19.orderID, planID = _ref19.planID, buyerAccessToken = _ref19.buyerAccessToken;
+            var orderID = _ref18.orderID, planID = _ref18.planID, buyerAccessToken = _ref18.buyerAccessToken;
             return Object(api.callGraphQL)({
                 name: "ApproveOrder",
                 query: "\n            mutation ApproveOrder(\n                $orderID : String!\n                $planID : String!\n            ) {\n                approvePayment(\n                    token: $orderID\n                    selectedPlanId: $planID\n                ) {\n                    buyer {\n                        userId\n                        auth {\n                            accessToken\n                        }\n                    }\n                }\n            }\n        ",
@@ -10096,18 +10138,18 @@ window.spb = function(modules) {
                 },
                 headers: (_headers19 = {}, _headers19[constants.HEADERS.ACCESS_TOKEN] = buyerAccessToken, 
                 _headers19[constants.HEADERS.CLIENT_CONTEXT] = orderID, _headers19)
-            }).then((function(_ref20) {
+            }).then((function(_ref19) {
                 var _approvePayment$buyer, _approvePayment$buyer2;
-                var approvePayment = _ref20.approvePayment;
+                var approvePayment = _ref19.approvePayment;
                 Object(lib.setBuyerAccessToken)(null == approvePayment || null == (_approvePayment$buyer = approvePayment.buyer) || null == (_approvePayment$buyer2 = _approvePayment$buyer.auth) ? void 0 : _approvePayment$buyer2.accessToken);
                 return {
                     payerID: approvePayment.buyer.userId
                 };
             }));
         }
-        function oneClickApproveOrder(_ref21) {
+        function oneClickApproveOrder(_ref20) {
             var _headers20;
-            var orderID = _ref21.orderID, instrumentType = _ref21.instrumentType, instrumentID = _ref21.instrumentID, buyerAccessToken = _ref21.buyerAccessToken, clientMetadataID = _ref21.clientMetadataID, planID = _ref21.planID, _ref21$useExistingPla = _ref21.useExistingPlanning, useExistingPlanning = void 0 !== _ref21$useExistingPla && _ref21$useExistingPla, enableOrdersApprovalSmartWallet = _ref21.enableOrdersApprovalSmartWallet;
+            var orderID = _ref20.orderID, instrumentType = _ref20.instrumentType, instrumentID = _ref20.instrumentID, buyerAccessToken = _ref20.buyerAccessToken, clientMetadataID = _ref20.clientMetadataID, planID = _ref20.planID, _ref20$useExistingPla = _ref20.useExistingPlanning, useExistingPlanning = void 0 !== _ref20$useExistingPla && _ref20$useExistingPla, enableOrdersApprovalSmartWallet = _ref20.enableOrdersApprovalSmartWallet;
             return Object(api.callGraphQL)({
                 name: "OneClickApproveOrder",
                 query: "\n            mutation OneClickApproveOrder(\n                $orderID : String!\n                $instrumentType : String!\n                $instrumentID : String!\n                $planID: String\n                $useExistingPlanning: Boolean\n            ) {\n                oneClickPayment(\n                    token: $orderID\n                    selectedInstrumentType : $instrumentType\n                    selectedInstrumentId : $instrumentID\n                    selectedPlanId: $planID\n                    useExistingPlanning: $useExistingPlanning\n                ) {\n                    userId\n                    " + (enableOrdersApprovalSmartWallet ? "" : "auth {\n        accessToken\n    }") + "\n                }\n            }\n        ",
@@ -10121,9 +10163,9 @@ window.spb = function(modules) {
                 headers: (_headers20 = {}, _headers20[constants.HEADERS.ACCESS_TOKEN] = buyerAccessToken, 
                 _headers20[constants.HEADERS.CLIENT_CONTEXT] = orderID, _headers20[constants.HEADERS.CLIENT_METADATA_ID] = clientMetadataID || orderID, 
                 _headers20)
-            }).then((function(_ref22) {
+            }).then((function(_ref21) {
                 var _oneClickPayment$auth;
-                var oneClickPayment = _ref22.oneClickPayment;
+                var oneClickPayment = _ref21.oneClickPayment;
                 null != oneClickPayment && null != (_oneClickPayment$auth = oneClickPayment.auth) && _oneClickPayment$auth.accessToken && Object(lib.setBuyerAccessToken)(oneClickPayment.auth.accessToken);
                 return {
                     payerID: oneClickPayment.userId
@@ -10167,19 +10209,19 @@ window.spb = function(modules) {
                 _headers23)
             });
         };
-        function updateButtonClientConfig(_ref23) {
-            var _ref23$inline = _ref23.inline;
+        function updateButtonClientConfig(_ref22) {
+            var _ref22$inline = _ref22.inline;
             return updateClientConfig({
-                orderID: _ref23.orderID,
-                fundingSource: _ref23.fundingSource,
+                orderID: _ref22.orderID,
+                fundingSource: _ref22.fundingSource,
                 integrationArtifact: constants.INTEGRATION_ARTIFACT.PAYPAL_JS_SDK,
-                userExperienceFlow: _ref23.userExperienceFlow || (void 0 !== _ref23$inline && _ref23$inline ? constants.USER_EXPERIENCE_FLOW.INLINE : constants.USER_EXPERIENCE_FLOW.INCONTEXT),
-                productFlow: _ref23.productFlow || constants.PRODUCT_FLOW.SMART_PAYMENT_BUTTONS,
-                buttonSessionID: _ref23.buttonSessionID
+                userExperienceFlow: _ref22.userExperienceFlow || (void 0 !== _ref22$inline && _ref22$inline ? constants.USER_EXPERIENCE_FLOW.INLINE : constants.USER_EXPERIENCE_FLOW.INCONTEXT),
+                productFlow: _ref22.productFlow || constants.PRODUCT_FLOW.SMART_PAYMENT_BUTTONS,
+                buttonSessionID: _ref22.buttonSessionID
             });
         }
-        function approveCardPayment(_ref24) {
-            var card = _ref24.card, orderID = _ref24.orderID, clientID = _ref24.clientID, branded = _ref24.branded;
+        function approveCardPayment(_ref23) {
+            var card = _ref23.card, orderID = _ref23.orderID, clientID = _ref23.clientID, branded = _ref23.branded;
             return Object(api.callGraphQL)({
                 name: "ProcessPayment",
                 query: '\n            mutation ProcessPayment(\n                $orderID: String!\n                $clientID: String!\n                $card: CardInput!\n                $branded: Boolean!\n            ) {\n                processPayment(\n                    clientID: $clientID\n                    paymentMethod: { type: CARD, card: $card }\n                    branded: $branded\n                    orderID: $orderID\n                    buttonSessionID: "f7r7367r4"\n                )\n            }\n        ',
@@ -11404,7 +11446,7 @@ window.spb = function(modules) {
                                         logApplePayEvent("validatemerchant", {
                                             validationURL: validationURL
                                         });
-                                        zalgo_promise_src.ZalgoPromise.try((function() {
+                                        return zalgo_promise_src.ZalgoPromise.try((function() {
                                             return !onClick || onClick({
                                                 fundingSource: fundingSource
                                             }).then((function(valid) {
@@ -11423,7 +11465,7 @@ window.spb = function(modules) {
                                         })).then((function(valid) {
                                             return valid ? createOrder() : Object(lib.unresolvedPromise)();
                                         })).then((function(orderID) {
-                                            Object(api.getDetailedOrderInfo)(orderID, locale.country).then((function(order) {
+                                            return Object(api.getDetailedOrderInfo)(orderID, locale.country).then((function(order) {
                                                 var _order$checkoutSessio = order.checkoutSession, merchant = _order$checkoutSessio.merchant, _order$checkoutSessio2 = _order$checkoutSessio.cart, _order$checkoutSessio3 = _order$checkoutSessio2.amounts, taxValue = _order$checkoutSessio3.tax.currencyValue, subtotalValue = _order$checkoutSessio3.subtotal.currencyValue, totalValue = _order$checkoutSessio3.total.currencyValue, shippingAddress = _order$checkoutSessio2.shippingAddress;
                                                 currentShippingAmount = _order$checkoutSessio3.shippingAndHandling.currencyValue;
                                                 var appleShippingMethods = getApplePayShippingMethods(_order$checkoutSessio2.shippingMethods);
@@ -11457,7 +11499,7 @@ window.spb = function(modules) {
                                                 currentSubtotalAmount = subtotalValue;
                                                 currentTotalAmount = totalValue;
                                                 merchantName = (null == merchant ? void 0 : merchant.name) || "Total";
-                                                Object(api.getApplePayMerchantSession)({
+                                                return Object(api.getApplePayMerchantSession)({
                                                     url: validationURL,
                                                     clientID: clientID,
                                                     orderID: orderID,
@@ -11503,8 +11545,8 @@ window.spb = function(modules) {
                                     })), addEventListener("shippingmethodselected", (function(_ref9) {
                                         var shippingMethod = _ref9.shippingMethod;
                                         logApplePayEvent("shippingmethodselected");
-                                        createOrder().then((function(orderID) {
-                                            onShippingChangeCallback({
+                                        return createOrder().then((function(orderID) {
+                                            return onShippingChangeCallback({
                                                 orderID: orderID,
                                                 shippingContact: currentShippingContact,
                                                 shippingMethod: shippingMethod,
@@ -11534,8 +11576,8 @@ window.spb = function(modules) {
                                     })), addEventListener("shippingcontactselected", (function(_ref10) {
                                         var shippingContact = _ref10.shippingContact;
                                         logApplePayEvent("shippingcontactselected", shippingContact);
-                                        createOrder().then((function(orderID) {
-                                            onShippingChangeCallback({
+                                        return createOrder().then((function(orderID) {
+                                            return onShippingChangeCallback({
                                                 orderID: orderID,
                                                 shippingContact: shippingContact,
                                                 shippingMethod: currentShippingMethod,
@@ -11553,8 +11595,8 @@ window.spb = function(modules) {
                                         if (!applePayPayment) throw new Error("No payment received from Apple.");
                                         null != applePayPayment && null != (_applePayPayment$ship = applePayPayment.shippingContact) && _applePayPayment$ship.countryCode && (applePayPayment.shippingContact.countryCode = applePayPayment.shippingContact.countryCode.toUpperCase());
                                         null != applePayPayment && null != (_applePayPayment$bill = applePayPayment.billingContact) && _applePayPayment$bill.countryCode && (applePayPayment.billingContact.countryCode = applePayPayment.billingContact.countryCode.toUpperCase());
-                                        createOrder().then((function(orderID) {
-                                            Object(api.approveApplePayPayment)(orderID, clientID, applePayPayment).then((function(validatedPayment) {
+                                        return createOrder().then((function(orderID) {
+                                            return Object(api.approveApplePayPayment)(orderID, clientID, applePayPayment).then((function(validatedPayment) {
                                                 if (validatedPayment) {
                                                     completePayment({
                                                         status: window.ApplePaySession.STATUS_SUCCESS
@@ -12595,6 +12637,18 @@ window.spb = function(modules) {
             },
             inline: !0
         };
+        var dist = __webpack_require__("./node_modules/card-validator/dist/index.js");
+        var dist_default = __webpack_require__.n(dist);
+        var _CARD_FIELD_TYPE_TO_F, _VALIDATOR_TO_TYPE_MA;
+        var types = dist_default.a.creditCardType.types;
+        (_CARD_FIELD_TYPE_TO_F = {}).single = constants.FRAME_NAME.CARD_FIELD, _CARD_FIELD_TYPE_TO_F.number = constants.FRAME_NAME.CARD_NUMBER_FIELD, 
+        _CARD_FIELD_TYPE_TO_F.cvv = constants.FRAME_NAME.CARD_CVV_FIELD, _CARD_FIELD_TYPE_TO_F.expiry = constants.FRAME_NAME.CARD_EXPIRY_FIELD, 
+        _CARD_FIELD_TYPE_TO_F.name = constants.FRAME_NAME.CARD_NAME_FIELD, _CARD_FIELD_TYPE_TO_F.postal = constants.FRAME_NAME.CARD_POSTAL_FIELD;
+        (_VALIDATOR_TO_TYPE_MA = {})[types.AMERICAN_EXPRESS] = sdk_constants_src.CARD.AMEX, 
+        _VALIDATOR_TO_TYPE_MA[types.DISCOVER] = sdk_constants_src.CARD.DISCOVER, _VALIDATOR_TO_TYPE_MA[types.ELO] = sdk_constants_src.CARD.ELO, 
+        _VALIDATOR_TO_TYPE_MA[types.HIPER] = sdk_constants_src.CARD.HIPER, _VALIDATOR_TO_TYPE_MA[types.JCB] = sdk_constants_src.CARD.JCB, 
+        _VALIDATOR_TO_TYPE_MA[types.MASTERCARD] = sdk_constants_src.CARD.MASTERCARD, _VALIDATOR_TO_TYPE_MA[types.UNIONPAY] = sdk_constants_src.CARD.CUP, 
+        _VALIDATOR_TO_TYPE_MA[types.VISA] = sdk_constants_src.CARD.VISA;
         function getExportsByFrameName(name) {
             try {
                 for (var _i2 = 0, _getAllFramesInWindow2 = Object(cross_domain_utils_src.getAllFramesInWindow)(window); _i2 < _getAllFramesInWindow2.length; _i2++) {
@@ -12618,27 +12672,47 @@ window.spb = function(modules) {
             var cardFrame = getExportsByFrameName(constants.FRAME_NAME.CARD_FIELD);
             if (cardFrame && cardFrame.isFieldValid()) return cardFrame.getFieldValue();
             var _getCardFrames = getCardFrames(), cardNumberFrame = _getCardFrames.cardNumberFrame, cardCVVFrame = _getCardFrames.cardCVVFrame, cardExpiryFrame = _getCardFrames.cardExpiryFrame, cardNameFrame = _getCardFrames.cardNameFrame, cardPostalFrame = _getCardFrames.cardPostalFrame;
-            if (!(cardNumberFrame && cardNumberFrame.isFieldValid() && cardCVVFrame && cardCVVFrame.isFieldValid() && cardExpiryFrame && cardExpiryFrame.isFieldValid())) throw new Error("Card fields not available to submit");
+            if (!cardNumberFrame || !cardNumberFrame.isFieldValid()) throw new Error("INVALID_NUMBER");
             card.number = cardNumberFrame.getFieldValue();
+            if (!cardCVVFrame || !cardCVVFrame.isFieldValid()) throw new Error("INVALID_CVV");
             card.cvv = cardCVVFrame.getFieldValue();
+            if (!cardExpiryFrame || !cardExpiryFrame.isFieldValid()) throw new Error("INVALID_EXPIRY");
             card.expiry = cardExpiryFrame.getFieldValue();
-            cardNameFrame && cardNameFrame.isFieldValid() && (card.name = cardNameFrame.getFieldValue());
-            cardPostalFrame && cardPostalFrame.isFieldValid() && (card.postalCode = cardPostalFrame.getFieldValue());
+            if (cardNameFrame) {
+                var cardNameValue = cardNameFrame.getFieldValue();
+                if (cardNameFrame.isFieldValid()) card.name = cardNameValue; else if (0 !== cardNameValue.length) throw new Error("INVALID_NAME");
+            }
+            if (cardPostalFrame) {
+                var postalCodeValue = cardPostalFrame.getFieldValue();
+                if (cardPostalFrame.isFieldValid()) card.name = postalCodeValue; else if (0 !== postalCodeValue.length) throw new Error("INVALID_POSTAL");
+            }
             return card;
         }
-        var dist = __webpack_require__("./node_modules/card-validator/dist/index.js");
-        var dist_default = __webpack_require__.n(dist);
-        var _CARD_FIELD_TYPE_TO_F, _VALIDATOR_TO_TYPE_MA;
-        var types = dist_default.a.creditCardType.types;
-        (_CARD_FIELD_TYPE_TO_F = {}).single = constants.FRAME_NAME.CARD_FIELD, _CARD_FIELD_TYPE_TO_F.number = constants.FRAME_NAME.CARD_NUMBER_FIELD, 
-        _CARD_FIELD_TYPE_TO_F.cvv = constants.FRAME_NAME.CARD_CVV_FIELD, _CARD_FIELD_TYPE_TO_F.expiry = constants.FRAME_NAME.CARD_EXPIRY_FIELD, 
-        _CARD_FIELD_TYPE_TO_F.name = constants.FRAME_NAME.CARD_NAME_FIELD, _CARD_FIELD_TYPE_TO_F.postal = constants.FRAME_NAME.CARD_POSTAL_FIELD;
-        (_VALIDATOR_TO_TYPE_MA = {})[types.AMERICAN_EXPRESS] = sdk_constants_src.CARD.AMEX, 
-        _VALIDATOR_TO_TYPE_MA[types.DISCOVER] = sdk_constants_src.CARD.DISCOVER, _VALIDATOR_TO_TYPE_MA[types.ELO] = sdk_constants_src.CARD.ELO, 
-        _VALIDATOR_TO_TYPE_MA[types.HIPER] = sdk_constants_src.CARD.HIPER, _VALIDATOR_TO_TYPE_MA[types.JCB] = sdk_constants_src.CARD.JCB, 
-        _VALIDATOR_TO_TYPE_MA[types.MASTERCARD] = sdk_constants_src.CARD.MASTERCARD, _VALIDATOR_TO_TYPE_MA[types.UNIONPAY] = sdk_constants_src.CARD.CUP, 
-        _VALIDATOR_TO_TYPE_MA[types.VISA] = sdk_constants_src.CARD.VISA;
-        var belter = __webpack_require__("./node_modules/@krakenjs/belter/index.js");
+        __webpack_require__("./node_modules/@krakenjs/belter/index.js");
+        function cardExpiryToPaymentSourceExpiry(dateString) {
+            if (!dateString || "string" != typeof dateString) throw new Error("can not convert invalid expiry date: " + dateString);
+            if (dateString.match("^[0-9]{4}-([1-9]|0[1-9]|1[0-2])$")) return dateString;
+            if (dateString.match("^([1-9]|0[1-9]|1[0-2])/?([0-9]{4}|[0-9]{2})$")) {
+                var _dateString$split = dateString.split("/"), monthString = _dateString$split[0], yearString = _dateString$split[1];
+                return (2 === yearString.length ? "20" + yearString : yearString) + "-" + (1 === monthString.length ? "0" + monthString : monthString);
+            }
+            throw new Error("can not convert invalid expiry date: " + dateString);
+        }
+        function convertCardToPaymentSource(card, extraFields) {
+            var paymentSource = {
+                card: {
+                    number: card.number,
+                    securityCode: card.cvv,
+                    expiry: cardExpiryToPaymentSourceExpiry(card.expiry)
+                }
+            };
+            extraFields && 0 !== Object.keys(extraFields).length && (paymentSource.card.billingAddress = extraFields.billingAddress);
+            card.name && (paymentSource.card.name = card.name);
+            card.postalCode && (paymentSource.card.billingAddress = {
+                postalCode: card.postalCode
+            });
+            return paymentSource;
+        }
         function reformatBillingKeys(str) {
             return str.replace(/([a-z\d])([A-Z])/g, "$1_$2").replace(/([a-z\d])(\d)/g, "$1_$2").toLowerCase();
         }
@@ -12686,47 +12760,22 @@ window.spb = function(modules) {
             patterns: [],
             type: "cofidis"
         });
-        var cardExpiryToPaymentSourceExpiry = function(dateString) {
-            if (!dateString || "string" != typeof dateString) throw new Error("can not convert invalid expiry date: " + dateString);
-            if (dateString.match("^[0-9]{4}-([1-9]|0[1-9]|1[0-2])$")) return dateString;
-            if (dateString.match("^([1-9]|0[1-9]|1[0-2])/?([0-9]{4}|[0-9]{2})$")) {
-                var _dateString$split = dateString.split("/"), monthString = _dateString$split[0], yearString = _dateString$split[1];
-                return (2 === yearString.length ? "20" + yearString : yearString) + "-" + (1 === monthString.length ? "0" + monthString : monthString);
-            }
-            throw new Error("can not convert invalid expiry date: " + dateString);
-        };
-        var convertCardToPaymentSource = function(card, extraFields) {
-            var paymentSource = {
-                card: {
-                    number: card.number,
-                    securityCode: card.cvv,
-                    expiry: cardExpiryToPaymentSourceExpiry(card.expiry)
-                }
-            };
-            extraFields && 0 !== Object.keys(extraFields).length && (paymentSource.card.billingAddress = extraFields.billingAddress);
-            card.name && (paymentSource.card.name = card.name);
-            card.postalCode && (paymentSource.card.billingAddress = {
-                postalCode: card.postalCode
-            });
-            return paymentSource;
-        };
         function hasCardFields() {
             var _getCardFrames = getCardFrames();
             return Boolean(_getCardFrames.cardFrame || _getCardFrames.cardNumberFrame && _getCardFrames.cardCVVFrame && _getCardFrames.cardExpiryFrame);
         }
         var props_createVaultSetupToken = __webpack_require__("./src/props/createVaultSetupToken.js");
-        var disallowedPropsWithSave = [ "onApprove", "onCancel", "onComplete", "createOrder" ];
+        var disallowedPropsWithSave = [ "createOrder" ];
         var api_api = __webpack_require__("./src/api/api.js");
         var vault_without_purchase_onVaultWithoutPurchaseError = function(_ref) {
             var vaultToken = _ref.vaultToken, onError = _ref.onError;
             return function(error) {
-                !function(_ref5) {
+                !function(_ref7) {
                     var _payload;
-                    var vaultToken = _ref5.vaultToken, error = _ref5.error;
+                    var vaultToken = _ref7.vaultToken, error = _ref7.error;
                     var payload = ((_payload = {})[sdk_constants_src.FPTI_KEY.ERROR_CODE] = "hcf_vault_without_purchase_error", 
                     _payload[sdk_constants_src.FPTI_KEY.ERROR_DESC] = Object(src.stringifyErrorMessage)(error), 
-                    _payload);
-                    vaultToken && (payload.vault_token = vaultToken);
+                    _payload.vault_token = vaultToken, _payload);
                     Object(lib.getLogger)().track(payload);
                 }({
                     vaultToken: vaultToken,
@@ -12760,7 +12809,7 @@ window.spb = function(modules) {
                                 var _fundingEligibility$c, _fundingEligibility$c2;
                                 var facilitatorAccessToken = _ref.facilitatorAccessToken, featureFlags = _ref.featureFlags;
                                 var xprops = window.xprops;
-                                var type = xprops.type, cardSessionID = xprops.cardSessionID, style = xprops.style, placeholder = xprops.placeholder, minLength = xprops.minLength, maxLength = xprops.maxLength, fundingEligibility = xprops.fundingEligibility, inputEvents = xprops.inputEvents, _xprops$branded = xprops.branded, branded = void 0 === _xprops$branded ? null == (_fundingEligibility$c = null == fundingEligibility || null == (_fundingEligibility$c2 = fundingEligibility.card) ? void 0 : _fundingEligibility$c2.branded) || _fundingEligibility$c : _xprops$branded, parent = xprops.parent, xport = xprops.export, save = xprops.save, sdkCorrelationID = xprops.sdkCorrelationID, partnerAttributionID = xprops.partnerAttributionID, hcfSessionID = xprops.hcfSessionID;
+                                var type = xprops.type, cardSessionID = xprops.cardSessionID, style = xprops.style, placeholder = xprops.placeholder, minLength = xprops.minLength, maxLength = xprops.maxLength, fundingEligibility = xprops.fundingEligibility, inputEvents = xprops.inputEvents, _xprops$branded = xprops.branded, branded = void 0 === _xprops$branded ? null == (_fundingEligibility$c = null == fundingEligibility || null == (_fundingEligibility$c2 = fundingEligibility.card) ? void 0 : _fundingEligibility$c2.branded) || _fundingEligibility$c : _xprops$branded, parent = xprops.parent, xport = xprops.export, createVaultSetupToken = xprops.createVaultSetupToken, createOrder = xprops.createOrder, sdkCorrelationID = xprops.sdkCorrelationID, partnerAttributionID = xprops.partnerAttributionID, hcfSessionID = xprops.hcfSessionID;
                                 var returnData = {
                                     type: type,
                                     branded: branded,
@@ -12777,65 +12826,66 @@ window.spb = function(modules) {
                                 var baseProps = Object(props_props.getProps)({
                                     branded: branded
                                 });
-                                if (save) return Object(esm_extends.default)({}, baseProps, function(xprops, baseProps) {
+                                if (createVaultSetupToken) return Object(esm_extends.default)({}, baseProps, function(xprops, baseProps) {
                                     disallowedPropsWithSave.forEach((function(prop) {
                                         if (xprops[prop]) throw new Error("Do not pass " + prop + " with an action.");
                                     }));
-                                    var save = xprops.save;
-                                    if (null == save || !save.createVaultSetupToken) throw new Error("createVaultSetupToken is required when saving card fields");
-                                    if (null == save || !save.onApprove) throw new Error("onApprove is required when saving card fields");
-                                    if (!xprops.userIDToken) throw new Error('data attribute "data-user-id-token" is required on SDK script tag for saving card fields');
+                                    if (null == xprops || !xprops.createVaultSetupToken) throw new Error("createVaultSetupToken is required when saving card fields");
+                                    if (null == xprops || !xprops.onApprove) throw new Error("onApprove is required when saving card fields");
                                     return {
-                                        userIDToken: xprops.userIDToken,
-                                        save: {
-                                            createVaultSetupToken: Object(props_createVaultSetupToken.getCreateVaultSetupToken)({
-                                                createVaultSetupToken: save.createVaultSetupToken
-                                            }),
-                                            onApprove: Object(props_onApprove.getSaveActionOnApprove)({
-                                                onApprove: save.onApprove,
-                                                onError: baseProps.onError
-                                            })
-                                        }
+                                        createVaultSetupToken: Object(props_createVaultSetupToken.getCreateVaultSetupToken)({
+                                            createVaultSetupToken: xprops.createVaultSetupToken
+                                        }),
+                                        onApprove: Object(props_onApprove.getSaveActionOnApprove)({
+                                            onApprove: xprops.onApprove,
+                                            onError: baseProps.onError
+                                        })
                                     };
                                 }(xprops, baseProps), returnData);
-                                var props = getLegacyProps({
-                                    paymentSource: null,
-                                    partnerAttributionID: xprops.partnerAttributionID,
-                                    merchantID: xprops.merchantID,
-                                    clientID: xprops.clientID,
-                                    currency: xprops.currency,
-                                    intent: xprops.intent,
-                                    clientAccessToken: xprops.clientAccessToken,
-                                    branded: branded,
-                                    vault: !1,
-                                    facilitatorAccessToken: facilitatorAccessToken,
-                                    featureFlags: featureFlags,
-                                    onShippingChange: xprops.onShippingChange,
-                                    onShippingAddressChange: xprops.onShippingAddressChange,
-                                    onShippingOptionsChange: xprops.onShippingOptionsChange,
-                                    onError: baseProps.onError,
-                                    onCancel: xprops.onCancel,
-                                    onApprove: xprops.onApprove,
-                                    createSubscription: xprops.createSubscription,
-                                    createOrder: xprops.createOrder,
-                                    createBillingAgreement: xprops.createBillingAgreement
-                                });
-                                return Object(esm_extends.default)({}, baseProps, props, {
-                                    type: type,
-                                    branded: branded,
-                                    style: style,
-                                    placeholder: placeholder,
-                                    minLength: minLength,
-                                    maxLength: maxLength,
-                                    cardSessionID: cardSessionID,
-                                    fundingEligibility: fundingEligibility,
-                                    inputEvents: inputEvents,
-                                    export: parent ? parent.export : xport,
-                                    facilitatorAccessToken: facilitatorAccessToken,
-                                    sdkCorrelationID: sdkCorrelationID,
-                                    partnerAttributionID: partnerAttributionID,
-                                    hcfSessionID: hcfSessionID
-                                });
+                                if (createOrder) {
+                                    var props = getLegacyProps({
+                                        paymentSource: null,
+                                        partnerAttributionID: xprops.partnerAttributionID,
+                                        merchantID: xprops.merchantID,
+                                        clientID: xprops.clientID,
+                                        currency: xprops.currency,
+                                        intent: xprops.intent,
+                                        clientAccessToken: xprops.clientAccessToken,
+                                        branded: branded,
+                                        vault: !1,
+                                        facilitatorAccessToken: facilitatorAccessToken,
+                                        featureFlags: featureFlags,
+                                        onShippingChange: xprops.onShippingChange,
+                                        onShippingAddressChange: xprops.onShippingAddressChange,
+                                        onShippingOptionsChange: xprops.onShippingOptionsChange,
+                                        onError: baseProps.onError,
+                                        onCancel: xprops.onCancel,
+                                        onApprove: xprops.onApprove,
+                                        createSubscription: xprops.createSubscription,
+                                        createOrder: xprops.createOrder,
+                                        createBillingAgreement: xprops.createBillingAgreement
+                                    });
+                                    return Object(esm_extends.default)({}, baseProps, props, {
+                                        type: type,
+                                        branded: branded,
+                                        style: style,
+                                        placeholder: placeholder,
+                                        onApprove: xprops.onApprove,
+                                        createOrder: xprops.createOrder,
+                                        onError: xprops.onError,
+                                        minLength: minLength,
+                                        maxLength: maxLength,
+                                        cardSessionID: cardSessionID,
+                                        fundingEligibility: fundingEligibility,
+                                        inputEvents: inputEvents,
+                                        export: parent ? parent.export : xport,
+                                        facilitatorAccessToken: facilitatorAccessToken,
+                                        sdkCorrelationID: sdkCorrelationID,
+                                        partnerAttributionID: partnerAttributionID,
+                                        hcfSessionID: hcfSessionID
+                                    });
+                                }
+                                throw new Error("Must pass either createVaultSetupToken or createOrder");
                             }({
                                 facilitatorAccessToken: facilitatorAccessToken,
                                 featureFlags: _ref.featureFlags
@@ -12850,65 +12900,51 @@ window.spb = function(modules) {
                             return zalgo_promise_src.ZalgoPromise.try((function() {
                                 if (!hasCardFields()) throw new Error("Card fields not available to submit");
                                 var card = getCardFields();
-                                return cardProps.save ? function(_ref2) {
-                                    var save = _ref2.save, onError = _ref2.onError, facilitatorAccessToken = _ref2.facilitatorAccessToken, clientID = _ref2.clientID, userIDToken = _ref2.userIDToken, paymentSource = _ref2.paymentSource;
-                                    var onApprove = save.onApprove;
-                                    return (0, save.createVaultSetupToken)().then((function(vaultSetupToken) {
-                                        return function(_ref) {
-                                            var vaultSetupToken = _ref.vaultSetupToken, facilitatorAccessToken = _ref.facilitatorAccessToken;
-                                            return Object(api_api.callRestAPI)({
-                                                accessToken: facilitatorAccessToken,
-                                                url: src_config.VAULT_SETUP_TOKENS_API_URL + "/" + vaultSetupToken,
-                                                eventName: "v3_vault_setup_tokens_get"
-                                            });
-                                        }({
-                                            vaultSetupToken: vaultSetupToken,
-                                            facilitatorAccessToken: facilitatorAccessToken
-                                        }).then((function() {
-                                            return function(_ref2) {
-                                                var clientID = _ref2.clientID, userIDToken = _ref2.userIDToken, vaultSetupToken = _ref2.vaultSetupToken, paymentSource = _ref2.paymentSource;
-                                                return Object(api_api.callGraphQL)({
-                                                    name: "UpdateVaultSetupToken",
-                                                    query: "\n      mutation UpdateVaultSetupToken(\n        $clientID: String!\n        $userIDToken: String!\n        $vaultSetupToken: String!\n        $paymentSource: PaymentSource\n      ) {\n        updateVaultSetupToken(\n          clientId: $clientID\n          idToken: $userIDToken\n          vaultSetupToken: $vaultSetupToken\n          paymentSource: $paymentSource\n        ) {\n          id,\n          status\n        }\n      }",
-                                                    variables: {
-                                                        clientID: clientID,
-                                                        userIDToken: userIDToken,
-                                                        vaultSetupToken: vaultSetupToken,
-                                                        paymentSource: paymentSource
-                                                    }
-                                                });
-                                            }({
-                                                vaultSetupToken: vaultSetupToken,
-                                                clientID: clientID,
-                                                userIDToken: userIDToken,
-                                                paymentSource: paymentSource
-                                            });
-                                        })).then((function() {
-                                            return onApprove({
-                                                vaultSetupToken: vaultSetupToken
-                                            });
-                                        })).then((function() {
-                                            return vaultToken = {
-                                                vaultToken: vaultSetupToken
-                                            }.vaultToken, void Object(lib.getLogger)().track(((_getLogger$track = {})[sdk_constants_src.FPTI_KEY.TRANSITION] = "hcf_vault_without_purchase_success", 
-                                            _getLogger$track[sdk_constants_src.FPTI_KEY.EVENT_NAME] = "hcf_vault_without_purchase_success", 
-                                            _getLogger$track.vault_token = vaultToken, _getLogger$track));
-                                            var _getLogger$track, vaultToken;
-                                        })).catch(vault_without_purchase_onVaultWithoutPurchaseError({
-                                            onError: onError,
-                                            vaultToken: vaultSetupToken
-                                        }));
-                                    })).catch(vault_without_purchase_onVaultWithoutPurchaseError({
-                                        onError: onError
-                                    }));
-                                }({
-                                    save: cardProps.save,
+                                return cardProps.createVaultSetupToken ? (_ref2 = {
+                                    onApprove: cardProps.onApprove,
+                                    createVaultSetupToken: cardProps.createVaultSetupToken,
                                     onError: cardProps.onError,
-                                    facilitatorAccessToken: facilitatorAccessToken,
                                     clientID: cardProps.clientID,
-                                    userIDToken: cardProps.userIDToken,
-                                    paymentSource: convertCardToPaymentSource(card, extraFields)
-                                }) : cardProps.createOrder().then((function(orderID) {
+                                    paymentSource: convertCardToPaymentSource(card, extraFields),
+                                    idToken: cardProps.userIDToken || ""
+                                }, onApprove = _ref2.onApprove, onError = _ref2.onError, clientID = _ref2.clientID, 
+                                paymentSource = _ref2.paymentSource, idToken = _ref2.idToken, (0, _ref2.createVaultSetupToken)().then((function(vaultSetupToken) {
+                                    return function(_ref2) {
+                                        var clientID = _ref2.clientID, vaultSetupToken = _ref2.vaultSetupToken, paymentSource = _ref2.paymentSource, idToken = _ref2.idToken;
+                                        return Object(api_api.callGraphQL)({
+                                            name: "UpdateVaultSetupToken",
+                                            query: "\n      mutation UpdateVaultSetupToken(\n        $clientID: String!\n        $vaultSetupToken: String!\n        $paymentSource: PaymentSource\n        $idToken: String!\n      ) {\n        updateVaultSetupToken(\n          clientId: $clientID\n          vaultSetupToken: $vaultSetupToken\n          paymentSource: $paymentSource\n          idToken: $idToken\n        ) {\n          id,\n          status\n        }\n      }",
+                                            variables: {
+                                                clientID: clientID,
+                                                vaultSetupToken: vaultSetupToken,
+                                                paymentSource: paymentSource,
+                                                idToken: idToken
+                                            }
+                                        });
+                                    }({
+                                        vaultSetupToken: vaultSetupToken,
+                                        clientID: clientID,
+                                        paymentSource: paymentSource,
+                                        idToken: idToken
+                                    }).then((function() {
+                                        return onApprove({
+                                            vaultSetupToken: vaultSetupToken
+                                        });
+                                    })).then((function() {
+                                        return vaultToken = {
+                                            vaultToken: vaultSetupToken
+                                        }.vaultToken, void Object(lib.getLogger)().track(((_getLogger$track3 = {})[sdk_constants_src.FPTI_KEY.TRANSITION] = "hcf_vault_without_purchase_success", 
+                                        _getLogger$track3[sdk_constants_src.FPTI_KEY.EVENT_NAME] = "hcf_vault_without_purchase_success", 
+                                        _getLogger$track3.vault_token = vaultToken, _getLogger$track3));
+                                        var _getLogger$track3, vaultToken;
+                                    })).catch(vault_without_purchase_onVaultWithoutPurchaseError({
+                                        onError: onError,
+                                        vaultToken: vaultSetupToken
+                                    }));
+                                })).catch(vault_without_purchase_onVaultWithoutPurchaseError({
+                                    onError: onError
+                                }))) : cardProps.createOrder().then((function(id) {
+                                    if ("string" != typeof (null == id ? void 0 : id.valueOf())) throw new TypeError("Expected createOrder to return a promise that resolves with the order ID as a string.");
                                     var payment_source = convertCardToPaymentSource(card, extraFields);
                                     var data = {
                                         payment_source: {
@@ -12928,24 +12964,42 @@ window.spb = function(modules) {
                                         }
                                     };
                                     var paymentSource;
+                                    orderID = id;
                                     return Object(api.confirmOrderAPI)(orderID, data, {
                                         facilitatorAccessToken: facilitatorAccessToken,
                                         partnerAttributionID: ""
-                                    }).catch((function(error) {
-                                        Object(lib.getLogger)().info("card_fields_payment_failed");
-                                        cardProps.onError && cardProps.onError(error);
-                                        throw error;
-                                    }));
-                                })).then((function(orderData) {
-                                    return cardProps.onApprove(Object(esm_extends.default)({
-                                        payerID: Object(belter.uniqueID)(),
-                                        buyerAccessToken: Object(belter.uniqueID)()
-                                    }, orderData), {
-                                        restart: function() {
-                                            throw new Error("Restart not implemented for card fields flow");
-                                        }
                                     });
+                                })).then((function() {
+                                    return cardProps.onApprove({
+                                        orderID: orderID
+                                    }, {});
+                                })).then((function() {
+                                    !function(_ref4) {
+                                        var _getLogger$track;
+                                        var orderID = _ref4.orderID;
+                                        Object(lib.getLogger)().track((_getLogger$track = {}, _getLogger$track[sdk_constants_src.FPTI_KEY.TRANSITION] = "hcf_transaction_success", 
+                                        _getLogger$track[sdk_constants_src.FPTI_KEY.EVENT_NAME] = "hcf_transaction_success", 
+                                        _getLogger$track.order_id = orderID, _getLogger$track)).flush();
+                                    }({
+                                        orderID: orderID
+                                    });
+                                })).catch((function(error) {
+                                    "string" == typeof error && (error = new Error(error));
+                                    !function(_ref5) {
+                                        var _getLogger$track2;
+                                        var orderID = _ref5.orderID, error = _ref5.error;
+                                        Object(lib.getLogger)().track((_getLogger$track2 = {}, _getLogger$track2[sdk_constants_src.FPTI_KEY.ERROR_CODE] = "hcf_transaction_error", 
+                                        _getLogger$track2[sdk_constants_src.FPTI_KEY.ERROR_DESC] = Object(src.stringifyErrorMessage)(error), 
+                                        _getLogger$track2.order_id = orderID, _getLogger$track2)).flush();
+                                    }({
+                                        error: error,
+                                        orderID: orderID
+                                    });
+                                    cardProps.onError && cardProps.onError(error);
+                                    throw error;
                                 }));
+                                var _ref2, onApprove, onError, clientID, paymentSource, idToken;
+                                var orderID;
                             }));
                         }({
                             facilitatorAccessToken: facilitatorAccessToken,
@@ -15851,7 +15905,7 @@ window.spb = function(modules) {
                     var _ref3;
                     return (_ref3 = {})[sdk_constants_src.FPTI_KEY.CONTEXT_TYPE] = constants.FPTI_CONTEXT_TYPE.BUTTON_SESSION_ID, 
                     _ref3[sdk_constants_src.FPTI_KEY.CONTEXT_ID] = buttonSessionID, _ref3[sdk_constants_src.FPTI_KEY.BUTTON_SESSION_UID] = buttonSessionID, 
-                    _ref3[sdk_constants_src.FPTI_KEY.BUTTON_VERSION] = "5.0.131", _ref3[constants.FPTI_BUTTON_KEY.BUTTON_CORRELATION_ID] = buttonCorrelationID, 
+                    _ref3[sdk_constants_src.FPTI_KEY.BUTTON_VERSION] = "5.0.132", _ref3[constants.FPTI_BUTTON_KEY.BUTTON_CORRELATION_ID] = buttonCorrelationID, 
                     _ref3[sdk_constants_src.FPTI_KEY.STICKINESS_ID] = Object(lib.isAndroidChrome)() ? stickinessID : null, 
                     _ref3[sdk_constants_src.FPTI_KEY.PARTNER_ATTRIBUTION_ID] = partnerAttributionID, 
                     _ref3[sdk_constants_src.FPTI_KEY.USER_ACTION] = commit ? sdk_constants_src.FPTI_USER_ACTION.COMMIT : sdk_constants_src.FPTI_USER_ACTION.CONTINUE, 
@@ -15913,7 +15967,7 @@ window.spb = function(modules) {
                     _tracking[sdk_constants_src.FPTI_KEY.FUNDING_LIST] = fundingSources.join(":"), _tracking[sdk_constants_src.FPTI_KEY.FI_LIST] = walletInstruments.join(":"), 
                     _tracking[sdk_constants_src.FPTI_KEY.SELECTED_FI] = fundingSource, _tracking[sdk_constants_src.FPTI_KEY.FUNDING_COUNT] = fundingSources.length.toString(), 
                     _tracking[sdk_constants_src.FPTI_KEY.PAGE_LOAD_TIME] = pageRenderTime ? pageRenderTime.toString() : "", 
-                    _tracking[sdk_constants_src.FPTI_KEY.POTENTIAL_PAYMENT_METHODS] = queriedEligibleFunding.join(":"), 
+                    _tracking[sdk_constants_src.FPTI_KEY.POTENTIAL_PAYMENT_METHODS] = Array.isArray(queriedEligibleFunding) ? queriedEligibleFunding.join(":") : "", 
                     _tracking[sdk_constants_src.FPTI_KEY.PAY_NOW] = payNow.toString(), _tracking[constants.FPTI_BUTTON_KEY.BUTTON_LAYOUT] = layout, 
                     _tracking[constants.FPTI_BUTTON_KEY.BUTTON_COLOR] = color, _tracking[constants.FPTI_BUTTON_KEY.BUTTON_SIZE] = "responsive", 
                     _tracking[constants.FPTI_BUTTON_KEY.BUTTON_SHAPE] = shape, _tracking[constants.FPTI_BUTTON_KEY.BUTTON_LABEL] = label, 
@@ -16347,7 +16401,8 @@ window.spb = function(modules) {
         var ORDER_API_ERROR = {
             INSTRUMENT_DECLINED: "INSTRUMENT_DECLINED",
             PAYER_ACTION_REQUIRED: "PAYER_ACTION_REQUIRED",
-            DUPLICATE_INVOICE_ID: "DUPLICATE_INVOICE_ID"
+            DUPLICATE_INVOICE_ID: "DUPLICATE_INVOICE_ID",
+            INVALID_RESOURCE_ID: "INVALID_RESOURCE_ID"
         };
         var CONTEXT = {
             IFRAME: "iframe",
