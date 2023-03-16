@@ -1,7 +1,7 @@
 /* @flow */
 import { describe, afterEach, vi, test, expect, beforeEach } from "vitest";
 
-import { getVaultSetupToken, updateVaultSetupToken } from "../../api/vault";
+import { updateVaultSetupToken } from "../../api/vault";
 import {
   vaultWithoutPurchaseSuccess,
   vaultWithoutPurchaseFailure,
@@ -15,8 +15,6 @@ vi.mock("../../../src/api/vault");
 
 describe("savePaymentSource", () => {
   beforeEach(() => {
-    // $FlowIssue
-    getVaultSetupToken.mockResolvedValue();
     // $FlowIssue
     updateVaultSetupToken.mockResolvedValue();
   });
@@ -37,7 +35,6 @@ describe("savePaymentSource", () => {
   const defaultOptions = {
     ...defaultSave(),
     clientID: "client-id",
-    facilitatorAccessToken: "low-scoped-access-token",
     paymentSource: {
       card: {
         expiry: "01/24",
@@ -68,25 +65,6 @@ describe("savePaymentSource", () => {
       error: createVaultSetupTokenError,
     });
     expect(defaultOptions.onError).toBeCalledWith(createVaultSetupTokenError);
-  });
-
-  test("should handle failure from performing GET on a setup vault token", async () => {
-    const getVaultSetupTokenError = new Error(
-      "error with get vault setup token"
-    );
-
-    // $FlowIssue
-    getVaultSetupToken.mockRejectedValue(getVaultSetupTokenError);
-
-    await savePaymentSource(defaultOptions);
-
-    expect.assertions(3);
-    expect(vaultWithoutPurchaseSuccess).not.toHaveBeenCalled();
-    expect(vaultWithoutPurchaseFailure).toHaveBeenCalledWith({
-      error: getVaultSetupTokenError,
-      vaultToken: defaultVaultSetupToken,
-    });
-    expect(defaultOptions.onError).toBeCalledWith(getVaultSetupTokenError);
   });
 
   test("should handle failure from performing POST on a setup vault token", async () => {

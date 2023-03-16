@@ -46,9 +46,9 @@ export function submitCardFields({
         onApprove: cardProps.onApprove,
         createVaultSetupToken: cardProps.createVaultSetupToken,
         onError: cardProps.onError,
-        facilitatorAccessToken,
         clientID: cardProps.clientID,
         paymentSource: convertCardToPaymentSource(card, extraFields),
+        idToken: cardProps.userIDToken || "",
       });
     }
     let orderID;
